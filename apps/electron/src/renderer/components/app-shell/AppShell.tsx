@@ -864,24 +864,24 @@ function AppShellContent({
     if (!activeWorkspace) return
     try {
       await window.electronAPI.deleteSource(activeWorkspace.id, sourceSlug)
-      toast.success(`Deleted source`)
+      toast.success(t('appShell.sources.deleteSuccess', 'Deleted source'))
     } catch (error) {
       console.error('[Chat] Failed to delete source:', error)
-      toast.error('Failed to delete source')
+      toast.error(t('appShell.sources.deleteError', 'Failed to delete source'))
     }
-  }, [activeWorkspace])
+  }, [activeWorkspace, t])
 
   // Delete Skill
   const handleDeleteSkill = useCallback(async (skillSlug: string) => {
     if (!activeWorkspace) return
     try {
       await window.electronAPI.deleteSkill(activeWorkspace.id, skillSlug)
-      toast.success(`Deleted skill: ${skillSlug}`)
+      toast.success(t('appShell.skills.deleteSuccess', 'Deleted skill: {{skill}}', { skill: skillSlug }))
     } catch (error) {
       console.error('[Chat] Failed to delete skill:', error)
-      toast.error('Failed to delete skill')
+      toast.error(t('appShell.skills.deleteError', 'Failed to delete skill'))
     }
-  }, [activeWorkspace])
+  }, [activeWorkspace, t])
 
   // Respond to menu bar "New Chat" trigger
   const menuTriggerRef = useRef(menuNewChatTrigger)
@@ -1032,30 +1032,30 @@ function AppShellContent({
   const listTitle = React.useMemo(() => {
     // Sources navigator
     if (isSourcesNavigation(navState)) {
-      return 'Sources'
+      return t('appShell.nav.sources', 'Sources')
     }
 
     // Skills navigator
     if (isSkillsNavigation(navState)) {
-      return 'All Skills'
+      return t('appShell.nav.allSkills', 'All Skills')
     }
 
     // Settings navigator
-    if (isSettingsNavigation(navState)) return 'Settings'
+    if (isSettingsNavigation(navState)) return t('appShell.nav.settings', 'Settings')
 
     // Chats navigator - use chatFilter
-    if (!chatFilter) return 'All Chats'
+    if (!chatFilter) return t('appShell.nav.allChats', 'All Chats')
 
     switch (chatFilter.kind) {
       case 'flagged':
-        return 'Flagged'
+        return t('appShell.nav.flagged', 'Flagged')
       case 'state':
         const state = todoStates.find(s => s.id === chatFilter.stateId)
-        return state?.label || 'All Chats'
+        return state?.label || t('appShell.nav.allChats', 'All Chats')
       default:
-        return 'All Chats'
+        return t('appShell.nav.allChats', 'All Chats')
     }
-  }, [navState, chatFilter, todoStates])
+  }, [navState, chatFilter, todoStates, t])
 
   return (
     <AppShellProvider value={appShellContextValue}>
@@ -1402,7 +1402,7 @@ function AppShellContent({
                       <StyledDropdownMenuContent align="end" light minWidth="min-w-[200px]">
                         {/* Header with title and clear button */}
                         <div className="flex items-center justify-between px-2 py-1.5 border-b border-foreground/5">
-                          <span className="text-xs font-medium text-muted-foreground">Filter Chats</span>
+                          <span className="text-xs font-medium text-muted-foreground">{t('appShell.filterChats', 'Filter Chats')}</span>
                           {listFilter.size > 0 && (
                             <button
                               onClick={(e) => {
@@ -1411,7 +1411,7 @@ function AppShellContent({
                               }}
                               className="text-xs text-muted-foreground hover:text-foreground"
                             >
-                              Clear
+                              {t('common.clear', 'Clear')}
                             </button>
                           )}
                         </div>
@@ -1453,7 +1453,7 @@ function AppShellContent({
                           }}
                         >
                           <Search className="h-3.5 w-3.5" />
-                          <span className="flex-1">Search</span>
+                          <span className="flex-1">{t('common.search', 'Search')}</span>
                         </StyledDropdownMenuItem>
                         <StyledDropdownMenuSeparator />
                         <StyledDropdownMenuItem
