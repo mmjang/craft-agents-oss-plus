@@ -71,11 +71,11 @@ import { useFocusZone, useGlobalShortcuts } from "@/hooks/keyboard"
 import { useFocusContext } from "@/context/FocusContext"
 import { getSessionTitle } from "@/utils/session"
 import { useSetAtom } from "jotai"
-import type { Session, Workspace, FileAttachment, PermissionRequest, TodoState, LoadedSource, LoadedSkill, PermissionMode, SourceFilter } from "../../../shared/types"
+import type { Session, Workspace, FileAttachment, PermissionRequest, LoadedSource, LoadedSkill, PermissionMode, SourceFilter } from "../../../shared/types"
 import { sessionMetaMapAtom, type SessionMeta } from "@/atoms/sessions"
 import { sourcesAtom } from "@/atoms/sources"
 import { skillsAtom } from "@/atoms/skills"
-import { type TodoStateId, statusConfigsToTodoStates } from "@/config/todo-states"
+import { type TodoStateId, type TodoState, statusConfigsToTodoStates } from "@/config/todo-states"
 import { useStatuses } from "@/hooks/useStatuses"
 import * as storage from "@/lib/local-storage"
 import { toast } from "sonner"
@@ -405,17 +405,7 @@ function AppShellContent({
 
   // Load dynamic statuses from workspace config
   const { statuses: statusConfigs, isLoading: isLoadingStatuses } = useStatuses(activeWorkspace?.id || null)
-  const [todoStates, setTodoStates] = React.useState<Array<{
-    id: string
-    label: string
-    color: string
-    icon: React.ReactNode
-    iconColorable: boolean
-    category?: 'open' | 'closed'
-    isFixed?: boolean
-    isDefault?: boolean
-    shortcut?: string
-  }>>([])
+  const [todoStates, setTodoStates] = React.useState<TodoState[]>([])
 
   // Convert StatusConfig to TodoState with resolved icons
   const localizeTodoStates = React.useCallback((states: TodoState[]) => {

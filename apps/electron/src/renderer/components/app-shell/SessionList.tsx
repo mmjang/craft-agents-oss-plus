@@ -540,6 +540,7 @@ export function SessionList({
   onSearchClose,
   todoStates = [],
 }: SessionListProps) {
+  const { t } = useI18n()
   const [session] = useSession()
   const { navigate } = useNavigation()
   const navState = useNavigationState()

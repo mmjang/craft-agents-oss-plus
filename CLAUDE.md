@@ -113,7 +113,8 @@ bun run electron:dist:linux # Linux AppImage
 1. Determine scope: UI-only (electron), business logic (shared), or types (core)
 2. Update relevant package(s)
 3. Add i18n keys if UI text is involved (see [apps/electron/CLAUDE.md](apps/electron/CLAUDE.md))
-4. Update CLAUDE.md if architecture changes
+4. **Run `bun run typecheck:all` to verify no type errors**
+5. Update CLAUDE.md if architecture changes
 
 ### Working with Translations
 - Files: `apps/electron/src/renderer/i18n/{en,zh}.ts`
@@ -135,6 +136,7 @@ bun run electron:dist:linux # Linux AppImage
 ## Project Conventions
 
 - **TypeScript**: Strict mode, no implicit any
+- **Type checking**: Always run `bun run typecheck:all` after completing any code task to catch type errors early
 - **Imports**: Use `@/` alias for renderer, `@craft-agent/*` for packages
 - **State**: Jotai atoms for global state, React hooks for local
 - **Styling**: Tailwind CSS v4 with utility classes
