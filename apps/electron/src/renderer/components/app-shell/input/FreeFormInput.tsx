@@ -56,6 +56,7 @@ import { PERMISSION_MODE_ORDER } from '@craft-agent/shared/agent/modes'
 import { type ThinkingLevel, THINKING_LEVELS, getThinkingLevelName } from '@craft-agent/shared/agent/thinking-levels'
 import { useEscapeInterrupt } from '@/context/EscapeInterruptContext'
 import { EscapeInterruptOverlay } from './EscapeInterruptOverlay'
+import { useI18n } from '@/i18n/I18nContext'
 
 /**
  * Format token count for display (e.g., 1500 -> "1.5k", 200000 -> "200k")
@@ -198,6 +199,18 @@ export function FreeFormInput({
   isEmptySession = false,
   contextStatus,
 }: FreeFormInputProps) {
+  const { t } = useI18n()
+  const defaultPlaceholders = React.useMemo(
+    () => [
+      t('freeform.placeholder.work', 'What would you like to work on?'),
+      t('freeform.placeholder.analyze', 'Ask me to analyze your codebase...'),
+      t('freeform.placeholder.bug', 'Describe a bug you need help fixing...'),
+      t('freeform.placeholder.docs', 'I can help you write documentation...'),
+      t('freeform.placeholder.refactor', "Let's refactor some code together..."),
+    ],
+    [t]
+  )
+  const resolvedPlaceholder = React.useMemo(() => placeholder ?? defaultPlaceholders, [placeholder, defaultPlaceholders])
   // Performance optimization: Always use internal state for typing to avoid parent re-renders
   // Sync FROM parent on mount/change (for restoring drafts)
   // Sync TO parent on blur/submit (debounced persistence)
@@ -1034,7 +1047,7 @@ export function FreeFormInput({
             setIsFocused(false)
             onFocusChange?.(false)
           }}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           disabled={disabled}
           skills={skills}
           sources={sources}
@@ -1057,15 +1070,15 @@ export function FreeFormInput({
             // Show count ("1 file" / "X files") instead of filename for cleaner UI
             label={attachments.length > 0
               ? attachments.length === 1
-                ? "1 file"
-                : `${attachments.length} files`
-              : "Attach Files"
+                ? t('freeform.attach.single', '1 file')
+                : t('freeform.attach.multiple', '{{count}} files', { count: attachments.length })
+              : t('freeform.attach.label', 'Attach Files')
             }
             isExpanded={isEmptySession}
             hasSelection={attachments.length > 0}
             showChevron={false}
             onClick={handleAttachClick}
-            tooltip="Attach files"
+            tooltip={t('freeform.attach.tooltip', 'Attach files')}
             disabled={disabled}
           />
 
@@ -1110,12 +1123,12 @@ export function FreeFormInput({
                 }
                 label={
                   optimisticSourceSlugs.length === 0
-                    ? "Choose Sources"
+                    ? t('freeform.sources.choose', 'Choose Sources')
                     : (() => {
                         const enabledSources = sources.filter(s => optimisticSourceSlugs.includes(s.config.slug))
                         if (enabledSources.length === 1) return enabledSources[0].config.name
                         if (enabledSources.length === 2) return enabledSources.map(s => s.config.name).join(', ')
-                        return `${enabledSources.length} sources`
+                        return t('freeform.sources.count', '{{count}} sources', { count: enabledSources.length })
                       })()
                 }
                 isExpanded={isEmptySession}
@@ -1139,7 +1152,7 @@ export function FreeFormInput({
                   }
                   setSourceDropdownOpen(!sourceDropdownOpen)
                 }}
-                tooltip="Sources"
+                tooltip={t('freeform.sources.tooltip', 'Sources')}
               />
               {sourceDropdownOpen && sourceDropdownPosition && ReactDOM.createPortal(
                 <>
@@ -1160,9 +1173,9 @@ export function FreeFormInput({
                   >
                     {sources.length === 0 ? (
                       <div className="text-xs text-muted-foreground p-3 select-none">
-                        No sources configured.
+                        {t('freeform.sources.none', 'No sources configured.')}
                         <br />
-                        Add sources in Settings.
+                        {t('freeform.sources.addHint', 'Add sources in Settings.')}
                       </div>
                     ) : (
                       <CommandPrimitive
@@ -1174,7 +1187,7 @@ export function FreeFormInput({
                             ref={sourceFilterInputRef}
                             value={sourceFilter}
                             onValueChange={setSourceFilter}
-                            placeholder="Search sources..."
+                            placeholder={t('freeform.sources.search', 'Search sources...')}
                             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground placeholder:select-none"
                           />
                         </div>

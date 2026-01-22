@@ -17,6 +17,7 @@ import { rendererPerf } from '@/lib/perf'
 import { routes } from '@/lib/navigate'
 import { ensureSessionMessagesLoadedAtom, loadedSessionsAtom, sessionMetaMapAtom } from '@/atoms/sessions'
 import { getSessionTitle } from '@/utils/session'
+import { useI18n } from '@/i18n/I18nContext'
 
 export interface ChatPageProps {
   sessionId: string
@@ -53,6 +54,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     onDeleteSession,
     rightSidebarButton,
   } = useAppShellContext()
+  const { t } = useI18n()
 
   // Use the unified session options hook for clean access
   const {
@@ -204,7 +206,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
 
   // Get display title for header - use getSessionTitle for consistent fallback logic with SessionList
   // Priority: name > first user message > preview > "New chat"
-  const displayTitle = session ? getSessionTitle(session) : (sessionMeta ? getSessionTitle(sessionMeta) : 'Chat')
+  const displayTitle = session ? getSessionTitle(session, t) : (sessionMeta ? getSessionTitle(sessionMeta, t) : t('chat.title', 'Chat'))
   const isFlagged = session?.isFlagged || sessionMeta?.isFlagged || false
   const sharedUrl = session?.sharedUrl || sessionMeta?.sharedUrl || null
   const currentTodoState = session?.todoState || sessionMeta?.todoState || 'todo'

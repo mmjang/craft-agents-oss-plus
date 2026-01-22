@@ -22,6 +22,7 @@ import { Spinner } from '@craft-agent/ui'
 import { Save, RotateCcw, Check, ExternalLink } from 'lucide-react'
 import { HeaderMenu } from '@/components/ui/HeaderMenu'
 import { routes } from '@/lib/navigate'
+import { useI18n } from '@/i18n/I18nContext'
 
 interface PreferencesFormState {
   name: string
@@ -114,6 +115,7 @@ function FormField({
 }
 
 export default function PreferencesPage() {
+  const { t } = useI18n()
   const [formState, setFormState] = useState<PreferencesFormState>(emptyFormState)
   const [originalState, setOriginalState] = useState<PreferencesFormState>(emptyFormState)
   const [isLoading, setIsLoading] = useState(true)
@@ -186,7 +188,7 @@ export default function PreferencesPage() {
       <button
         onClick={() => window.electronAPI.showInFolder('~/.craft-agent/preferences.json')}
         className="flex items-center gap-1 text-xs h-7 px-2 rounded-md bg-foreground/5 hover:bg-foreground/10 text-muted-foreground"
-        title="Open in Finder"
+        title={t('session.viewInFinder', 'View in Finder')}
       >
         <ExternalLink className="h-3 w-3" />
       </button>
@@ -196,7 +198,7 @@ export default function PreferencesPage() {
           className="flex items-center gap-1 text-xs h-7 px-2 rounded-md bg-foreground/5 hover:bg-foreground/10 text-muted-foreground"
         >
           <RotateCcw className="h-3 w-3" />
-          Revert
+          {t('common.revert', 'Revert')}
         </button>
         <Button
           variant="default"
@@ -212,7 +214,7 @@ export default function PreferencesPage() {
           ) : (
             <Save className="h-3.5 w-3.5 mr-1" />
           )}
-          Save
+          {t('common.save', 'Save')}
         </Button>
       </div>
       <HeaderMenu route={routes.view.settings('preferences')} />
@@ -221,61 +223,61 @@ export default function PreferencesPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="Preferences" actions={headerActions} />
+      <PanelHeader title={t('preferences.title', 'Preferences')} actions={headerActions} />
       <Separator />
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
           {/* Basic Info */}
           <section>
-            <SectionHeader>Basic Info</SectionHeader>
+            <SectionHeader>{t('preferences.basicInfo.title', 'Basic Info')}</SectionHeader>
             <div className="space-y-1">
               <FormField
-                label="Name"
+                label={t('preferences.name.label', 'Name')}
                 value={formState.name}
                 onChange={(v) => updateField('name', v)}
-                placeholder="Your name"
+                placeholder={t('preferences.name.placeholder', 'Your name')}
               />
               <FormField
-                label="Timezone"
+                label={t('preferences.timezone.label', 'Timezone')}
                 value={formState.timezone}
                 onChange={(v) => updateField('timezone', v)}
-                placeholder="e.g., America/New_York"
+                placeholder={t('preferences.timezone.placeholder', 'e.g., America/New_York')}
               />
               <FormField
-                label="Language"
+                label={t('preferences.language.label', 'Language')}
                 value={formState.language}
                 onChange={(v) => updateField('language', v)}
-                placeholder="e.g., English"
+                placeholder={t('preferences.language.placeholder', 'e.g., English')}
               />
             </div>
           </section>
 
           {/* Location */}
           <section>
-            <SectionHeader>Location</SectionHeader>
+            <SectionHeader>{t('preferences.location.title', 'Location')}</SectionHeader>
             <div className="space-y-1">
               <FormField
-                label="City"
+                label={t('preferences.city.label', 'City')}
                 value={formState.city}
                 onChange={(v) => updateField('city', v)}
-                placeholder="e.g., New York"
+                placeholder={t('preferences.city.placeholder', 'e.g., New York')}
               />
               <FormField
-                label="Country"
+                label={t('preferences.country.label', 'Country')}
                 value={formState.country}
                 onChange={(v) => updateField('country', v)}
-                placeholder="e.g., USA"
+                placeholder={t('preferences.country.placeholder', 'e.g., USA')}
               />
             </div>
           </section>
 
           {/* Notes */}
           <section>
-            <SectionHeader>Notes</SectionHeader>
+            <SectionHeader>{t('preferences.notes.title', 'Notes')}</SectionHeader>
             <Textarea
               value={formState.notes}
               onChange={(e) => updateField('notes', e.target.value)}
-              placeholder="Any additional information you'd like to share with the AI assistant..."
+              placeholder={t('preferences.notes.placeholder', "Any additional information you'd like to share with the AI assistant...")}
               className="min-h-[120px] text-sm resize-y"
             />
           </section>

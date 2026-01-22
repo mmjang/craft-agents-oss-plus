@@ -13,6 +13,7 @@ import { Popover, PopoverTrigger, PopoverContent } from './popover'
 import { Button } from './button'
 import { cn } from '@/lib/utils'
 import type { ContentBadge } from '../../../shared/types'
+import { useI18n } from '@/i18n/I18nContext'
 
 /**
  * Context passed to the new chat session so the agent knows exactly
@@ -624,6 +625,7 @@ export const EditButton = React.forwardRef<
   HTMLButtonElement,
   React.ComponentPropsWithoutRef<typeof Button>
 >(function EditButton({ className, ...props }, ref) {
+  const { t } = useI18n()
   return (
     <Button
       ref={ref}
@@ -633,7 +635,7 @@ export const EditButton = React.forwardRef<
       className={cn("h-8 px-3 rounded-[6px] bg-background shadow-minimal text-foreground/70 hover:text-foreground", className)}
       {...props}
     >
-      Edit
+      {t('common.edit', 'Edit')}
     </Button>
   )
 })

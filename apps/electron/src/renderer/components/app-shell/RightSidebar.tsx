@@ -8,6 +8,7 @@
 import * as React from 'react'
 import type { RightSidebarPanel } from '../../../shared/types'
 import { SessionMetadataPanel } from '../right-sidebar/SessionMetadataPanel'
+import { useI18n } from '@/i18n/I18nContext'
 
 export interface RightSidebarProps {
   /** Current panel configuration */
@@ -22,6 +23,7 @@ export interface RightSidebarProps {
  * Routes right sidebar content based on panel type
  */
 export function RightSidebar({ panel, sessionId, closeButton }: RightSidebarProps) {
+  const { t } = useI18n()
   switch (panel.type) {
     case 'sessionMetadata':
       return <SessionMetadataPanel sessionId={sessionId} closeButton={closeButton} />
@@ -30,7 +32,7 @@ export function RightSidebar({ panel, sessionId, closeButton }: RightSidebarProp
       // TODO: Implement SessionFilesPanel
       return (
         <div className="h-full flex items-center justify-center text-muted-foreground">
-          <p className="text-sm">Files panel - Coming soon</p>
+          <p className="text-sm">{t('rightSidebar.filesComingSoon', 'Files panel - Coming soon')}</p>
         </div>
       )
 
@@ -38,7 +40,7 @@ export function RightSidebar({ panel, sessionId, closeButton }: RightSidebarProp
       // TODO: Implement SessionHistoryPanel
       return (
         <div className="h-full flex items-center justify-center text-muted-foreground">
-          <p className="text-sm">History panel - Coming soon</p>
+          <p className="text-sm">{t('rightSidebar.historyComingSoon', 'History panel - Coming soon')}</p>
         </div>
       )
 

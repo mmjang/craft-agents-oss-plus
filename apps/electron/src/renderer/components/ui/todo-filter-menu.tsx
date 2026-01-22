@@ -7,6 +7,7 @@ import {
   getStateIcon,
   getStateColor,
 } from '@/config/todo-states'
+import { useI18n } from '@/i18n/I18nContext'
 
 // Re-export types for backwards compatibility
 export { type TodoStateId, type TodoState, getStateIcon, getStateColor }
@@ -61,6 +62,7 @@ export function TodoStateMenu({
   onSelect,
   className,
 }: TodoStateMenuProps) {
+  const { t } = useI18n()
   const [filter, setFilter] = React.useState('')
   const inputRef = React.useRef<HTMLInputElement>(null)
 
@@ -85,13 +87,13 @@ export function TodoStateMenu({
           ref={inputRef}
           value={filter}
           onValueChange={setFilter}
-          placeholder="Filter statuses..."
+          placeholder={t('todoFilter.placeholder', 'Filter statuses...')}
           className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
         />
       </div>
       <CommandPrimitive.List className={MENU_LIST_STYLE}>
         <CommandPrimitive.Empty className="py-3 text-center text-sm text-muted-foreground">
-          No status found
+          {t('todoFilter.empty', 'No status found')}
         </CommandPrimitive.Empty>
         {states.map((state) => {
           const isActive = activeState === state.id

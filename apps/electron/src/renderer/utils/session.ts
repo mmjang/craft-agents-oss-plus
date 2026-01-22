@@ -3,6 +3,7 @@ import type { SessionMeta } from "../atoms/sessions"
 
 /** Common session fields used by getSessionTitle */
 type SessionLike = Pick<Session, 'name' | 'preview'> & { messages?: Session['messages'] }
+type Translator = (key: string, fallback?: string) => string
 
 /**
  * Sanitize content for display as session title.
@@ -21,7 +22,7 @@ function sanitizePreview(content: string): string {
  * Priority: custom name > first user message > preview (from metadata) > "New chat"
  * Works with both Session (full) and SessionMeta (lightweight)
  */
-export function getSessionTitle(session: SessionLike | SessionMeta): string {
+export function getSessionTitle(session: SessionLike | SessionMeta, t?: Translator): string {
   if (session.name) {
     return session.name
   }
@@ -47,7 +48,7 @@ export function getSessionTitle(session: SessionLike | SessionMeta): string {
     }
   }
 
-  return 'New chat'
+  return t ? t('session.newChat', 'New chat') : 'New chat'
 }
 
 /**

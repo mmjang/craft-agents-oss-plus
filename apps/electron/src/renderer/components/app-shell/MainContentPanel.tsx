@@ -26,6 +26,7 @@ import {
 } from '@/contexts/NavigationContext'
 import { AppSettingsPage, WorkspaceSettingsPage, PermissionsSettingsPage, PreferencesPage, ShortcutsPage, SourceInfoPage, ChatPage } from '@/pages'
 import SkillInfoPage from '@/pages/SkillInfoPage'
+import { useI18n } from '@/i18n/I18nContext'
 
 export interface MainContentPanelProps {
   /** Whether the app is in focused mode (single chat, no sidebar) */
@@ -38,6 +39,7 @@ export function MainContentPanel({
   isFocusedMode = false,
   className,
 }: MainContentPanelProps) {
+  const { t } = useI18n()
   const navState = useNavigationState()
   const { activeWorkspaceId } = useAppShellContext()
 
@@ -101,7 +103,7 @@ export function MainContentPanel({
     return wrapWithStoplight(
       <Panel variant="grow" className={className}>
         <div className="flex items-center justify-center h-full text-muted-foreground">
-          <p className="text-sm">No sources configured</p>
+          <p className="text-sm">{t('appShell.main.noSources', 'No sources configured')}</p>
         </div>
       </Panel>
     )
@@ -123,7 +125,7 @@ export function MainContentPanel({
     return wrapWithStoplight(
       <Panel variant="grow" className={className}>
         <div className="flex items-center justify-center h-full text-muted-foreground">
-          <p className="text-sm">No skills configured</p>
+          <p className="text-sm">{t('appShell.main.noSkills', 'No skills configured')}</p>
         </div>
       </Panel>
     )
@@ -144,8 +146,8 @@ export function MainContentPanel({
         <div className="flex items-center justify-center h-full text-muted-foreground">
           <p className="text-sm">
             {navState.filter.kind === 'flagged'
-              ? 'No flagged conversations'
-              : 'No conversations yet'}
+              ? t('appShell.main.noFlagged', 'No flagged conversations')
+              : t('appShell.main.noConversations', 'No conversations yet')}
           </p>
         </div>
       </Panel>
@@ -156,7 +158,7 @@ export function MainContentPanel({
   return wrapWithStoplight(
     <Panel variant="grow" className={className}>
       <div className="flex items-center justify-center h-full text-muted-foreground">
-        <p className="text-sm">Select a conversation to get started</p>
+        <p className="text-sm">{t('appShell.main.selectConversation', 'Select a conversation to get started')}</p>
       </div>
     </Panel>
   )

@@ -418,14 +418,31 @@ function AppShellContent({
   }>>([])
 
   // Convert StatusConfig to TodoState with resolved icons
+  const localizeTodoStates = React.useCallback((states: TodoState[]) => {
+    const statusLabelKeys: Record<string, string> = {
+      backlog: 'status.backlog',
+      todo: 'status.todo',
+      'needs-review': 'status.needsReview',
+      done: 'status.done',
+      cancelled: 'status.cancelled',
+    }
+    return states.map((state) => {
+      const key = statusLabelKeys[state.id]
+      if (!key) return state
+      return { ...state, label: t(key, state.label) }
+    })
+  }, [t])
+
   React.useEffect(() => {
     if (!activeWorkspace?.id || statusConfigs.length === 0) {
       setTodoStates([])
       return
     }
 
-    statusConfigsToTodoStates(statusConfigs, activeWorkspace.id).then(setTodoStates)
-  }, [statusConfigs, activeWorkspace?.id])
+    statusConfigsToTodoStates(statusConfigs, activeWorkspace.id).then((states) => {
+      setTodoStates(localizeTodoStates(states))
+    })
+  }, [statusConfigs, activeWorkspace?.id, localizeTodoStates])
 
   // Ensure session messages are loaded when selected
   const ensureMessagesLoaded = useSetAtom(ensureSessionMessagesLoadedAtom)

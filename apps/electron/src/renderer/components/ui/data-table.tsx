@@ -26,6 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/i18n/I18nContext'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -66,6 +67,7 @@ export function DataTable<TData, TValue>({
   pagination: paginationEnabled = false,
   pageSize = 50,
 }: DataTableProps<TData, TValue>) {
+  const { t } = useI18n()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({})
@@ -225,7 +227,7 @@ export function DataTable<TData, TValue>({
   const paginationControls = paginationEnabled && table.getPageCount() > 1 && (
     <div className="flex items-center justify-between px-2 py-3 border-t border-border">
       <div className="text-sm text-muted-foreground">
-        {table.getFilteredRowModel().rows.length} total
+        {t('dataTable.total', '{{count}} total', { count: table.getFilteredRowModel().rows.length })}
       </div>
       <div className="flex items-center gap-2">
         <Button
@@ -234,10 +236,13 @@ export function DataTable<TData, TValue>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Previous
+          {t('dataTable.previous', 'Previous')}
         </Button>
         <span className="text-sm text-muted-foreground">
-          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          {t('dataTable.pageOf', 'Page {{page}} of {{total}}', {
+            page: table.getState().pagination.pageIndex + 1,
+            total: table.getPageCount(),
+          })}
         </span>
         <Button
           variant="outline"
@@ -245,7 +250,7 @@ export function DataTable<TData, TValue>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Next
+          {t('dataTable.next', 'Next')}
         </Button>
       </div>
     </div>

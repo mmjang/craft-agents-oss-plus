@@ -4,6 +4,7 @@ import { Brain, Check } from 'lucide-react'
 import { Icon_Folder } from '@craft-agent/ui'
 import { cn } from '@/lib/utils'
 import { PERMISSION_MODE_CONFIG, PERMISSION_MODE_ORDER, type PermissionMode } from '@craft-agent/shared/agent/modes'
+import { useI18n } from '@/i18n/I18nContext'
 
 // ============================================================================
 // Types
@@ -198,29 +199,76 @@ export function SlashCommandMenu({
   activeCommands = [],
   onSelect,
   showFilter = false,
-  filterPlaceholder = 'Search commands...',
+  filterPlaceholder,
   className,
 }: SlashCommandMenuProps) {
+  const { t } = useI18n()
   const [filter, setFilter] = React.useState('')
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const resolvedPlaceholder = filterPlaceholder ?? t('slashMenu.search', 'Search commands...')
+
+  const localizeCommand = React.useCallback((cmd: SlashCommand): SlashCommand => {
+    if (cmd.id === 'ultrathink') {
+      return {
+        ...cmd,
+        label: t('appShell.ultrathink', cmd.label),
+        description: t('slash.ultrathinkDesc', 'Extended reasoning for complex problems'),
+      }
+    }
+
+    if (cmd.id === 'safe' || cmd.id === 'ask' || cmd.id === 'allow-all') {
+      const modeLabelKey: Record<string, string> = {
+        safe: 'permissions.mode.safe',
+        ask: 'permissions.mode.ask',
+        'allow-all': 'permissions.mode.allow-all',
+      }
+      const modeDescriptionKey: Record<string, string> = {
+        safe: 'permissions.mode.safeDescMenu',
+        ask: 'permissions.mode.askDescMenu',
+        'allow-all': 'permissions.mode.allowAllDescMenu',
+      }
+      return {
+        ...cmd,
+        label: t(modeLabelKey[cmd.id], cmd.label),
+        description: t(modeDescriptionKey[cmd.id], cmd.description),
+      }
+    }
+
+    return cmd
+  }, [t])
+
+  const localizedCommands = React.useMemo(() => {
+    if (commands && !commandGroups) {
+      return commands.map(localizeCommand)
+    }
+    return commands
+  }, [commands, commandGroups, localizeCommand])
+
+  const localizedGroups = React.useMemo(() => {
+    if (!commandGroups) return null
+    return commandGroups.map(group => ({
+      ...group,
+      commands: group.commands.map(localizeCommand),
+    }))
+  }, [commandGroups, localizeCommand])
 
   // If groups provided, filter within each group; otherwise use flat commands
   const filteredGroups = React.useMemo(() => {
-    if (commandGroups) {
-      return commandGroups.map(group => ({
+    if (localizedGroups) {
+      return localizedGroups.map(group => ({
         ...group,
         commands: filterCommands(group.commands, filter),
       })).filter(group => group.commands.length > 0)
     }
     return null
-  }, [commandGroups, filter])
+  }, [localizedGroups, filter])
 
   const filteredCommands = React.useMemo(() => {
-    if (commands && !commandGroups) {
-      return filterCommands(commands, filter)
+    if (localizedCommands && !localizedGroups) {
+      return filterCommands(localizedCommands, filter)
     }
     return null
-  }, [commands, commandGroups, filter])
+  }, [localizedCommands, localizedGroups, filter])
 
   // Get all commands for defaultValue calculation
   const allFilteredCommands = filteredGroups
@@ -270,7 +318,7 @@ export function SlashCommandMenu({
             ref={inputRef}
             value={filter}
             onValueChange={setFilter}
-            placeholder={filterPlaceholder}
+            placeholder={resolvedPlaceholder}
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -278,7 +326,7 @@ export function SlashCommandMenu({
       <CommandPrimitive.List className={MENU_LIST_STYLE}>
         {allFilteredCommands.length === 0 ? (
           <CommandPrimitive.Empty className="py-4 text-center text-sm text-muted-foreground">
-            No commands found
+            {t('slashMenu.empty', 'No commands found')}
           </CommandPrimitive.Empty>
         ) : filteredGroups ? (
           // Group-based rendering with smart separators

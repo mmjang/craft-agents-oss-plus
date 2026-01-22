@@ -9,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useRegisterModal } from "@/context/ModalContext"
+import { useI18n } from "@/i18n/I18nContext"
 
 interface RenameDialogProps {
   open: boolean
@@ -27,8 +28,9 @@ export function RenameDialog({
   value,
   onValueChange,
   onSubmit,
-  placeholder = "Enter a name...",
+  placeholder,
 }: RenameDialogProps) {
+  const { t } = useI18n()
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Register with modal context so X button / Cmd+W closes this dialog first
@@ -50,6 +52,8 @@ export function RenameDialog({
     }
   }
 
+  const resolvedPlaceholder = placeholder ?? t('renameDialog.placeholder', 'Enter a name...')
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]" onOpenAutoFocus={(e) => e.preventDefault()}>
@@ -61,7 +65,7 @@ export function RenameDialog({
             ref={inputRef}
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 handleSubmit()
@@ -71,10 +75,10 @@ export function RenameDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common.cancel', 'Cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={!value.trim()}>
-            Save
+            {t('common.save', 'Save')}
           </Button>
         </DialogFooter>
       </DialogContent>

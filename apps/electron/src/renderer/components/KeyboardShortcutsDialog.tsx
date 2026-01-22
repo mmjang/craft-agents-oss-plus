@@ -5,6 +5,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useRegisterModal } from "@/context/ModalContext"
+import { useI18n } from "@/i18n/I18nContext"
+import { useMemo } from "react"
 
 interface KeyboardShortcutsDialogProps {
   open: boolean
@@ -24,58 +26,6 @@ interface ShortcutSection {
 const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
 const cmdKey = isMac ? '⌘' : 'Ctrl'
 
-const sections: ShortcutSection[] = [
-  {
-    title: 'Global',
-    shortcuts: [
-      { keys: [cmdKey, '1'], description: 'Focus sidebar' },
-      { keys: [cmdKey, '2'], description: 'Focus session list' },
-      { keys: [cmdKey, '3'], description: 'Focus chat input' },
-      { keys: [cmdKey, 'N'], description: 'New chat' },
-      { keys: [cmdKey, 'Shift', 'N'], description: 'New window' },
-      { keys: [cmdKey, '\\'], description: 'Toggle sidebar' },
-      { keys: [cmdKey, ','], description: 'Open settings' },
-      { keys: [cmdKey, '/'], description: 'Show this dialog' },
-    ],
-  },
-  {
-    title: 'Navigation',
-    shortcuts: [
-      { keys: ['Tab'], description: 'Move to next zone' },
-      { keys: ['Shift', 'Tab'], description: 'Move to previous zone' },
-      { keys: ['←', '→'], description: 'Move between zones (in lists)' },
-      { keys: ['↑', '↓'], description: 'Navigate items in list' },
-      { keys: ['Home'], description: 'Go to first item' },
-      { keys: ['End'], description: 'Go to last item' },
-      { keys: ['Esc'], description: 'Close dialog / blur input' },
-    ],
-  },
-  {
-    title: 'Session List',
-    shortcuts: [
-      { keys: ['Enter'], description: 'Focus chat input' },
-      { keys: ['Delete'], description: 'Delete session' },
-      { keys: ['R'], description: 'Rename session' },
-      { keys: ['Right-click'], description: 'Open context menu' },
-    ],
-  },
-  {
-    title: 'Agent Tree',
-    shortcuts: [
-      { keys: ['←'], description: 'Collapse folder' },
-      { keys: ['→'], description: 'Expand folder' },
-    ],
-  },
-  {
-    title: 'Chat',
-    shortcuts: [
-      { keys: ['Enter'], description: 'Send message' },
-      { keys: ['Shift', 'Enter'], description: 'New line' },
-      { keys: [cmdKey, 'Enter'], description: 'Send message' },
-    ],
-  },
-]
-
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <kbd className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-medium bg-muted border border-border rounded shadow-sm">
@@ -87,12 +37,65 @@ function Kbd({ children }: { children: React.ReactNode }) {
 export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcutsDialogProps) {
   // Register with modal context so X button / Cmd+W closes this dialog first
   useRegisterModal(open, () => onOpenChange(false))
+  const { t } = useI18n()
+
+  const sections: ShortcutSection[] = useMemo(() => [
+    {
+      title: t('shortcuts.section.global', 'Global'),
+      shortcuts: [
+        { keys: [cmdKey, '1'], description: t('shortcuts.focusSidebar', 'Focus sidebar') },
+        { keys: [cmdKey, '2'], description: t('shortcuts.focusSessionList', 'Focus session list') },
+        { keys: [cmdKey, '3'], description: t('shortcuts.focusChatInput', 'Focus chat input') },
+        { keys: [cmdKey, 'N'], description: t('shortcuts.newChat', 'New chat') },
+        { keys: [cmdKey, 'Shift', 'N'], description: t('shortcuts.newWindow', 'New window') },
+        { keys: [cmdKey, '\\'], description: t('shortcuts.toggleSidebar', 'Toggle sidebar') },
+        { keys: [cmdKey, ','], description: t('shortcuts.openSettings', 'Open settings') },
+        { keys: [cmdKey, '/'], description: t('shortcuts.showShortcuts', 'Show this dialog') },
+      ],
+    },
+    {
+      title: t('shortcuts.section.navigation', 'Navigation'),
+      shortcuts: [
+        { keys: ['Tab'], description: t('shortcuts.nextZone', 'Move to next zone') },
+        { keys: ['Shift', 'Tab'], description: t('shortcuts.prevZone', 'Move to previous zone') },
+        { keys: ['←', '→'], description: t('shortcuts.zoneArrows', 'Move between zones (in lists)') },
+        { keys: ['↑', '↓'], description: t('shortcuts.navigateList', 'Navigate items in list') },
+        { keys: ['Home'], description: t('shortcuts.firstItem', 'Go to first item') },
+        { keys: ['End'], description: t('shortcuts.lastItem', 'Go to last item') },
+        { keys: ['Esc'], description: t('shortcuts.closeDialog', 'Close dialog / blur input') },
+      ],
+    },
+    {
+      title: t('shortcuts.section.sessionList', 'Session List'),
+      shortcuts: [
+        { keys: ['Enter'], description: t('shortcuts.sessionFocusInput', 'Focus chat input') },
+        { keys: ['Delete'], description: t('shortcuts.deleteSession', 'Delete session') },
+        { keys: ['R'], description: t('shortcuts.renameSession', 'Rename session') },
+        { keys: ['Right-click'], description: t('shortcuts.contextMenu', 'Open context menu') },
+      ],
+    },
+    {
+      title: t('shortcuts.section.agentTree', 'Agent Tree'),
+      shortcuts: [
+        { keys: ['←'], description: t('shortcuts.collapseFolder', 'Collapse folder') },
+        { keys: ['→'], description: t('shortcuts.expandFolder', 'Expand folder') },
+      ],
+    },
+    {
+      title: t('shortcuts.section.chat', 'Chat'),
+      shortcuts: [
+        { keys: ['Enter'], description: t('shortcuts.send', 'Send message') },
+        { keys: ['Shift', 'Enter'], description: t('shortcuts.newLine', 'New line') },
+        { keys: [cmdKey, 'Enter'], description: t('shortcuts.send', 'Send message') },
+      ],
+    },
+  ], [t])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Keyboard Shortcuts</DialogTitle>
+          <DialogTitle>{t('menu.shortcuts', 'Keyboard Shortcuts')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-6 py-2">
           {sections.map((section) => (

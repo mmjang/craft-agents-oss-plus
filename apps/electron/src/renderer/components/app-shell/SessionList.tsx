@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { formatDistanceToNow, isToday, isYesterday, format, startOfDay } from "date-fns"
+import { enUS, zhCN } from "date-fns/locale"
 import { MoreHorizontal, Flag, Search, X, Copy, Link2Off, CloudUpload, Globe, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 
@@ -43,6 +44,7 @@ import { useFocusContext } from "@/context/FocusContext"
 import { getSessionTitle } from "@/utils/session"
 import type { SessionMeta } from "@/atoms/sessions"
 import { PERMISSION_MODE_CONFIG, type PermissionMode } from "@craft-agent/shared/agent/modes"
+import { useI18n } from "@/i18n/I18nContext"
 
 // Pagination constants
 const INITIAL_DISPLAY_LIMIT = 20
@@ -53,8 +55,8 @@ const BATCH_SIZE = 20
  * Returns "Today", "Yesterday", or formatted date like "Dec 19"
  */
 function formatDateHeader(date: Date): string {
-  if (isToday(date)) return "Today"
-  if (isYesterday(date)) return "Yesterday"
+  if (isToday(date)) return "today"
+  if (isYesterday(date)) return "yesterday"
   return format(date, "MMM d")
 }
 
@@ -196,6 +198,7 @@ function SessionItem({
   const [menuOpen, setMenuOpen] = useState(false)
   const [contextMenuOpen, setContextMenuOpen] = useState(false)
   const [todoMenuOpen, setTodoMenuOpen] = useState(false)
+  const { t, locale } = useI18n()
 
   // Get current todo state from session properties
   const currentTodoState = getSessionTodoState(item)
@@ -240,7 +243,7 @@ function SessionItem({
                 role="button"
                 aria-haspopup="menu"
                 aria-expanded={todoMenuOpen}
-                aria-label="Change todo state"
+                aria-label={t('session.changeTodoState', 'Change todo state')}
                 onContextMenu={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
@@ -296,7 +299,7 @@ function SessionItem({
                 "font-medium font-sans line-clamp-2 min-w-0 -mb-[2px]",
                 item.isAsyncOperationOngoing && "animate-shimmer-text"
               )}>
-                {searchQuery ? highlightMatch(getSessionTitle(item), searchQuery) : getSessionTitle(item)}
+                {searchQuery ? highlightMatch(getSessionTitle(item, t), searchQuery) : getSessionTitle(item, t)}
               </div>
             </div>
             {/* Subtitle - with optional flag at start, single line with truncation */}
@@ -306,7 +309,7 @@ function SessionItem({
               )}
               {!item.isProcessing && hasUnreadMessages(item) && (
                 <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-medium rounded bg-accent text-white">
-                  New
+                  {t('session.badge.new', 'New')}
                 </span>
               )}
               {item.isFlagged && (
@@ -314,7 +317,7 @@ function SessionItem({
               )}
               {item.lastMessageRole === 'plan' && (
                 <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-medium rounded bg-success/10 text-success">
-                  Plan
+                  {t('session.badge.plan', 'Plan')}
                 </span>
               )}
               {permissionMode && (
@@ -327,7 +330,7 @@ function SessionItem({
                     permissionMode === 'allow-all' && "bg-accent/10 text-accent"
                   )}
                 >
-                  {PERMISSION_MODE_CONFIG[permissionMode].shortName}
+                  {t(`permissions.mode.${permissionMode}`, PERMISSION_MODE_CONFIG[permissionMode].shortName)}
                 </span>
               )}
               {item.sharedUrl && (
@@ -343,44 +346,44 @@ function SessionItem({
                   <StyledDropdownMenuContent align="start">
                     <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl(item.sharedUrl!)}>
                       <Globe />
-                      Open in Browser
+                      {t('session.openInBrowser', 'Open in Browser')}
                     </StyledDropdownMenuItem>
                     <StyledDropdownMenuItem onClick={async () => {
                       await navigator.clipboard.writeText(item.sharedUrl!)
-                      toast.success('Link copied to clipboard')
+                      toast.success(t('session.linkCopied', 'Link copied to clipboard'))
                     }}>
                       <Copy />
-                      Copy Link
+                      {t('session.copyLink', 'Copy Link')}
                     </StyledDropdownMenuItem>
                     <StyledDropdownMenuItem onClick={async () => {
                       const result = await window.electronAPI.sessionCommand(item.id, { type: 'updateShare' })
                       if (result?.success) {
-                        toast.success('Share updated')
+                        toast.success(t('session.shareUpdated', 'Share updated'))
                       } else {
-                        toast.error('Failed to update share', { description: result?.error })
+                        toast.error(t('session.shareUpdateFailed', 'Failed to update share'), { description: result?.error })
                       }
                     }}>
                       <RefreshCw />
-                      Update Share
+                      {t('session.updateShare', 'Update Share')}
                     </StyledDropdownMenuItem>
                     <StyledDropdownMenuSeparator />
                     <StyledDropdownMenuItem onClick={async () => {
                       const result = await window.electronAPI.sessionCommand(item.id, { type: 'revokeShare' })
                       if (result?.success) {
-                        toast.success('Sharing stopped')
+                        toast.success(t('session.shareStopped', 'Sharing stopped'))
                       } else {
-                        toast.error('Failed to stop sharing', { description: result?.error })
+                        toast.error(t('session.shareStopFailed', 'Failed to stop sharing'), { description: result?.error })
                       }
                     }} variant="destructive">
                       <Link2Off />
-                      Stop Sharing
+                      {t('session.stopSharing', 'Stop Sharing')}
                     </StyledDropdownMenuItem>
                   </StyledDropdownMenuContent>
                 </DropdownMenu>
               )}
               <span className="truncate">
                 {item.lastMessageAt && (
-                  <>{formatDistanceToNow(new Date(item.lastMessageAt), { addSuffix: true })}</>
+                  <>{formatDistanceToNow(new Date(item.lastMessageAt), { addSuffix: true, locale: locale === 'zh' ? zhCN : enUS })}</>
                 )}
               </span>
             </div>
@@ -405,14 +408,14 @@ function SessionItem({
                 <DropdownMenuProvider>
                   <SessionMenu
                     sessionId={item.id}
-                    sessionName={getSessionTitle(item)}
+                    sessionName={getSessionTitle(item, t)}
                     isFlagged={item.isFlagged ?? false}
                     sharedUrl={item.sharedUrl}
                     hasMessages={hasMessages(item)}
                     hasUnreadMessages={hasUnreadMessages(item)}
                     currentTodoState={currentTodoState}
                     todoStates={todoStates}
-                    onRename={() => onRenameClick(item.id, getSessionTitle(item))}
+                    onRename={() => onRenameClick(item.id, getSessionTitle(item, t))}
                     onFlag={() => onFlag?.(item.id)}
                     onUnflag={() => onUnflag?.(item.id)}
                     onMarkUnread={() => onMarkUnread(item.id)}
@@ -432,14 +435,14 @@ function SessionItem({
           <ContextMenuProvider>
             <SessionMenu
               sessionId={item.id}
-              sessionName={getSessionTitle(item)}
+              sessionName={getSessionTitle(item, t)}
               isFlagged={item.isFlagged ?? false}
               sharedUrl={item.sharedUrl}
               hasMessages={hasMessages(item)}
               hasUnreadMessages={hasUnreadMessages(item)}
               currentTodoState={currentTodoState}
               todoStates={todoStates}
-              onRename={() => onRenameClick(item.id, getSessionTitle(item))}
+              onRename={() => onRenameClick(item.id, getSessionTitle(item, t))}
               onFlag={() => onFlag?.(item.id)}
               onUnflag={() => onUnflag?.(item.id)}
               onMarkUnread={() => onMarkUnread(item.id)}
@@ -459,10 +462,17 @@ function SessionItem({
  * No sticky behavior - just scrolls with the list.
  */
 function DateHeader({ label }: { label: string }) {
+  const { t } = useI18n()
+  const displayLabel = label === 'today'
+    ? t('date.today', 'Today')
+    : label === 'yesterday'
+      ? t('date.yesterday', 'Yesterday')
+      : label
+
   return (
     <div className="px-4 py-2">
       <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-        {label}
+        {displayLabel}
       </span>
     </div>
   )
@@ -564,7 +574,7 @@ export function SessionList({
     if (!searchQuery.trim()) return sortedItems
     const query = searchQuery.toLowerCase()
     return sortedItems.filter(item => {
-      const title = getSessionTitle(item).toLowerCase()
+      const title = getSessionTitle(item, t).toLowerCase()
       return title.includes(query)
     })
   }, [sortedItems, searchQuery])
@@ -881,4 +891,3 @@ export function SessionList({
     </>
   )
 }
-

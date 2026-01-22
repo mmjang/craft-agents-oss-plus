@@ -5,6 +5,7 @@ import { SlashCommandMenu, DEFAULT_SLASH_COMMAND_GROUPS, type SlashCommandId } f
 import { ChevronDown, X } from 'lucide-react'
 import { PERMISSION_MODE_CONFIG, type PermissionMode } from '@craft-agent/shared/agent/modes'
 import { ActiveTasksBar, type BackgroundTask } from './ActiveTasksBar'
+import { useI18n } from '@/i18n/I18nContext'
 
 // ============================================================================
 // Permission Mode Icon Component
@@ -59,6 +60,8 @@ export function ActiveOptionBadges({
   onInsertMessage,
   className,
 }: ActiveOptionBadgesProps) {
+  const { t } = useI18n()
+
   // Only render if badges or tasks are active
   if (!ultrathinkEnabled && !permissionMode && tasks.length === 0) {
     return null
@@ -87,7 +90,7 @@ export function ActiveOptionBadges({
           style={{ '--shadow-color': '147, 51, 234' } as React.CSSProperties}
         >
           <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Ultrathink
+            {t('appShell.ultrathink', 'Ultrathink')}
           </span>
           <X className="h-3 w-3 text-purple-500 opacity-60 hover:opacity-100 translate-y-px" />
         </button>
@@ -111,6 +114,7 @@ interface PermissionModeDropdownProps {
 
 function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onPermissionModeChange, onUltrathinkChange }: PermissionModeDropdownProps) {
   const [open, setOpen] = React.useState(false)
+  const { t } = useI18n()
   // Optimistic local state - updates immediately, syncs with prop
   const [optimisticMode, setOptimisticMode] = React.useState(permissionMode)
 
@@ -139,6 +143,12 @@ function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onP
 
   // Get config for current mode (use optimistic state for instant UI update)
   const config = PERMISSION_MODE_CONFIG[optimisticMode]
+  const modeLabelKeys: Record<PermissionMode, string> = {
+    safe: 'permissions.mode.safe',
+    ask: 'permissions.mode.ask',
+    'allow-all': 'permissions.mode.allow-all',
+  }
+  const modeLabel = t(modeLabelKeys[optimisticMode], config.displayName)
 
   // Mode-specific styling using CSS variables (theme-aware)
   // - safe (Explore): foreground at 60% opacity - subtle, read-only feel
@@ -173,7 +183,7 @@ function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onP
           style={{ '--shadow-color': currentStyle.shadowVar } as React.CSSProperties}
         >
           <PermissionModeIcon mode={optimisticMode} className="h-3.5 w-3.5" />
-          <span>{config.displayName}</span>
+          <span>{modeLabel}</span>
           <ChevronDown className="h-3.5 w-3.5 opacity-60" />
         </button>
       </PopoverTrigger>
@@ -198,4 +208,3 @@ function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onP
     </Popover>
   )
 }
-
