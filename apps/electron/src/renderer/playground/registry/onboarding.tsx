@@ -5,6 +5,7 @@ import { CredentialsStep } from '@/components/onboarding/CredentialsStep'
 import { CompletionStep } from '@/components/onboarding/CompletionStep'
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
 import type { OnboardingState } from '@/components/onboarding/OnboardingWizard'
+import type { ApiCredentialPayload } from '@/components/onboarding/CredentialsStep'
 
 const createOnboardingState = (overrides: Partial<OnboardingState> = {}): OnboardingState => ({
   step: 'welcome',
@@ -109,7 +110,7 @@ export const onboardingComponents: ComponentEntry[] = [
     ],
     mockData: () => ({
       billingMethod: 'api_key',
-      onSubmit: (cred: string) => console.log('[Playground] Submitted credential:', cred),
+      onSubmit: (cred: ApiCredentialPayload) => console.log('[Playground] Submitted credential:', cred),
       onStartOAuth: noopHandler,
       onBack: noopHandler,
     }),
@@ -249,7 +250,7 @@ export const onboardingComponents: ComponentEntry[] = [
       onContinue: noopHandler,
       onBack: noopHandler,
       onSelectBillingMethod: (method: string) => console.log('[Playground] Selected billing:', method),
-      onSubmitCredential: (cred: string) => console.log('[Playground] Submitted:', cred),
+      onSubmitCredential: (cred: ApiCredentialPayload) => console.log('[Playground] Submitted:', cred),
       onStartOAuth: noopHandler,
       onFinish: noopHandler,
     }),

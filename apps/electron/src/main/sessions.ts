@@ -487,6 +487,8 @@ export class SessionManager {
     try {
       const authState = await getAuthState()
       const { billing } = authState
+      const optionsEnv: Record<string, string> = {}
+      const trimmedBaseUrl = billing.apiBaseUrl?.trim()
 
       sessionLog.info('Reinitializing auth with billing type:', billing.type)
 
@@ -494,15 +496,30 @@ export class SessionManager {
         // Use Claude Max subscription via OAuth token
         process.env.CLAUDE_CODE_OAUTH_TOKEN = billing.claudeOAuthToken
         delete process.env.ANTHROPIC_API_KEY
+        delete process.env.ANTHROPIC_BASE_URL
+        optionsEnv.CLAUDE_CODE_OAUTH_TOKEN = billing.claudeOAuthToken
         sessionLog.info('Set Claude Max OAuth Token')
       } else if (billing.apiKey) {
         // Use API key (pay-as-you-go)
         process.env.ANTHROPIC_API_KEY = billing.apiKey
         delete process.env.CLAUDE_CODE_OAUTH_TOKEN
-        sessionLog.info('Set Anthropic API Key')
+        if (trimmedBaseUrl) {
+          process.env.ANTHROPIC_BASE_URL = trimmedBaseUrl
+          optionsEnv.ANTHROPIC_BASE_URL = trimmedBaseUrl
+          sessionLog.info('Set Anthropic API Key with custom base URL')
+        } else {
+          delete process.env.ANTHROPIC_BASE_URL
+          sessionLog.info('Set Anthropic API Key')
+        }
+        optionsEnv.ANTHROPIC_API_KEY = billing.apiKey
       } else {
         sessionLog.error('No authentication configured!')
+        delete process.env.ANTHROPIC_API_KEY
+        delete process.env.CLAUDE_CODE_OAUTH_TOKEN
+        delete process.env.ANTHROPIC_BASE_URL
       }
+
+      setAnthropicOptionsEnv(optionsEnv)
     } catch (error) {
       sessionLog.error('Failed to reinitialize auth:', error)
       throw error

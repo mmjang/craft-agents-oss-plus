@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils"
 import { WelcomeStep } from "./WelcomeStep"
 import { BillingMethodStep, type BillingMethod } from "./BillingMethodStep"
-import { CredentialsStep, type CredentialStatus } from "./CredentialsStep"
+import { CredentialsStep, type ApiCredentialPayload, type CredentialStatus } from "./CredentialsStep"
 import { CompletionStep } from "./CompletionStep"
 
 export type OnboardingStep =
@@ -30,7 +30,7 @@ interface OnboardingWizardProps {
   onContinue: () => void
   onBack: () => void
   onSelectBillingMethod: (method: BillingMethod) => void
-  onSubmitCredential: (credential: string) => void
+  onSubmitCredential: (credential: ApiCredentialPayload) => void
   onStartOAuth?: () => void
   onFinish: () => void
 

@@ -43,6 +43,8 @@ export interface PendingUpdate {
 // Config stored in JSON file (credentials stored in encrypted file, not here)
 export interface StoredConfig {
   authType?: AuthType;
+  /** Optional override for Anthropic API base URL */
+  anthropicBaseUrl?: string;
   workspaces: Workspace[];
   activeWorkspaceId: string | null;
   activeSessionId: string | null;  // Currently active session (primary scope)
@@ -159,6 +161,30 @@ export function loadStoredConfig(): StoredConfig | null {
 export async function getAnthropicApiKey(): Promise<string | null> {
   const manager = getCredentialManager();
   return manager.getApiKey();
+}
+
+/**
+ * Get the Anthropic API base URL override from config
+ */
+export function getAnthropicBaseUrl(): string | null {
+  const config = loadStoredConfig();
+  return config?.anthropicBaseUrl?.trim() || null;
+}
+
+/**
+ * Set the Anthropic API base URL override in config (clears when empty)
+ */
+export function setAnthropicBaseUrl(baseUrl?: string | null): void {
+  const config = loadStoredConfig();
+  if (!config) return;
+
+  const trimmed = baseUrl?.trim();
+  if (trimmed) {
+    config.anthropicBaseUrl = trimmed;
+  } else {
+    delete config.anthropicBaseUrl;
+  }
+  saveConfig(config);
 }
 
 /**

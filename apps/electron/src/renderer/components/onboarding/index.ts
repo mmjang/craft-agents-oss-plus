@@ -12,7 +12,7 @@ export {
 // Individual steps
 export { WelcomeStep } from './WelcomeStep'
 export { BillingMethodStep, type BillingMethod } from './BillingMethodStep'
-export { CredentialsStep, type CredentialStatus } from './CredentialsStep'
+export { CredentialsStep, type CredentialStatus, type ApiCredentialPayload } from './CredentialsStep'
 export { CompletionStep } from './CompletionStep'
 export { ReauthScreen } from './ReauthScreen'
 
@@ -31,4 +31,5 @@ export type {
 
 export type {
   CredentialStatus as CredentialStatusType,
+  ApiCredentialPayload as ApiCredentialPayloadType,
 } from './CredentialsStep'

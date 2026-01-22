@@ -15,6 +15,7 @@ import type {
   LoginStatus,
   CredentialStatus,
   BillingMethod,
+  ApiCredentialPayload,
 } from '@/components/onboarding'
 import type { AuthType, SetupNeeds } from '../../shared/types'
 
@@ -37,7 +38,7 @@ interface UseOnboardingReturn {
   handleSelectBillingMethod: (method: BillingMethod) => void
 
   // Credentials
-  handleSubmitCredential: (credential: string) => void
+  handleSubmitCredential: (credential: ApiCredentialPayload) => void
   handleStartOAuth: () => void
 
   // Claude OAuth
@@ -80,11 +81,14 @@ export function useOnboarding({
   })
 
   // Save configuration
-  const handleSaveConfig = useCallback(async (credential?: string) => {
+  const handleSaveConfig = useCallback(async (params?: { credential?: string; baseUrl?: string | null }) => {
     if (!state.billingMethod) {
       console.log('[Onboarding] No billing method, returning early')
       return
     }
+
+    const credential = params?.credential
+    const baseUrl = params?.baseUrl
 
     setState(s => ({ ...s, completionStatus: 'saving' }))
 
@@ -95,6 +99,7 @@ export function useOnboarding({
       const result = await window.electronAPI.saveOnboardingConfig({
         authType,
         credential,
+        baseUrl,
       })
 
       if (result.success) {
@@ -157,11 +162,14 @@ export function useOnboarding({
   }, [])
 
   // Submit credential (API key)
-  const handleSubmitCredential = useCallback(async (credential: string) => {
+  const handleSubmitCredential = useCallback(async (credential: ApiCredentialPayload) => {
     setState(s => ({ ...s, credentialStatus: 'validating', errorMessage: undefined }))
 
     try {
-      if (!credential.trim()) {
+      const trimmedKey = credential.apiKey.trim()
+      const trimmedBaseUrl = credential.baseUrl?.trim() ?? ''
+
+      if (!trimmedKey) {
         setState(s => ({
           ...s,
           credentialStatus: 'error',
@@ -170,7 +178,27 @@ export function useOnboarding({
         return
       }
 
-      await handleSaveConfig(credential)
+      let baseUrlToSave: string | null | undefined = undefined
+      if (trimmedBaseUrl) {
+        try {
+          const parsed = new URL(trimmedBaseUrl)
+          if (!['http:', 'https:'].includes(parsed.protocol)) {
+            throw new Error('Invalid protocol')
+          }
+          baseUrlToSave = trimmedBaseUrl
+        } catch {
+          setState(s => ({
+            ...s,
+            credentialStatus: 'error',
+            errorMessage: 'Base URL must be a valid http(s) URL.',
+          }))
+          return
+        }
+      } else {
+        baseUrlToSave = null
+      }
+
+      await handleSaveConfig({ credential: trimmedKey, baseUrl: baseUrlToSave })
 
       setState(s => ({
         ...s,
@@ -221,7 +249,7 @@ export function useOnboarding({
     setState(s => ({ ...s, credentialStatus: 'validating', errorMessage: undefined }))
 
     try {
-      await handleSaveConfig(existingClaudeToken)
+      await handleSaveConfig({ credential: existingClaudeToken })
 
       setState(s => ({
         ...s,
@@ -283,7 +311,7 @@ export function useOnboarding({
       if (result.success && result.token) {
         setExistingClaudeToken(result.token)
         setIsWaitingForCode(false)
-        await handleSaveConfig(result.token)
+        await handleSaveConfig({ credential: result.token })
 
         setState(s => ({
           ...s,

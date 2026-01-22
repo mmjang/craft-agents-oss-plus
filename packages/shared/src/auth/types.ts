@@ -19,6 +19,8 @@ export interface AuthState {
     hasCredentials: boolean;
     /** Anthropic API key (if using api_key auth type) */
     apiKey: string | null;
+    /** Optional Anthropic API base URL override for API key billing */
+    apiBaseUrl: string | null;
     /** Claude Max OAuth token (if using oauth_token auth type) */
     claudeOAuthToken: string | null;
   };

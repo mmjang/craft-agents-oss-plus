@@ -65,7 +65,9 @@ export const meta: DetailsPageMeta = {
 
 interface ApiKeyDialogProps {
   value: string
+  baseUrl: string
   onChange: (value: string) => void
+  onBaseUrlChange: (value: string) => void
   onSave: () => void
   onCancel: () => void
   isSaving: boolean
@@ -73,7 +75,7 @@ interface ApiKeyDialogProps {
   error?: string
 }
 
-function ApiKeyDialogContent({ value, onChange, onSave, onCancel, isSaving, hasExistingKey, error }: ApiKeyDialogProps) {
+function ApiKeyDialogContent({ value, baseUrl, onChange, onBaseUrlChange, onSave, onCancel, isSaving, hasExistingKey, error }: ApiKeyDialogProps) {
   const [showValue, setShowValue] = useState(false)
 
   return (
@@ -116,6 +118,22 @@ function ApiKeyDialogContent({ value, onChange, onSave, onCancel, isSaving, hasE
         </button>
       </div>
 
+      {/* Base URL */}
+      <div className="space-y-2">
+        <Label htmlFor="api-base-url">API base URL (optional)</Label>
+        <Input
+          id="api-base-url"
+          type="text"
+          value={baseUrl}
+          onChange={(e) => onBaseUrlChange(e.target.value)}
+          placeholder="https://api.anthropic.com"
+          disabled={isSaving}
+        />
+        <p className="text-xs text-muted-foreground">
+          Leave blank to use Anthropic&apos;s default endpoint. Set this if you&apos;re using a proxy or gateway.
+        </p>
+      </div>
+
       {/* Error message */}
       {error && (
         <p className="text-xs text-destructive">{error}</p>
@@ -125,7 +143,7 @@ function ApiKeyDialogContent({ value, onChange, onSave, onCancel, isSaving, hasE
       <div className="flex items-center gap-2 pt-2">
         <Button
           onClick={onSave}
-          disabled={!value.trim() || isSaving}
+          disabled={(!value.trim() && !hasExistingKey) || isSaving}
         >
           {isSaving ? (
             <>
@@ -338,6 +356,8 @@ export default function AppSettingsPage() {
 
   // API Key state
   const [apiKeyValue, setApiKeyValue] = useState('')
+  const [apiBaseUrl, setApiBaseUrl] = useState('')
+  const [savedApiBaseUrl, setSavedApiBaseUrl] = useState('')
   const [isSavingApiKey, setIsSavingApiKey] = useState(false)
   const [apiKeyError, setApiKeyError] = useState<string | undefined>()
 
@@ -375,6 +395,8 @@ export default function AppSettingsPage() {
         ])
         setAuthType(billing.authType)
         setHasCredential(billing.hasCredential)
+        setApiBaseUrl(billing.baseUrl ?? '')
+        setSavedApiBaseUrl(billing.baseUrl ?? '')
         setNotificationsEnabled(notificationsOn)
       } catch (error) {
         console.error('Failed to load settings:', error)
@@ -437,22 +459,54 @@ export default function AppSettingsPage() {
   const handleCancel = useCallback(() => {
     setExpandedMethod(null)
     setApiKeyValue('')
+    setApiBaseUrl(savedApiBaseUrl)
     setApiKeyError(undefined)
     setClaudeOAuthStatus('idle')
     setClaudeOAuthError(undefined)
-  }, [])
+  }, [savedApiBaseUrl])
 
   // Save API key
   const handleSaveApiKey = useCallback(async () => {
-    if (!window.electronAPI || !apiKeyValue.trim()) return
+    if (!window.electronAPI) return
+
+    const trimmedKey = apiKeyValue.trim()
+    const trimmedBaseUrl = apiBaseUrl.trim()
+    const hasExistingKey = hasCredential && authType === 'api_key'
+
+    if (!trimmedKey && !hasExistingKey) {
+      setApiKeyError('Please enter your API key')
+      return
+    }
+
+    let baseUrlToSave: string | null | undefined = undefined
+    if (trimmedBaseUrl) {
+      try {
+        const parsed = new URL(trimmedBaseUrl)
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+          throw new Error('Base URL must use http or https')
+        }
+        baseUrlToSave = trimmedBaseUrl
+      } catch {
+        setApiKeyError('Base URL must be a valid http(s) URL.')
+        return
+      }
+    } else {
+      baseUrlToSave = null
+    }
 
     setIsSavingApiKey(true)
     setApiKeyError(undefined)
     try {
-      await window.electronAPI.updateBillingMethod('api_key', apiKeyValue.trim())
+      await window.electronAPI.updateBillingMethod({
+        authType: 'api_key',
+        credential: trimmedKey || undefined,
+        baseUrl: baseUrlToSave,
+      })
       setAuthType('api_key')
       setHasCredential(true)
       setApiKeyValue('')
+      setApiBaseUrl(baseUrlToSave ?? '')
+      setSavedApiBaseUrl(baseUrlToSave ?? '')
       setExpandedMethod(null)
     } catch (error) {
       console.error('Failed to save API key:', error)
@@ -460,7 +514,7 @@ export default function AppSettingsPage() {
     } finally {
       setIsSavingApiKey(false)
     }
-  }, [apiKeyValue])
+  }, [apiKeyValue, apiBaseUrl, hasCredential, authType])
 
   // Use existing Claude token
   const handleUseExistingClaudeToken = useCallback(async () => {
@@ -469,9 +523,14 @@ export default function AppSettingsPage() {
     setClaudeOAuthStatus('loading')
     setClaudeOAuthError(undefined)
     try {
-      await window.electronAPI.updateBillingMethod('oauth_token', existingClaudeToken)
+      await window.electronAPI.updateBillingMethod({
+        authType: 'oauth_token',
+        credential: existingClaudeToken,
+      })
       setAuthType('oauth_token')
       setHasCredential(true)
+      setApiBaseUrl('')
+      setSavedApiBaseUrl('')
       setClaudeOAuthStatus('success')
       setExpandedMethod(null)
     } catch (error) {
@@ -519,9 +578,14 @@ export default function AppSettingsPage() {
       const result = await window.electronAPI.exchangeClaudeCode(code.trim())
 
       if (result.success && result.token) {
-        await window.electronAPI.updateBillingMethod('oauth_token', result.token)
+        await window.electronAPI.updateBillingMethod({
+          authType: 'oauth_token',
+          credential: result.token,
+        })
         setAuthType('oauth_token')
         setHasCredential(true)
+        setApiBaseUrl('')
+        setSavedApiBaseUrl('')
         setClaudeOAuthStatus('success')
         setIsWaitingForCode(false)
         setAuthCode('')
@@ -653,7 +717,9 @@ export default function AppSettingsPage() {
                   </DialogHeader>
                   <ApiKeyDialogContent
                     value={apiKeyValue}
+                    baseUrl={apiBaseUrl}
                     onChange={setApiKeyValue}
+                    onBaseUrlChange={setApiBaseUrl}
                     onSave={handleSaveApiKey}
                     onCancel={handleCancel}
                     isSaving={isSavingApiKey}

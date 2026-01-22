@@ -9,12 +9,16 @@ import type { BillingMethod } from "./BillingMethodStep"
 import { StepFormLayout, BackButton, ContinueButton, type StepIconVariant } from "./primitives"
 
 export type CredentialStatus = 'idle' | 'validating' | 'success' | 'error'
+export interface ApiCredentialPayload {
+  apiKey: string
+  baseUrl?: string | null
+}
 
 interface CredentialsStepProps {
   billingMethod: BillingMethod
   status: CredentialStatus
   errorMessage?: string
-  onSubmit: (credential: string) => void
+  onSubmit: (credential: ApiCredentialPayload) => void
   onStartOAuth?: () => void
   onBack: () => void
   // Claude OAuth specific
@@ -86,6 +90,7 @@ export function CredentialsStep({
   onCancelOAuth,
 }: CredentialsStepProps) {
   const [value, setValue] = useState('')
+  const [baseUrl, setBaseUrl] = useState('')
   const [showValue, setShowValue] = useState(false)
   const [authCode, setAuthCode] = useState('')
 
@@ -94,9 +99,10 @@ export function CredentialsStep({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (value.trim()) {
-      onSubmit(value.trim())
-    }
+    onSubmit({
+      apiKey: value.trim(),
+      baseUrl: baseUrl.trim() || null,
+    })
   }
 
   // Handle auth code submission
@@ -265,38 +271,65 @@ export function CredentialsStep({
       }
     >
       <form id="api-key-form" onSubmit={handleSubmit}>
-        <div className="space-y-2">
-          <Label htmlFor="api-key">Anthropic API Key</Label>
-          <div className={cn(
-            "relative rounded-md shadow-minimal transition-colors",
-            "bg-foreground-2 focus-within:bg-background"
-          )}>
-            <Input
-              id="api-key"
-              type={showValue ? 'text' : 'password'}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder="sk-ant-..."
-              className={cn(
-                "pr-10 border-0 bg-transparent shadow-none",
-                status === 'error' && "focus-visible:ring-destructive"
-              )}
-              disabled={status === 'validating'}
-              autoFocus
-            />
-            <button
-              type="button"
-              onClick={() => setShowValue(!showValue)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              tabIndex={-1}
-            >
-              {showValue ? (
-                <EyeOff className="size-4" />
-              ) : (
-                <Eye className="size-4" />
-              )}
-            </button>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="api-key">Anthropic API Key</Label>
+            <div className={cn(
+              "relative rounded-md shadow-minimal transition-colors",
+              "bg-foreground-2 focus-within:bg-background"
+            )}>
+              <Input
+                id="api-key"
+                type={showValue ? 'text' : 'password'}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="sk-ant-..."
+                className={cn(
+                  "pr-10 border-0 bg-transparent shadow-none",
+                  status === 'error' && "focus-visible:ring-destructive"
+                )}
+                disabled={status === 'validating'}
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setShowValue(!showValue)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showValue ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="api-base-url">API Base URL (optional)</Label>
+            <div className={cn(
+              "rounded-md shadow-minimal transition-colors",
+              "bg-foreground-2 focus-within:bg-background"
+            )}>
+              <Input
+                id="api-base-url"
+                type="text"
+                value={baseUrl}
+                onChange={(e) => setBaseUrl(e.target.value)}
+                placeholder="https://api.anthropic.com"
+                className={cn(
+                  "border-0 bg-transparent shadow-none font-mono text-sm",
+                  status === 'error' && "focus-visible:ring-destructive"
+                )}
+                disabled={status === 'validating'}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Leave blank to use Anthropic&apos;s default endpoint or set your proxy URL here.
+            </p>
+          </div>
+
           {status === 'error' && errorMessage && (
             <p className="text-sm text-destructive">{errorMessage}</p>
           )}

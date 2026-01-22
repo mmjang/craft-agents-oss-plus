@@ -82,6 +82,7 @@ export function registerOnboardingHandlers(sessionManager: SessionManager): void
     authType?: AuthType  // Optional - if not provided, preserves existing auth type
     workspace?: { name: string; iconUrl?: string; mcpUrl?: string }  // Optional - if not provided, only updates billing
     credential?: string
+    baseUrl?: string | null
   }): Promise<OnboardingSaveResult> => {
     mainLog.info('[Onboarding:Main] ONBOARDING_SAVE_CONFIG received', {
       authType: config.authType,
@@ -90,6 +91,7 @@ export function registerOnboardingHandlers(sessionManager: SessionManager): void
       mcpUrl: config.workspace?.mcpUrl,
       hasCredential: !!config.credential,
       credentialLength: config.credential?.length,
+      hasBaseUrl: Object.prototype.hasOwnProperty.call(config, 'baseUrl'),
     })
 
     try {
@@ -144,6 +146,8 @@ export function registerOnboardingHandlers(sessionManager: SessionManager): void
         newConfig.authType = config.authType
       }
 
+      const targetAuthType = newConfig.authType
+
       // 4. Create workspace only if workspace info is provided
       let workspaceId: string | undefined
       if (config.workspace) {
@@ -193,12 +197,26 @@ export function registerOnboardingHandlers(sessionManager: SessionManager): void
         }
       }
 
-      // 5. Save config
+      // 5. Update Anthropic base URL override when provided
+      const hasBaseUrlField = Object.prototype.hasOwnProperty.call(config, 'baseUrl')
+      if (targetAuthType === 'oauth_token') {
+        // Clear base URL when using Claude OAuth billing
+        delete newConfig.anthropicBaseUrl
+      } else if (targetAuthType === 'api_key' && hasBaseUrlField) {
+        const trimmedBaseUrl = config.baseUrl?.trim()
+        if (trimmedBaseUrl) {
+          newConfig.anthropicBaseUrl = trimmedBaseUrl
+        } else {
+          delete newConfig.anthropicBaseUrl
+        }
+      }
+
+      // 6. Save config
       mainLog.info('[Onboarding:Main] Saving config to disk...')
       saveConfig(newConfig)
       mainLog.info('[Onboarding:Main] Config saved successfully')
 
-      // 6. Reinitialize SessionManager auth to pick up new credentials
+      // 7. Reinitialize SessionManager auth to pick up new credentials
       try {
         mainLog.info('[Onboarding:Main] Reinitializing SessionManager auth...')
         await sessionManager.reinitializeAuth()

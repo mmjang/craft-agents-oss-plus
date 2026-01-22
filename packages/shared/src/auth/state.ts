@@ -24,6 +24,8 @@ export interface AuthState {
     hasCredentials: boolean;
     /** Anthropic API key (if using api_key auth type) */
     apiKey: string | null;
+    /** api base URL (if using api_key auth type) */
+    apiBaseUrl: string | null;
     /** Claude Max OAuth token (if using oauth_token auth type) */
     claudeOAuthToken: string | null;
   };
@@ -121,6 +123,7 @@ export async function getAuthState(): Promise<AuthState> {
 
   const apiKey = await manager.getApiKey();
   const claudeOAuth = await getValidClaudeOAuthToken();
+  const apiBaseUrl = config?.anthropicBaseUrl?.trim() || null;
   const activeWorkspace = getActiveWorkspace();
 
   // Determine if billing credentials are satisfied based on auth type
@@ -136,6 +139,7 @@ export async function getAuthState(): Promise<AuthState> {
       type: config?.authType ?? null,
       hasCredentials,
       apiKey,
+      apiBaseUrl,
       claudeOAuthToken: claudeOAuth,
     },
     workspace: {
