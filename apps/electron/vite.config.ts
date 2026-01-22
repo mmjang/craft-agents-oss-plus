@@ -2,9 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { resolve } from 'path'
+import { inspectorServer } from '@react-dev-inspector/vite-plugin'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), inspectorServer()],
   root: resolve(__dirname, 'src/renderer'),
   base: './',
   build: {

@@ -5,6 +5,7 @@ import App from './App'
 import { ThemeProvider } from './context/ThemeContext'
 import { I18nProvider } from './i18n/I18nContext'
 import { Toaster } from '@/components/ui/sonner'
+import { Inspector } from 'react-dev-inspector'
 import './index.css'
 
 /**
@@ -25,5 +26,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         </ThemeProvider>
       </I18nProvider>
     </JotaiProvider>
+    <Inspector />
   </React.StrictMode>
 )
