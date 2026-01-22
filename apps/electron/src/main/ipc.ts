@@ -1226,6 +1226,171 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     }
   })
 
+  // ============================================================
+  // Workspace Tree Panel (workspace directory file browser)
+  // ============================================================
+
+  // Directories to filter out when scanning workspace
+  const WORKSPACE_IGNORED_DIRS = new Set([
+    '.git',
+    'node_modules',
+    'dist',
+    'build',
+    '.next',
+    '__pycache__',
+    '.venv',
+    '.craft-agent',
+    'coverage',
+    '.cache',
+    '.turbo',
+  ])
+
+  // Recursive directory scanner for workspace files
+  // Filters out common build/cache directories and hidden files
+  // Depth limit: 5 levels to prevent excessive scanning
+  async function scanWorkspaceDirectory(
+    dirPath: string,
+    depth: number = 0,
+    maxDepth: number = 5
+  ): Promise<import('../shared/types').SessionFile[]> {
+    if (depth >= maxDepth) return []
+
+    const { readdir, stat } = await import('fs/promises')
+    let entries: import('fs').Dirent[]
+    try {
+      entries = await readdir(dirPath, { withFileTypes: true })
+    } catch {
+      // Directory might not exist or be inaccessible
+      return []
+    }
+    const files: import('../shared/types').SessionFile[] = []
+
+    for (const entry of entries) {
+      // Skip hidden files and ignored directories
+      if (entry.name.startsWith('.')) continue
+      if (entry.isDirectory() && WORKSPACE_IGNORED_DIRS.has(entry.name)) continue
+
+      const fullPath = join(dirPath, entry.name)
+
+      if (entry.isDirectory()) {
+        // Recursively scan subdirectory
+        const children = await scanWorkspaceDirectory(fullPath, depth + 1, maxDepth)
+        // Only include non-empty directories
+        if (children.length > 0) {
+          files.push({
+            name: entry.name,
+            path: fullPath,
+            type: 'directory',
+            children,
+          })
+        }
+      } else {
+        try {
+          const stats = await stat(fullPath)
+          files.push({
+            name: entry.name,
+            path: fullPath,
+            type: 'file',
+            size: stats.size,
+          })
+        } catch {
+          // File might have been deleted between readdir and stat
+          continue
+        }
+      }
+    }
+
+    // Sort: directories first, then alphabetically
+    return files.sort((a, b) => {
+      if (a.type !== b.type) return a.type === 'directory' ? -1 : 1
+      return a.name.localeCompare(b.name)
+    })
+  }
+
+  // Get files in workspace directory (recursive tree structure)
+  ipcMain.handle(IPC_CHANNELS.GET_WORKSPACE_FILES, async (_event, workspaceId: string) => {
+    const workspace = getWorkspaceByNameOrId(workspaceId)
+    if (!workspace) {
+      ipcLog.error(`GET_WORKSPACE_FILES: Workspace not found: ${workspaceId}`)
+      return []
+    }
+
+    try {
+      return await scanWorkspaceDirectory(workspace.rootPath)
+    } catch (error) {
+      ipcLog.error('Failed to get workspace files:', error)
+      return []
+    }
+  })
+
+  // Workspace file watcher state - only one workspace watched at a time
+  let workspaceFileWatcher: import('fs').FSWatcher | null = null
+  let watchedWorkspaceId: string | null = null
+  let workspaceFileChangeDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
+  // Start watching a workspace directory for file changes
+  ipcMain.handle(IPC_CHANNELS.WATCH_WORKSPACE_FILES, async (_event, workspaceId: string) => {
+    const workspace = getWorkspaceByNameOrId(workspaceId)
+    if (!workspace) return
+
+    // Close existing watcher if watching a different workspace
+    if (workspaceFileWatcher) {
+      workspaceFileWatcher.close()
+      workspaceFileWatcher = null
+    }
+    if (workspaceFileChangeDebounceTimer) {
+      clearTimeout(workspaceFileChangeDebounceTimer)
+      workspaceFileChangeDebounceTimer = null
+    }
+
+    watchedWorkspaceId = workspaceId
+
+    try {
+      const { watch } = await import('fs')
+      workspaceFileWatcher = watch(workspace.rootPath, { recursive: true }, (eventType, filename) => {
+        // Ignore hidden files and ignored directories
+        if (filename) {
+          const parts = filename.split(/[/\\]/)
+          if (parts.some(part => part.startsWith('.') || WORKSPACE_IGNORED_DIRS.has(part))) {
+            return
+          }
+        }
+
+        // Debounce: wait 200ms before notifying to batch rapid changes
+        if (workspaceFileChangeDebounceTimer) {
+          clearTimeout(workspaceFileChangeDebounceTimer)
+        }
+        workspaceFileChangeDebounceTimer = setTimeout(() => {
+          // Notify all windows that workspace files changed
+          const { BrowserWindow } = require('electron')
+          for (const win of BrowserWindow.getAllWindows()) {
+            win.webContents.send(IPC_CHANNELS.WORKSPACE_FILES_CHANGED, watchedWorkspaceId)
+          }
+        }, 200)
+      })
+
+      ipcLog.info(`Watching workspace files: ${workspaceId}`)
+    } catch (error) {
+      ipcLog.error('Failed to start workspace file watcher:', error)
+    }
+  })
+
+  // Stop watching workspace files
+  ipcMain.handle(IPC_CHANNELS.UNWATCH_WORKSPACE_FILES, async () => {
+    if (workspaceFileWatcher) {
+      workspaceFileWatcher.close()
+      workspaceFileWatcher = null
+    }
+    if (workspaceFileChangeDebounceTimer) {
+      clearTimeout(workspaceFileChangeDebounceTimer)
+      workspaceFileChangeDebounceTimer = null
+    }
+    if (watchedWorkspaceId) {
+      ipcLog.info(`Stopped watching workspace files: ${watchedWorkspaceId}`)
+      watchedWorkspaceId = null
+    }
+  })
+
   // Preview windows removed - now using in-app overlays (see ChatDisplay.tsx)
 
   // ============================================================

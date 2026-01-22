@@ -8,6 +8,7 @@
 import * as React from 'react'
 import type { RightSidebarPanel } from '../../../shared/types'
 import { SessionMetadataPanel } from '../right-sidebar/SessionMetadataPanel'
+import { WorkspaceTreePanel } from '../right-sidebar/WorkspaceTreePanel'
 import { useI18n } from '@/i18n/I18nContext'
 
 export interface RightSidebarProps {
@@ -15,6 +16,8 @@ export interface RightSidebarProps {
   panel: RightSidebarPanel
   /** Session ID (required for session-specific panels) */
   sessionId?: string
+  /** Workspace ID (required for workspace-specific panels) */
+  workspaceId?: string
   /** Close button to display in panel header */
   closeButton?: React.ReactNode
 }
@@ -22,11 +25,14 @@ export interface RightSidebarProps {
 /**
  * Routes right sidebar content based on panel type
  */
-export function RightSidebar({ panel, sessionId, closeButton }: RightSidebarProps) {
+export function RightSidebar({ panel, sessionId, workspaceId, closeButton }: RightSidebarProps) {
   const { t } = useI18n()
   switch (panel.type) {
     case 'sessionMetadata':
       return <SessionMetadataPanel sessionId={sessionId} closeButton={closeButton} />
+
+    case 'workspaceTree':
+      return <WorkspaceTreePanel workspaceId={workspaceId} closeButton={closeButton} />
 
     case 'files':
       // TODO: Implement SessionFilesPanel

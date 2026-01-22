@@ -212,6 +212,16 @@ const api: ElectronAPI = {
     return () => ipcRenderer.removeListener(IPC_CHANNELS.SESSION_FILES_CHANGED, handler)
   },
 
+  // Workspace Tree Panel
+  getWorkspaceFiles: (workspaceId: string) => ipcRenderer.invoke(IPC_CHANNELS.GET_WORKSPACE_FILES, workspaceId),
+  watchWorkspaceFiles: (workspaceId: string) => ipcRenderer.invoke(IPC_CHANNELS.WATCH_WORKSPACE_FILES, workspaceId),
+  unwatchWorkspaceFiles: () => ipcRenderer.invoke(IPC_CHANNELS.UNWATCH_WORKSPACE_FILES),
+  onWorkspaceFilesChanged: (callback: (workspaceId: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, workspaceId: string) => callback(workspaceId)
+    ipcRenderer.on(IPC_CHANNELS.WORKSPACE_FILES_CHANGED, handler)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.WORKSPACE_FILES_CHANGED, handler)
+  },
+
   // Sources
   getSources: (workspaceId: string) => ipcRenderer.invoke(IPC_CHANNELS.SOURCES_GET, workspaceId),
   createSource: (workspaceId: string, config: Partial<import('@craft-agent/shared/sources').FolderSourceConfig>) =>

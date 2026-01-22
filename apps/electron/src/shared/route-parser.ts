@@ -605,6 +605,7 @@ export function buildRouteFromNavigationState(state: NavigationState): string {
  *
  * Examples:
  *   'sessionMetadata' -> { type: 'sessionMetadata' }
+ *   'workspaceTree' -> { type: 'workspaceTree' }
  *   'history' -> { type: 'history' }
  *   'files' -> { type: 'files' }
  *   'files/src/main.ts' -> { type: 'files', path: 'src/main.ts' }
@@ -615,6 +616,9 @@ export function parseRightSidebarParam(sidebarStr?: string): RightSidebarPanel |
 
   if (sidebarStr === 'sessionMetadata') {
     return { type: 'sessionMetadata' }
+  }
+  if (sidebarStr === 'workspaceTree') {
+    return { type: 'workspaceTree' }
   }
   if (sidebarStr === 'history') {
     return { type: 'history' }
@@ -641,6 +645,8 @@ export function buildRightSidebarParam(panel?: RightSidebarPanel): string | unde
   switch (panel.type) {
     case 'sessionMetadata':
       return 'sessionMetadata'
+    case 'workspaceTree':
+      return 'workspaceTree'
     case 'history':
       return 'history'
     case 'files':

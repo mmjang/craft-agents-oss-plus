@@ -479,6 +479,12 @@ export const IPC_CHANNELS = {
   UNWATCH_SESSION_FILES: 'sessions:unwatchFiles',  // Stop watching
   SESSION_FILES_CHANGED: 'sessions:filesChanged',  // Event: main → renderer
 
+  // Workspace Tree Panel
+  GET_WORKSPACE_FILES: 'workspace:getFiles',
+  WATCH_WORKSPACE_FILES: 'workspace:watchFiles',
+  UNWATCH_WORKSPACE_FILES: 'workspace:unwatchFiles',
+  WORKSPACE_FILES_CHANGED: 'workspace:filesChanged',
+
   // Theme
   GET_SYSTEM_THEME: 'theme:getSystemPreference',
   SYSTEM_THEME_CHANGED: 'theme:systemChanged',
@@ -770,6 +776,12 @@ export interface ElectronAPI {
   unwatchSessionFiles(): Promise<void>
   onSessionFilesChanged(callback: (sessionId: string) => void): () => void
 
+  // Workspace Tree Panel
+  getWorkspaceFiles(workspaceId: string): Promise<SessionFile[]>
+  watchWorkspaceFiles(workspaceId: string): Promise<void>
+  unwatchWorkspaceFiles(): Promise<void>
+  onWorkspaceFilesChanged(callback: (workspaceId: string) => void): () => void
+
   // Sources
   getSources(workspaceId: string): Promise<LoadedSource[]>
   createSource(workspaceId: string, config: Partial<FolderSourceConfig>): Promise<FolderSourceConfig>
@@ -917,6 +929,7 @@ export type RightSidebarPanel =
   | { type: 'sessionMetadata' }
   | { type: 'files'; path?: string }
   | { type: 'history' }
+  | { type: 'workspaceTree' }
   | { type: 'none' }
 
 /**

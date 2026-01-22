@@ -1696,7 +1696,8 @@ function AppShellContent({
                   style={{ width: rightSidebarWidth }}
                 >
                   <RightSidebar
-                    panel={{ type: 'sessionMetadata' }}
+                    panel={{ type: 'workspaceTree' }}
+                    workspaceId={activeWorkspaceId ?? undefined}
                     sessionId={isChatsNavigation(navState) && navState.details ? navState.details.sessionId : undefined}
                     closeButton={rightSidebarCloseButton}
                   />
@@ -1729,7 +1730,8 @@ function AppShellContent({
                   >
                     <div className="h-full bg-foreground-2 overflow-hidden shadow-strong rounded-[12px]">
                       <RightSidebar
-                        panel={{ type: 'sessionMetadata' }}
+                        panel={{ type: 'workspaceTree' }}
+                        workspaceId={activeWorkspaceId ?? undefined}
                         sessionId={isChatsNavigation(navState) && navState.details ? navState.details.sessionId : undefined}
                         closeButton={rightSidebarCloseButton}
                       />

@@ -344,4 +344,8 @@ export default {
   'settings.navigator.shortcutsDesc': '快捷键参考',
   'settings.navigator.preferences': '偏好',
   'settings.navigator.preferencesDesc': '你的个人偏好',
+
+  'workspaceTree.title': '工作区文件',
+  'workspaceTree.empty': '工作区中没有文件。',
+  'workspaceTree.loading': '加载中...',
 }

@@ -344,4 +344,8 @@ export default {
   'settings.navigator.shortcutsDesc': 'Keyboard shortcuts reference',
   'settings.navigator.preferences': 'Preferences',
   'settings.navigator.preferencesDesc': 'Your personal preferences',
+
+  'workspaceTree.title': 'Workspace Files',
+  'workspaceTree.empty': 'No files in workspace.',
+  'workspaceTree.loading': 'Loading...',
 }
