@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { useMenuComponents } from '@/components/ui/menu-context'
 import { getDocUrl, type DocFeature } from '@craft-agent/shared/docs/doc-links'
+import { useI18n } from '@/i18n/I18nContext'
 
 export type SidebarMenuType = 'allChats' | 'flagged' | 'status' | 'sources' | 'skills' | 'newChat'
 
@@ -56,13 +57,14 @@ export function SidebarMenu({
 }: SidebarMenuProps) {
   // Get menu components from context (works with both DropdownMenu and ContextMenu)
   const { MenuItem, Separator } = useMenuComponents()
+  const { t } = useI18n()
 
   // New Chat: only shows "Open in New Window"
   if (type === 'newChat') {
     return (
       <MenuItem onClick={() => window.electronAPI.openUrl('craftagents://action/new-chat?window=focused')}>
         <AppWindow className="h-3.5 w-3.5" />
-        <span className="flex-1">Open in New Window</span>
+        <span className="flex-1">{t('sidebar.openInNewWindow', 'Open in New Window')}</span>
       </MenuItem>
     )
   }
@@ -72,7 +74,7 @@ export function SidebarMenu({
     return (
       <MenuItem onClick={onConfigureStatuses}>
         <Settings2 className="h-3.5 w-3.5" />
-        <span className="flex-1">Configure Statuses</span>
+        <span className="flex-1">{t('sidebar.configureStatuses', 'Configure Statuses')}</span>
       </MenuItem>
     )
   }
@@ -86,19 +88,19 @@ export function SidebarMenu({
 
     // Display label varies by source type
     const learnMoreLabel = sourceType === 'api'
-      ? 'Learn More about APIs'
+      ? t('sidebar.learnMoreApi', 'Learn More about APIs')
       : sourceType === 'mcp'
-        ? 'Learn More about MCP'
+        ? t('sidebar.learnMoreMcp', 'Learn More about MCP')
         : sourceType === 'local'
-          ? 'Learn More about Local Folders'
-          : 'Learn More about Sources'
+          ? t('sidebar.learnMoreLocal', 'Learn More about Local Folders')
+          : t('sidebar.learnMoreSources', 'Learn More about Sources')
 
     return (
       <>
         {onAddSource && (
           <MenuItem onClick={onAddSource}>
             <Plus className="h-3.5 w-3.5" />
-            <span className="flex-1">Add Source</span>
+            <span className="flex-1">{t('sidebar.addSource', 'Add Source')}</span>
           </MenuItem>
         )}
         <Separator />
@@ -115,7 +117,7 @@ export function SidebarMenu({
     return (
       <MenuItem onClick={onAddSkill}>
         <Plus className="h-3.5 w-3.5" />
-        <span className="flex-1">Add Skill</span>
+        <span className="flex-1">{t('sidebar.addSkill', 'Add Skill')}</span>
       </MenuItem>
     )
   }

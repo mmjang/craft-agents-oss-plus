@@ -53,6 +53,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import { useI18n } from '@/i18n/I18nContext'
+import type { Locale } from '@/i18n/translations'
 
 export const meta: DetailsPageMeta = {
   navigator: 'settings',
@@ -77,12 +79,13 @@ interface ApiKeyDialogProps {
 
 function ApiKeyDialogContent({ value, baseUrl, onChange, onBaseUrlChange, onSave, onCancel, isSaving, hasExistingKey, error }: ApiKeyDialogProps) {
   const [showValue, setShowValue] = useState(false)
+  const { t } = useI18n()
 
   return (
     <div className="space-y-4">
       {/* Description */}
       <p className="text-sm text-muted-foreground">
-        Pay-as-you-go with your own API key.{' '}
+        {t('appSettings.apiKey.description', 'Pay-as-you-go with your own API key.')}{' '}
         <a
           href="https://console.anthropic.com"
           target="_blank"
@@ -93,7 +96,7 @@ function ApiKeyDialogContent({ value, baseUrl, onChange, onBaseUrlChange, onSave
             window.electronAPI?.openUrl('https://console.anthropic.com')
           }}
         >
-          Get one from Anthropic
+          {t('appSettings.apiKey.getOne', 'Get one from Anthropic')}
           <ExternalLink className="size-3" />
         </a>
       </p>
@@ -120,7 +123,7 @@ function ApiKeyDialogContent({ value, baseUrl, onChange, onBaseUrlChange, onSave
 
       {/* Base URL */}
       <div className="space-y-2">
-        <Label htmlFor="api-base-url">API base URL (optional)</Label>
+        <Label htmlFor="api-base-url">{t('appSettings.apiKey.baseUrlLabel', 'API base URL (optional)')}</Label>
         <Input
           id="api-base-url"
           type="text"
@@ -130,7 +133,7 @@ function ApiKeyDialogContent({ value, baseUrl, onChange, onBaseUrlChange, onSave
           disabled={isSaving}
         />
         <p className="text-xs text-muted-foreground">
-          Leave blank to use Anthropic&apos;s default endpoint. Set this if you&apos;re using a proxy or gateway.
+          {t('appSettings.apiKey.baseUrlHint', "Leave blank to use Anthropic's default endpoint. Set this if you're using a proxy or gateway.")}
         </p>
       </div>
 
@@ -148,12 +151,12 @@ function ApiKeyDialogContent({ value, baseUrl, onChange, onBaseUrlChange, onSave
           {isSaving ? (
             <>
               <Spinner className="mr-1.5" />
-              Validating...
+              {t('common.validating', 'Validating...')}
             </>
           ) : (
             <>
               <Check className="size-3 mr-1.5" />
-              {hasExistingKey ? 'Update Key' : 'Save'}
+              {hasExistingKey ? t('appSettings.apiKey.update', 'Update Key') : t('common.save', 'Save')}
             </>
           )}
         </Button>
@@ -162,7 +165,7 @@ function ApiKeyDialogContent({ value, baseUrl, onChange, onBaseUrlChange, onSave
           onClick={onCancel}
           disabled={isSaving}
         >
-          Cancel
+          {t('common.cancel', 'Cancel')}
         </Button>
       </div>
     </div>
@@ -190,13 +193,14 @@ type ClaudeOAuthDialogProps = ClaudeOAuthDialogBaseProps & (
 
 function ClaudeOAuthDialogContent(props: ClaudeOAuthDialogProps) {
   const { existingToken, isLoading, onUseExisting, onStartOAuth, onCancel, status, errorMessage } = props
+  const { t } = useI18n()
 
   if (status === 'success') {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm text-success">
           <CheckCircle2 className="size-4" />
-          Connected to Claude
+          {t('appSettings.oauth.connected', 'Connected to Claude')}
         </div>
       </div>
     )
@@ -216,17 +220,17 @@ function ClaudeOAuthDialogContent(props: ClaudeOAuthDialogProps) {
     return (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Copy the authorization code from your browser and paste it below.
+          {t('appSettings.oauth.copyCode', 'Copy the authorization code from your browser and paste it below.')}
         </p>
         <div className="space-y-2">
-          <Label htmlFor="auth-code">Authorization Code</Label>
+          <Label htmlFor="auth-code">{t('appSettings.oauth.codeLabel', 'Authorization Code')}</Label>
           <div className="relative rounded-md shadow-minimal transition-colors bg-foreground-2 focus-within:bg-background">
             <Input
               id="auth-code"
               type="text"
               value={authCode}
               onChange={(e) => onAuthCodeChange(e.target.value)}
-              placeholder="Paste your authorization code here"
+              placeholder={t('appSettings.oauth.codePlaceholder', 'Paste your authorization code here')}
               className="border-0 bg-transparent shadow-none font-mono text-sm"
               disabled={status === 'loading'}
               autoFocus
@@ -247,7 +251,7 @@ function ClaudeOAuthDialogContent(props: ClaudeOAuthDialogProps) {
             onClick={onCancel}
             disabled={status === 'loading'}
           >
-            Cancel
+            {t('common.cancel', 'Cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -256,10 +260,10 @@ function ClaudeOAuthDialogContent(props: ClaudeOAuthDialogProps) {
             {status === 'loading' ? (
               <>
                 <Spinner className="mr-1.5" />
-                Connecting...
+                {t('common.connecting', 'Connecting...')}
               </>
             ) : (
-              'Connect'
+              t('common.connect', 'Connect')
             )}
           </Button>
         </div>
@@ -270,7 +274,7 @@ function ClaudeOAuthDialogContent(props: ClaudeOAuthDialogProps) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Use your Claude Pro or Max subscription for unlimited access.
+        {t('appSettings.oauth.desc', 'Use your Claude Pro or Max subscription for unlimited access.')}
       </p>
       <div className="flex items-center justify-end gap-2 pt-2">
         {existingToken ? (
@@ -281,12 +285,12 @@ function ClaudeOAuthDialogContent(props: ClaudeOAuthDialogProps) {
             {status === 'loading' ? (
               <>
                 <Spinner className="mr-1.5" />
-                Connecting...
+                {t('common.connecting', 'Connecting...')}
               </>
             ) : (
               <>
                 <CheckCircle2 className="size-3 mr-1.5" />
-                Use Existing Token
+                {t('appSettings.oauth.useExisting', 'Use Existing Token')}
               </>
             )}
           </Button>
@@ -298,12 +302,12 @@ function ClaudeOAuthDialogContent(props: ClaudeOAuthDialogProps) {
             {status === 'loading' ? (
               <>
                 <Spinner className="mr-1.5" />
-                Starting...
+                {t('common.starting', 'Starting...')}
               </>
             ) : (
               <>
                 <ExternalLink className="size-3 mr-1.5" />
-                Sign in with Claude
+                {t('appSettings.oauth.signIn', 'Sign in with Claude')}
               </>
             )}
           </Button>
@@ -313,7 +317,7 @@ function ClaudeOAuthDialogContent(props: ClaudeOAuthDialogProps) {
           onClick={onCancel}
           disabled={isLoading}
         >
-          Cancel
+          {t('common.cancel', 'Cancel')}
         </Button>
       </div>
       {existingToken && (
@@ -324,7 +328,7 @@ function ClaudeOAuthDialogContent(props: ClaudeOAuthDialogProps) {
             disabled={isLoading}
             className="text-muted-foreground hover:text-foreground"
           >
-            Or sign in with a different account
+            {t('appSettings.oauth.signInOther', 'Or sign in with a different account')}
           </Button>
         </div>
       )}
@@ -340,6 +344,7 @@ function ClaudeOAuthDialogContent(props: ClaudeOAuthDialogProps) {
 // ============================================
 
 export default function AppSettingsPage() {
+  const { t, locale, setLocale } = useI18n()
   const { mode, setMode, colorTheme, setColorTheme, setPreviewColorTheme, font, setFont } = useTheme()
 
   // Get workspace ID from context for loading preset themes
@@ -474,7 +479,7 @@ export default function AppSettingsPage() {
     const hasExistingKey = hasCredential && authType === 'api_key'
 
     if (!trimmedKey && !hasExistingKey) {
-      setApiKeyError('Please enter your API key')
+      setApiKeyError(t('appSettings.apiKey.enterKey', 'Please enter your API key'))
       return
     }
 
@@ -483,11 +488,11 @@ export default function AppSettingsPage() {
       try {
         const parsed = new URL(trimmedBaseUrl)
         if (!['http:', 'https:'].includes(parsed.protocol)) {
-          throw new Error('Base URL must use http or https')
+          throw new Error(t('appSettings.apiKey.protocolError', 'Base URL must use http or https'))
         }
         baseUrlToSave = trimmedBaseUrl
       } catch {
-        setApiKeyError('Base URL must be a valid http(s) URL.')
+        setApiKeyError(t('appSettings.apiKey.urlInvalid', 'Base URL must be a valid http(s) URL.'))
         return
       }
     } else {
@@ -510,11 +515,11 @@ export default function AppSettingsPage() {
       setExpandedMethod(null)
     } catch (error) {
       console.error('Failed to save API key:', error)
-      setApiKeyError(error instanceof Error ? error.message : 'Invalid API key. Please check and try again.')
+      setApiKeyError(error instanceof Error ? error.message : t('appSettings.apiKey.invalid', 'Invalid API key. Please check and try again.'))
     } finally {
       setIsSavingApiKey(false)
     }
-  }, [apiKeyValue, apiBaseUrl, hasCredential, authType])
+  }, [apiKeyValue, apiBaseUrl, hasCredential, authType, t])
 
   // Use existing Claude token
   const handleUseExistingClaudeToken = useCallback(async () => {
@@ -535,9 +540,9 @@ export default function AppSettingsPage() {
       setExpandedMethod(null)
     } catch (error) {
       setClaudeOAuthStatus('error')
-      setClaudeOAuthError(error instanceof Error ? error.message : 'Failed to save token')
+      setClaudeOAuthError(error instanceof Error ? error.message : t('appSettings.oauth.saveTokenFailed', 'Failed to save token'))
     }
-  }, [existingClaudeToken])
+  }, [existingClaudeToken, t])
 
   // Start Claude OAuth flow (native browser-based)
   const handleStartClaudeOAuth = useCallback(async () => {
@@ -556,18 +561,18 @@ export default function AppSettingsPage() {
         setClaudeOAuthStatus('idle')
       } else {
         setClaudeOAuthStatus('error')
-        setClaudeOAuthError(result.error || 'Failed to start OAuth')
+        setClaudeOAuthError(result.error || t('appSettings.oauth.startFailed', 'Failed to start OAuth'))
       }
     } catch (error) {
       setClaudeOAuthStatus('error')
-      setClaudeOAuthError(error instanceof Error ? error.message : 'OAuth failed')
+      setClaudeOAuthError(error instanceof Error ? error.message : t('appSettings.oauth.failed', 'OAuth failed'))
     }
-  }, [])
+  }, [t])
 
   // Submit authorization code from browser
   const handleSubmitAuthCode = useCallback(async (code: string) => {
     if (!window.electronAPI || !code.trim()) {
-      setClaudeOAuthError('Please enter the authorization code')
+      setClaudeOAuthError(t('appSettings.oauth.enterCode', 'Please enter the authorization code'))
       return
     }
 
@@ -592,13 +597,13 @@ export default function AppSettingsPage() {
         setExpandedMethod(null)
       } else {
         setClaudeOAuthStatus('error')
-        setClaudeOAuthError(result.error || 'Failed to exchange code')
+        setClaudeOAuthError(result.error || t('appSettings.oauth.exchangeFailed', 'Failed to exchange code'))
       }
     } catch (error) {
       setClaudeOAuthStatus('error')
-      setClaudeOAuthError(error instanceof Error ? error.message : 'Failed to exchange code')
+      setClaudeOAuthError(error instanceof Error ? error.message : t('appSettings.oauth.exchangeFailed', 'Failed to exchange code'))
     }
-  }, [])
+  }, [t])
 
   // Cancel OAuth flow and clear state
   const handleCancelOAuth = useCallback(async () => {
@@ -626,31 +631,31 @@ export default function AppSettingsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="App Settings" actions={<HeaderMenu route={routes.view.settings('app')} helpFeature="app-settings" />} />
+      <PanelHeader title={t('appSettings.title', 'App Settings')} actions={<HeaderMenu route={routes.view.settings('app')} helpFeature="app-settings" />} />
       <div className="flex-1 min-h-0 mask-fade-y">
         <ScrollArea className="h-full">
           <div className="px-5 py-7 max-w-3xl mx-auto">
           <div className="space-y-6">
             {/* Appearance */}
-            <SettingsSection title="Appearance">
+            <SettingsSection title={t('appSettings.appearance.title', 'Appearance')}>
               <SettingsCard>
-                <SettingsRow label="Mode">
+                <SettingsRow label={t('appSettings.appearance.mode', 'Mode')}>
                   <SettingsSegmentedControl
                     value={mode}
                     onValueChange={setMode}
                     options={[
-                      { value: 'system', label: 'System', icon: <Monitor className="w-4 h-4" /> },
-                      { value: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
-                      { value: 'dark', label: 'Dark', icon: <Moon className="w-4 h-4" /> },
+                      { value: 'system', label: t('common.system', 'System'), icon: <Monitor className="w-4 h-4" /> },
+                      { value: 'light', label: t('common.light', 'Light'), icon: <Sun className="w-4 h-4" /> },
+                      { value: 'dark', label: t('common.dark', 'Dark'), icon: <Moon className="w-4 h-4" /> },
                     ]}
                   />
                 </SettingsRow>
-                <SettingsRow label="Color theme">
+                <SettingsRow label={t('appSettings.appearance.colorTheme', 'Color theme')}>
                   <SettingsMenuSelect
                     value={colorTheme}
                     onValueChange={setColorTheme}
                     options={[
-                      { value: 'default', label: 'Default' },
+                      { value: 'default', label: t('common.default', 'Default') },
                       ...presetThemes
                         .filter(t => t.id !== 'default')
                         .map(t => ({
@@ -660,13 +665,23 @@ export default function AppSettingsPage() {
                     ]}
                   />
                 </SettingsRow>
-                <SettingsRow label="Font">
+                <SettingsRow label={t('appSettings.appearance.font', 'Font')}>
                   <SettingsSegmentedControl
                     value={font}
                     onValueChange={setFont}
                     options={[
-                      { value: 'inter', label: 'Inter' },
-                      { value: 'system', label: 'System' },
+                      { value: 'inter', label: t('appSettings.appearance.fontInter', 'Inter') },
+                      { value: 'system', label: t('common.system', 'System') },
+                    ]}
+                  />
+                </SettingsRow>
+                <SettingsRow label={t('appSettings.appearance.language', 'Language')}>
+                  <SettingsMenuSelect
+                    value={locale}
+                    onValueChange={(value) => setLocale(value as Locale)}
+                    options={[
+                      { value: 'en', label: t('common.language.english', 'English') },
+                      { value: 'zh', label: t('common.language.chinese', 'Chinese (Simplified)') },
                     ]}
                   />
                 </SettingsRow>
@@ -674,11 +689,11 @@ export default function AppSettingsPage() {
             </SettingsSection>
 
             {/* Notifications */}
-            <SettingsSection title="Notifications">
+            <SettingsSection title={t('appSettings.notifications.title', 'Notifications')}>
               <SettingsCard>
                 <SettingsToggle
-                  label="Desktop notifications"
-                  description="Get notified when AI finishes working in a chat."
+                  label={t('appSettings.notifications.desktop', 'Desktop notifications')}
+                  description={t('appSettings.notifications.desc', 'Get notified when AI finishes working in a chat.')}
                   checked={notificationsEnabled}
                   onCheckedChange={handleNotificationsEnabledChange}
                 />
@@ -686,22 +701,22 @@ export default function AppSettingsPage() {
             </SettingsSection>
 
             {/* Billing */}
-            <SettingsSection title="Billing" description="Choose how you pay for AI usage">
+            <SettingsSection title={t('appSettings.billing.title', 'Billing')} description={t('appSettings.billing.desc', 'Choose how you pay for AI usage')}>
               <SettingsCard>
                 <SettingsMenuSelectRow
-                  label="Payment method"
+                  label={t('appSettings.billing.paymentMethod', 'Payment method')}
                   description={
                     authType === 'api_key' && hasCredential
-                      ? 'API key configured'
+                      ? t('appSettings.billing.apiConfigured', 'API key configured')
                       : authType === 'oauth_token' && hasCredential
-                        ? 'Claude connected'
-                        : 'Select a method'
+                        ? t('appSettings.billing.claudeConnected', 'Claude connected')
+                        : t('appSettings.billing.selectMethod', 'Select a method')
                   }
                   value={authType}
                   onValueChange={(v) => handleMethodClick(v as AuthType)}
                   options={[
-                    { value: 'oauth_token', label: 'Claude Pro/Max', description: 'Use your Pro or Max subscription' },
-                    { value: 'api_key', label: 'API Key', description: 'Pay-as-you-go with your Anthropic key' },
+                    { value: 'oauth_token', label: t('appSettings.billing.claudePro', 'Claude Pro/Max'), description: t('appSettings.billing.claudeDesc', 'Use your Pro or Max subscription') },
+                    { value: 'api_key', label: t('appSettings.billing.apiKeyLabel', 'API Key'), description: t('appSettings.billing.apiKeyDesc', 'Pay-as-you-go with your Anthropic key') },
                   ]}
                 />
               </SettingsCard>
@@ -710,9 +725,9 @@ export default function AppSettingsPage() {
               <Dialog open={expandedMethod === 'api_key'} onOpenChange={(open) => !open && handleCancel()}>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>API Key</DialogTitle>
+                    <DialogTitle>{t('appSettings.apiKey.title', 'API Key')}</DialogTitle>
                     <DialogDescription>
-                      Configure your Anthropic API key
+                      {t('appSettings.apiKey.configure', 'Configure your Anthropic API key')}
                     </DialogDescription>
                   </DialogHeader>
                   <ApiKeyDialogContent
@@ -733,9 +748,9 @@ export default function AppSettingsPage() {
               <Dialog open={expandedMethod === 'oauth_token'} onOpenChange={(open) => !open && handleCancelOAuth()}>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Claude Max</DialogTitle>
+                    <DialogTitle>{t('appSettings.oauth.title', 'Claude Max')}</DialogTitle>
                     <DialogDescription>
-                      Connect your Claude subscription
+                      {t('appSettings.oauth.connect', 'Connect your Claude subscription')}
                     </DialogDescription>
                   </DialogHeader>
                   {isWaitingForCode ? (
@@ -769,12 +784,12 @@ export default function AppSettingsPage() {
             </SettingsSection>
 
             {/* About */}
-            <SettingsSection title="About">
+            <SettingsSection title={t('appSettings.about.title', 'About')}>
               <SettingsCard>
-                <SettingsRow label="Version">
+                <SettingsRow label={t('appSettings.about.version', 'Version')}>
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground">
-                      {updateChecker.updateInfo?.currentVersion ?? 'Loading...'}
+                      {updateChecker.updateInfo?.currentVersion ?? t('common.loading', 'Loading...')}
                     </span>
                     {updateChecker.updateAvailable && updateChecker.updateInfo?.latestVersion && (
                       <Button
@@ -782,12 +797,12 @@ export default function AppSettingsPage() {
                         size="sm"
                         onClick={updateChecker.installUpdate}
                       >
-                        Update to {updateChecker.updateInfo.latestVersion}
+                        {t('appSettings.about.updateTo', 'Update to {{version}}', { version: updateChecker.updateInfo.latestVersion })}
                       </Button>
                     )}
                   </div>
                 </SettingsRow>
-                <SettingsRow label="Check for updates">
+                <SettingsRow label={t('appSettings.about.check', 'Check for updates')}>
                   <Button
                     variant="outline"
                     size="sm"
@@ -797,20 +812,20 @@ export default function AppSettingsPage() {
                     {isCheckingForUpdates ? (
                       <>
                         <Spinner className="mr-1.5" />
-                        Checking...
+                        {t('appSettings.about.checking', 'Checking...')}
                       </>
                     ) : (
-                      'Check Now'
+                      t('appSettings.about.checkNow', 'Check Now')
                     )}
                   </Button>
                 </SettingsRow>
                 {updateChecker.isReadyToInstall && (
-                  <SettingsRow label="Install update">
+                  <SettingsRow label={t('appSettings.about.install', 'Install update')}>
                     <Button
                       size="sm"
                       onClick={updateChecker.installUpdate}
                     >
-                      Restart to Update
+                      {t('appSettings.about.restart', 'Restart to Update')}
                     </Button>
                   </SettingsRow>
                 )}

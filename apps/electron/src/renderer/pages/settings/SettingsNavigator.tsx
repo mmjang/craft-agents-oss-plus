@@ -17,6 +17,7 @@ import {
   StyledDropdownMenuItem,
 } from '@/components/ui/styled-dropdown'
 import { DropdownMenuProvider } from '@/components/ui/menu-context'
+import { useI18n } from '@/i18n/I18nContext'
 /** Custom app settings icon */
 const AppSettingsIcon = ({ className }: { className?: string }) => (
   <svg
@@ -121,39 +122,6 @@ interface SettingsItem {
   description: string
 }
 
-const settingsItems: SettingsItem[] = [
-  {
-    id: 'app',
-    label: 'App',
-    icon: AppSettingsIcon,
-    description: 'Appearance, notifications, billing',
-  },
-  {
-    id: 'workspace',
-    label: 'Workspace',
-    icon: WorkspaceIcon,
-    description: 'Model, mode cycling, advanced',
-  },
-  {
-    id: 'permissions',
-    label: 'Permissions',
-    icon: ShieldIcon,
-    description: 'Allowed commands in Explore mode',
-  },
-  {
-    id: 'shortcuts',
-    label: 'Shortcuts',
-    icon: KeyboardIcon,
-    description: 'Keyboard shortcuts reference',
-  },
-  {
-    id: 'preferences',
-    label: 'Preferences',
-    icon: PreferencesIcon,
-    description: 'Your personal preferences',
-  },
-]
-
 interface SettingsItemRowProps {
   item: SettingsItem
   isSelected: boolean
@@ -168,6 +136,7 @@ interface SettingsItemRowProps {
 function SettingsItemRow({ item, isSelected, isFirst, onSelect }: SettingsItemRowProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const Icon = item.icon
+  const { t } = useI18n()
 
   // Open settings page in a new window via deep link
   const handleOpenInNewWindow = () => {
@@ -241,7 +210,7 @@ function SettingsItemRow({ item, isSelected, isFirst, onSelect }: SettingsItemRo
                 <DropdownMenuProvider>
                   <StyledDropdownMenuItem onClick={handleOpenInNewWindow}>
                     <AppWindow className="h-3.5 w-3.5" />
-                    <span className="flex-1">Open in New Window</span>
+                    <span className="flex-1">{t('settings.navigator.openInNewWindow', 'Open in New Window')}</span>
                   </StyledDropdownMenuItem>
                 </DropdownMenuProvider>
               </StyledDropdownMenuContent>
@@ -257,6 +226,41 @@ export default function SettingsNavigator({
   selectedSubpage,
   onSelectSubpage,
 }: SettingsNavigatorProps) {
+  const { t } = useI18n()
+
+  const settingsItems: SettingsItem[] = React.useMemo(() => ([
+    {
+      id: 'app',
+      label: t('settings.navigator.app', 'App'),
+      icon: AppSettingsIcon,
+      description: t('settings.navigator.appDesc', 'Appearance, notifications, billing'),
+    },
+    {
+      id: 'workspace',
+      label: t('settings.navigator.workspace', 'Workspace'),
+      icon: WorkspaceIcon,
+      description: t('settings.navigator.workspaceDesc', 'Model, mode cycling, advanced'),
+    },
+    {
+      id: 'permissions',
+      label: t('settings.navigator.permissions', 'Permissions'),
+      icon: ShieldIcon,
+      description: t('settings.navigator.permissionsDesc', 'Allowed commands in Explore mode'),
+    },
+    {
+      id: 'shortcuts',
+      label: t('settings.navigator.shortcuts', 'Shortcuts'),
+      icon: KeyboardIcon,
+      description: t('settings.navigator.shortcutsDesc', 'Keyboard shortcuts reference'),
+    },
+    {
+      id: 'preferences',
+      label: t('settings.navigator.preferences', 'Preferences'),
+      icon: PreferencesIcon,
+      description: t('settings.navigator.preferencesDesc', 'Your personal preferences'),
+    },
+  ]), [t])
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">

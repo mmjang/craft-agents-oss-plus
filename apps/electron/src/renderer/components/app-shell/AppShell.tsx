@@ -100,6 +100,7 @@ import SettingsNavigator from "@/pages/settings/SettingsNavigator"
 import { RightSidebar } from "./RightSidebar"
 import type { RichTextInputHandle } from "@/components/ui/rich-text-input"
 import { hasOpenOverlay } from "@/lib/overlay-detection"
+import { useI18n } from "@/i18n/I18nContext"
 
 /**
  * AppShellProps - Minimal props interface for AppShell component
@@ -184,6 +185,8 @@ function AppShellContent({
     onSendMessage,
     openNewChat,
   } = contextValue
+
+  const { t } = useI18n()
 
   const [isSidebarVisible, setIsSidebarVisible] = React.useState(() => {
     return storage.get(storage.KEYS.sidebarVisible, !defaultCollapsed)
@@ -716,12 +719,12 @@ function AppShellContent({
         <HeaderIconButton
           icon={<PanelRightRounded className="h-5 w-6" />}
           onClick={() => setIsRightSidebarVisible(true)}
-          tooltip="Open sidebar"
+          tooltip={t('appShell.openSidebar', 'Open sidebar')}
           className="text-foreground"
         />
       </motion.div>
     )
-  }, [isFocusedMode, navState, isRightSidebarVisible])
+  }, [isFocusedMode, navState, isRightSidebarVisible, t])
 
   // Right sidebar CLOSE button (shown in sidebar header when open)
   const rightSidebarCloseButton = React.useMemo(() => {
@@ -731,11 +734,11 @@ function AppShellContent({
       <HeaderIconButton
         icon={<PanelLeftRounded className="h-5 w-6" />}
         onClick={() => setIsRightSidebarVisible(false)}
-        tooltip="Close sidebar"
+        tooltip={t('appShell.closeSidebar', 'Close sidebar')}
         className="text-foreground"
       />
     )
-  }, [isFocusedMode, isRightSidebarVisible])
+  }, [isFocusedMode, isRightSidebarVisible, t])
 
   // Extend context value with local overrides (textareaRef, wrapped onDeleteSession, sources, skills, enabledModes, rightSidebarOpenButton, todoStates)
   const appShellContextValue = React.useMemo<AppShellContextType>(() => ({
@@ -1123,7 +1126,7 @@ function AppShellContent({
                         data-tutorial="new-chat-button"
                       >
                         <SquarePenRounded className="h-3.5 w-3.5 shrink-0" />
-                        New Chat
+                        {t('appShell.newChat', 'New Chat')}
                       </Button>
                     </ContextMenuTrigger>
                     <StyledContextMenuContent>
@@ -1141,7 +1144,7 @@ function AppShellContent({
                   links={[
                     {
                       id: "nav:allChats",
-                      title: "All Chats",
+                      title: t('appShell.nav.allChats', 'All Chats'),
                       label: String(workspaceSessionMetas.length),
                       icon: Inbox,
                       variant: chatFilter?.kind === 'allChats' ? "default" : "ghost",
@@ -1177,7 +1180,7 @@ function AppShellContent({
                         // Flagged at the bottom
                         {
                           id: "nav:flagged",
-                          title: "Flagged",
+                          title: t('appShell.nav.flagged', 'Flagged'),
                           label: String(flaggedCount),
                           icon: <Flag className="h-3.5 w-3.5 fill-current" />,
                           iconColor: "text-info",
@@ -1193,7 +1196,7 @@ function AppShellContent({
                     },
                     {
                       id: "nav:sources",
-                      title: "Sources",
+                      title: t('appShell.nav.sources', 'Sources'),
                       label: String(sources.length),
                       icon: DatabaseZap,
                       // Highlight when in sources navigator and no type filter (or viewing all)
@@ -1214,7 +1217,7 @@ function AppShellContent({
                       items: [
                         {
                           id: "nav:sources:api",
-                          title: "APIs",
+                          title: t('appShell.nav.sourcesApi', 'APIs'),
                           label: String(sourceTypeCounts.api),
                           icon: Globe,
                           variant: (sourceFilter?.kind === 'type' && sourceFilter.sourceType === 'api') ? "default" : "ghost",
@@ -1227,7 +1230,7 @@ function AppShellContent({
                         },
                         {
                           id: "nav:sources:mcp",
-                          title: "MCPs",
+                          title: t('appShell.nav.sourcesMcp', 'MCPs'),
                           label: String(sourceTypeCounts.mcp),
                           icon: <McpIcon className="h-3.5 w-3.5" />,
                           variant: (sourceFilter?.kind === 'type' && sourceFilter.sourceType === 'mcp') ? "default" : "ghost",
@@ -1240,7 +1243,7 @@ function AppShellContent({
                         },
                         {
                           id: "nav:sources:local",
-                          title: "Local Folders",
+                          title: t('appShell.nav.sourcesLocal', 'Local Folders'),
                           label: String(sourceTypeCounts.local),
                           icon: FolderOpen,
                           variant: (sourceFilter?.kind === 'type' && sourceFilter.sourceType === 'local') ? "default" : "ghost",
@@ -1255,7 +1258,7 @@ function AppShellContent({
                     },
                     {
                       id: "nav:skills",
-                      title: "Skills",
+                      title: t('appShell.nav.skills', 'Skills'),
                       label: String(skills.length),
                       icon: Zap,
                       variant: isSkillsNavigation(navState) ? "default" : "ghost",
@@ -1269,7 +1272,7 @@ function AppShellContent({
                     { id: "separator:skills-settings", type: "separator" },
                     {
                       id: "nav:settings",
-                      title: "Settings",
+                      title: t('appShell.nav.settings', 'Settings'),
                       icon: Settings,
                       variant: isSettingsNavigation(navState) ? "default" : "ghost",
                       onClick: () => handleSettingsClick('app'),
@@ -1306,34 +1309,34 @@ function AppShellContent({
                             </button>
                           </DropdownMenuTrigger>
                         </TooltipTrigger>
-                        <TooltipContent side="top">Help & Documentation</TooltipContent>
+                        <TooltipContent side="top">{t('appShell.help.title', 'Help & Documentation')}</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                     <StyledDropdownMenuContent align="end" side="top" sideOffset={8}>
                       <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl(getDocUrl('sources'))}>
                         <DatabaseZap className="h-3.5 w-3.5" />
-                        <span className="flex-1">Sources</span>
+                        <span className="flex-1">{t('appShell.help.sources', 'Sources')}</span>
                         <ExternalLink className="h-3 w-3 text-muted-foreground" />
                       </StyledDropdownMenuItem>
                       <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl(getDocUrl('skills'))}>
                         <Zap className="h-3.5 w-3.5" />
-                        <span className="flex-1">Skills</span>
+                        <span className="flex-1">{t('appShell.help.skills', 'Skills')}</span>
                         <ExternalLink className="h-3 w-3 text-muted-foreground" />
                       </StyledDropdownMenuItem>
                       <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl(getDocUrl('statuses'))}>
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        <span className="flex-1">Statuses</span>
+                        <span className="flex-1">{t('appShell.help.statuses', 'Statuses')}</span>
                         <ExternalLink className="h-3 w-3 text-muted-foreground" />
                       </StyledDropdownMenuItem>
                       <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl(getDocUrl('permissions'))}>
                         <Settings className="h-3.5 w-3.5" />
-                        <span className="flex-1">Permissions</span>
+                        <span className="flex-1">{t('appShell.help.permissions', 'Permissions')}</span>
                         <ExternalLink className="h-3 w-3 text-muted-foreground" />
                       </StyledDropdownMenuItem>
                       <StyledDropdownMenuSeparator />
                       <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.craft.do/docs')}>
                         <ExternalLink className="h-3.5 w-3.5" />
-                        <span className="flex-1">All Documentation</span>
+                        <span className="flex-1">{t('appShell.help.allDocs', 'All Documentation')}</span>
                       </StyledDropdownMenuItem>
                     </StyledDropdownMenuContent>
                   </DropdownMenu>
@@ -1459,7 +1462,7 @@ function AppShellContent({
                           }}
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
-                          <span className="flex-1">Learn More</span>
+                          <span className="flex-1">{t('appShell.learnMore', 'Learn More')}</span>
                         </StyledDropdownMenuItem>
                       </StyledDropdownMenuContent>
                     </DropdownMenu>
@@ -1477,7 +1480,7 @@ function AppShellContent({
                           }}
                         >
                           <Search className="h-3.5 w-3.5" />
-                          <span className="flex-1">Search</span>
+                          <span className="flex-1">{t('common.search', 'Search')}</span>
                         </StyledDropdownMenuItem>
                         <StyledDropdownMenuSeparator />
                         <StyledDropdownMenuItem
@@ -1486,7 +1489,7 @@ function AppShellContent({
                           }}
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
-                          <span className="flex-1">Learn More</span>
+                          <span className="flex-1">{t('appShell.learnMore', 'Learn More')}</span>
                         </StyledDropdownMenuItem>
                       </StyledDropdownMenuContent>
                     </DropdownMenu>
@@ -1497,7 +1500,7 @@ function AppShellContent({
                       trigger={
                         <HeaderIconButton
                           icon={<Plus className="h-4 w-4" />}
-                          tooltip="Add Source"
+                          tooltip={t('appShell.addSource', 'Add Source')}
                           data-tutorial="add-source-button"
                         />
                       }
@@ -1513,7 +1516,7 @@ function AppShellContent({
                       trigger={
                         <HeaderIconButton
                           icon={<Plus className="h-4 w-4" />}
-                          tooltip="Add Skill"
+                          tooltip={t('appShell.addSkill', 'Add Skill')}
                           data-tutorial="add-skill-button"
                         />
                       }

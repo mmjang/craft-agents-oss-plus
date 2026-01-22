@@ -23,6 +23,7 @@ import {
 } from '@/components/settings'
 import { EditPopover, EditButton, getEditConfig } from '@/components/ui/EditPopover'
 import type { DetailsPageMeta } from '@/lib/navigation-registry'
+import { useI18n } from '@/i18n/I18nContext'
 
 export const meta: DetailsPageMeta = {
   navigator: 'settings',
@@ -86,6 +87,7 @@ function serializePreferences(state: PreferencesFormState): string {
 }
 
 export default function PreferencesPage() {
+  const { t } = useI18n()
   const [formState, setFormState] = useState<PreferencesFormState>(emptyFormState)
   const [isLoading, setIsLoading] = useState(true)
   const [preferencesPath, setPreferencesPath] = useState<string | null>(null)
@@ -196,38 +198,38 @@ export default function PreferencesPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="Preferences" actions={<HeaderMenu route={routes.view.settings('preferences')} helpFeature="preferences" />} />
+      <PanelHeader title={t('preferences.title', 'Preferences')} actions={<HeaderMenu route={routes.view.settings('preferences')} helpFeature="preferences" />} />
       <div className="flex-1 min-h-0 mask-fade-y">
         <ScrollArea className="h-full">
           <div className="px-5 py-7 max-w-3xl mx-auto space-y-6">
           {/* Basic Info */}
           <SettingsSection
-            title="Basic Info"
-            description="Help Craft Agent personalize responses to you."
+            title={t('preferences.basicInfo.title', 'Basic Info')}
+            description={t('preferences.basicInfo.desc', 'Help Craft Agent personalize responses to you.')}
           >
             <SettingsCard divided>
               <SettingsInput
-                label="Name"
-                description="How Craft Agent should address you."
+                label={t('preferences.name.label', 'Name')}
+                description={t('preferences.name.desc', 'How Craft Agent should address you.')}
                 value={formState.name}
                 onChange={(v) => updateField('name', v)}
-                placeholder="Your name"
+                placeholder={t('preferences.name.placeholder', 'Your name')}
                 inCard
               />
               <SettingsInput
-                label="Timezone"
-                description="Used for relative dates like 'tomorrow' or 'next week'."
+                label={t('preferences.timezone.label', 'Timezone')}
+                description={t('preferences.timezone.desc', "Used for relative dates like 'tomorrow' or 'next week'.")}
                 value={formState.timezone}
                 onChange={(v) => updateField('timezone', v)}
-                placeholder="e.g., America/New_York"
+                placeholder={t('preferences.timezone.placeholder', 'e.g., America/New_York')}
                 inCard
               />
               <SettingsInput
-                label="Language"
-                description="Preferred language for Craft Agent's responses."
+                label={t('preferences.language.label', 'Language')}
+                description={t('preferences.language.desc', "Preferred language for Craft Agent's responses.")}
                 value={formState.language}
                 onChange={(v) => updateField('language', v)}
-                placeholder="e.g., English"
+                placeholder={t('preferences.language.placeholder', 'e.g., English')}
                 inCard
               />
             </SettingsCard>
@@ -235,24 +237,24 @@ export default function PreferencesPage() {
 
           {/* Location */}
           <SettingsSection
-            title="Location"
-            description="Enables location-aware responses like weather, local time, and regional context."
+            title={t('preferences.location.title', 'Location')}
+            description={t('preferences.location.desc', 'Enables location-aware responses like weather, local time, and regional context.')}
           >
             <SettingsCard divided>
               <SettingsInput
-                label="City"
-                description="Your city for local information and context."
+                label={t('preferences.city.label', 'City')}
+                description={t('preferences.city.desc', 'Your city for local information and context.')}
                 value={formState.city}
                 onChange={(v) => updateField('city', v)}
-                placeholder="e.g., New York"
+                placeholder={t('preferences.city.placeholder', 'e.g., New York')}
                 inCard
               />
               <SettingsInput
-                label="Country"
-                description="Your country for regional formatting and context."
+                label={t('preferences.country.label', 'Country')}
+                description={t('preferences.country.desc', 'Your country for regional formatting and context.')}
                 value={formState.country}
                 onChange={(v) => updateField('country', v)}
-                placeholder="e.g., USA"
+                placeholder={t('preferences.country.placeholder', 'e.g., USA')}
                 inCard
               />
             </SettingsCard>
@@ -260,8 +262,8 @@ export default function PreferencesPage() {
 
           {/* Notes */}
           <SettingsSection
-            title="Notes"
-            description="Free-form context that helps Craft Agent understand your preferences."
+            title={t('preferences.notes.title', 'Notes')}
+            description={t('preferences.notes.desc', 'Free-form context that helps Craft Agent understand your preferences.')}
             action={
               // EditPopover for AI-assisted notes editing with "Edit File" as secondary action
               preferencesPath ? (
@@ -269,7 +271,7 @@ export default function PreferencesPage() {
                   trigger={<EditButton />}
                   {...getEditConfig('preferences-notes', preferencesPath)}
                   secondaryAction={{
-                    label: 'Edit File',
+                    label: t('preferences.editFile', 'Edit File'),
                     onClick: handleEditPreferences,
                   }}
                 />
@@ -280,7 +282,7 @@ export default function PreferencesPage() {
               <SettingsTextarea
                 value={formState.notes}
                 onChange={(v) => updateField('notes', v)}
-                placeholder="Any additional context you'd like Craft Agent to know..."
+                placeholder={t('preferences.notes.placeholder', "Any additional context you'd like Craft Agent to know...")}
                 rows={5}
                 inCard
               />

@@ -39,6 +39,7 @@ import { cn, isHexColor } from '@/lib/utils'
 import { useMenuComponents } from '@/components/ui/menu-context'
 import { getStateColor, getStateIcon, type TodoStateId } from '@/config/todo-states'
 import type { TodoState } from '@/config/todo-states'
+import { useI18n } from '@/i18n/I18nContext'
 
 export interface SessionMenuProps {
   /** Session ID */
@@ -88,20 +89,21 @@ export function SessionMenu({
   onOpenInNewWindow,
   onDelete,
 }: SessionMenuProps) {
+  const { t } = useI18n()
   // Share handlers
   const handleShare = async () => {
     const result = await window.electronAPI.sessionCommand(sessionId, { type: 'shareToViewer' }) as { success: boolean; url?: string; error?: string } | undefined
     if (result?.success && result.url) {
       await navigator.clipboard.writeText(result.url)
-      toast.success('Link copied to clipboard', {
+      toast.success(t('session.linkCopied', 'Link copied to clipboard'), {
         description: result.url,
         action: {
-          label: 'Open',
+          label: t('common.open', 'Open'),
           onClick: () => window.electronAPI.openUrl(result.url!),
         },
       })
     } else {
-      toast.error('Failed to share', { description: result?.error || 'Unknown error' })
+      toast.error(t('session.shareFailed', 'Failed to share'), { description: result?.error || t('common.unknownError', 'Unknown error') })
     }
   }
 
@@ -112,25 +114,25 @@ export function SessionMenu({
   const handleCopyLink = async () => {
     if (sharedUrl) {
       await navigator.clipboard.writeText(sharedUrl)
-      toast.success('Link copied to clipboard')
+      toast.success(t('session.linkCopied', 'Link copied to clipboard'))
     }
   }
 
   const handleUpdateShare = async () => {
     const result = await window.electronAPI.sessionCommand(sessionId, { type: 'updateShare' })
     if (result?.success) {
-      toast.success('Share updated')
+      toast.success(t('session.shareUpdated', 'Share updated'))
     } else {
-      toast.error('Failed to update share', { description: result?.error })
+      toast.error(t('session.shareUpdateFailed', 'Failed to update share'), { description: result?.error })
     }
   }
 
   const handleRevokeShare = async () => {
     const result = await window.electronAPI.sessionCommand(sessionId, { type: 'revokeShare' })
     if (result?.success) {
-      toast.success('Sharing stopped')
+      toast.success(t('session.shareStopped', 'Sharing stopped'))
     } else {
-      toast.error('Failed to stop sharing', { description: result?.error })
+      toast.error(t('session.shareStopFailed', 'Failed to stop sharing'), { description: result?.error })
     }
   }
 
@@ -142,16 +144,16 @@ export function SessionMenu({
     const result = await window.electronAPI.sessionCommand(sessionId, { type: 'copyPath' }) as { success: boolean; path?: string } | undefined
     if (result?.success && result.path) {
       await navigator.clipboard.writeText(result.path)
-      toast.success('Path copied to clipboard')
+      toast.success(t('session.pathCopied', 'Path copied to clipboard'))
     }
   }
 
   const handleRefreshTitle = async () => {
     const result = await window.electronAPI.sessionCommand(sessionId, { type: 'refreshTitle' }) as { success: boolean; title?: string; error?: string } | undefined
     if (result?.success) {
-      toast.success('Title refreshed', { description: result.title })
+      toast.success(t('session.titleRefreshed', 'Title refreshed'), { description: result.title })
     } else {
-      toast.error('Failed to refresh title', { description: result?.error || 'Unknown error' })
+      toast.error(t('session.titleRefreshFailed', 'Failed to refresh title'), { description: result?.error || t('common.unknownError', 'Unknown error') })
     }
   }
 
@@ -164,30 +166,30 @@ export function SessionMenu({
       {!sharedUrl ? (
         <MenuItem onClick={handleShare}>
           <CloudUpload className="h-3.5 w-3.5" />
-          <span className="flex-1">Share</span>
+          <span className="flex-1">{t('session.share', 'Share')}</span>
         </MenuItem>
       ) : (
         <Sub>
           <SubTrigger>
             <CloudUpload className="h-3.5 w-3.5" />
-            <span className="flex-1">Shared</span>
+            <span className="flex-1">{t('session.shared', 'Shared')}</span>
           </SubTrigger>
           <SubContent>
             <MenuItem onClick={handleOpenInBrowser}>
               <Globe className="h-3.5 w-3.5" />
-              <span className="flex-1">Open in Browser</span>
+              <span className="flex-1">{t('session.openInBrowser', 'Open in Browser')}</span>
             </MenuItem>
             <MenuItem onClick={handleCopyLink}>
               <Copy className="h-3.5 w-3.5" />
-              <span className="flex-1">Copy Link</span>
+              <span className="flex-1">{t('session.copyLink', 'Copy Link')}</span>
             </MenuItem>
             <MenuItem onClick={handleUpdateShare}>
               <RefreshCw className="h-3.5 w-3.5" />
-              <span className="flex-1">Update Share</span>
+              <span className="flex-1">{t('session.updateShare', 'Update Share')}</span>
             </MenuItem>
             <MenuItem onClick={handleRevokeShare} variant="destructive">
               <Link2Off className="h-3.5 w-3.5" />
-              <span className="flex-1">Stop Sharing</span>
+              <span className="flex-1">{t('session.stopSharing', 'Stop Sharing')}</span>
             </MenuItem>
           </SubContent>
         </Sub>
@@ -212,7 +214,7 @@ export function SessionMenu({
           >
             {getStateIcon(currentTodoState, todoStates)}
           </span>
-          <span className="flex-1">Status</span>
+          <span className="flex-1">{t('session.status', 'Status')}</span>
         </SubTrigger>
         <SubContent>
           {todoStates.map((state) => {
@@ -246,12 +248,12 @@ export function SessionMenu({
           {!isFlagged ? (
             <MenuItem onClick={onFlag}>
               <Flag className="h-3.5 w-3.5 text-info" />
-              <span className="flex-1">Flag</span>
+              <span className="flex-1">{t('session.flag', 'Flag')}</span>
             </MenuItem>
           ) : (
             <MenuItem onClick={onUnflag}>
               <FlagOff className="h-3.5 w-3.5" />
-              <span className="flex-1">Unflag</span>
+              <span className="flex-1">{t('session.unflag', 'Unflag')}</span>
             </MenuItem>
           )}
         </SubContent>
@@ -261,7 +263,7 @@ export function SessionMenu({
       {!hasUnreadMessages && hasMessages && (
         <MenuItem onClick={onMarkUnread}>
           <MailOpen className="h-3.5 w-3.5" />
-          <span className="flex-1">Mark as Unread</span>
+          <span className="flex-1">{t('session.markUnread', 'Mark as Unread')}</span>
         </MenuItem>
       )}
 
@@ -270,13 +272,13 @@ export function SessionMenu({
       {/* Rename */}
       <MenuItem onClick={onRename}>
         <Pencil className="h-3.5 w-3.5" />
-        <span className="flex-1">Rename</span>
+        <span className="flex-1">{t('session.rename', 'Rename')}</span>
       </MenuItem>
 
       {/* Regenerate Title - AI-generate based on recent messages */}
       <MenuItem onClick={handleRefreshTitle}>
         <RefreshCw className="h-3.5 w-3.5" />
-        <span className="flex-1">Regenerate Title</span>
+        <span className="flex-1">{t('session.regenerateTitle', 'Regenerate Title')}</span>
       </MenuItem>
 
       <Separator />
@@ -284,19 +286,19 @@ export function SessionMenu({
       {/* Open in New Window */}
       <MenuItem onClick={onOpenInNewWindow}>
         <AppWindow className="h-3.5 w-3.5" />
-        <span className="flex-1">Open in New Window</span>
+        <span className="flex-1">{t('session.openInNewWindow', 'Open in New Window')}</span>
       </MenuItem>
 
       {/* View in Finder */}
       <MenuItem onClick={handleShowInFinder}>
         <FolderOpen className="h-3.5 w-3.5" />
-        <span className="flex-1">View in Finder</span>
+        <span className="flex-1">{t('session.viewInFinder', 'View in Finder')}</span>
       </MenuItem>
 
       {/* Copy Path */}
       <MenuItem onClick={handleCopyPath}>
         <Copy className="h-3.5 w-3.5" />
-        <span className="flex-1">Copy Path</span>
+        <span className="flex-1">{t('session.copyPath', 'Copy Path')}</span>
       </MenuItem>
 
       <Separator />
@@ -304,7 +306,7 @@ export function SessionMenu({
       {/* Delete */}
       <MenuItem onClick={onDelete} variant="destructive">
         <Trash2 className="h-3.5 w-3.5" />
-        <span className="flex-1">Delete</span>
+        <span className="flex-1">{t('session.delete', 'Delete')}</span>
       </MenuItem>
     </>
   )

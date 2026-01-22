@@ -27,6 +27,8 @@ export const KEYS = {
 
   // Theme
   theme: 'theme',
+  // UI language
+  locale: 'locale',
 
   // Panel layouts (dynamic key suffix)
   panelLayout: 'panel-layout', // Used as: panelLayout:${key}
