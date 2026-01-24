@@ -879,6 +879,11 @@ export function FreeFormInput({
       }
     }
 
+    // Skip Enter handling during IME composition (e.g., Chinese input method confirming English text)
+    if (e.nativeEvent.isComposing) {
+      return
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       // Submit message - backend handles interruption if processing
