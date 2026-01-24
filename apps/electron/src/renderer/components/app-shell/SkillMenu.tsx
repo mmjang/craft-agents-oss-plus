@@ -11,7 +11,7 @@
  * Provides consistent skill actions:
  * - Open in New Window
  * - Show in Finder
- * - Delete
+ * - Delete (hidden for app-level skills)
  */
 
 import * as React from 'react'
@@ -28,6 +28,8 @@ export interface SkillMenuProps {
   skillSlug: string
   /** Skill name for display */
   skillName: string
+  /** Whether this is an app-level preset skill (read-only, not deletable) */
+  isAppLevel?: boolean
   /** Callbacks */
   onOpenInNewWindow: () => void
   onShowInFinder: () => void
@@ -41,6 +43,7 @@ export interface SkillMenuProps {
 export function SkillMenu({
   skillSlug,
   skillName,
+  isAppLevel,
   onOpenInNewWindow,
   onShowInFinder,
   onDelete,
@@ -63,13 +66,16 @@ export function SkillMenu({
         <span className="flex-1">{t('skillMenu.showInFinder', 'Show in Finder')}</span>
       </MenuItem>
 
-      <Separator />
-
-      {/* Delete */}
-      <MenuItem onClick={onDelete} variant="destructive">
-        <Trash2 className="h-3.5 w-3.5" />
-        <span className="flex-1">{t('skillMenu.delete', 'Delete Skill')}</span>
-      </MenuItem>
+      {/* Delete - hidden for app-level skills */}
+      {!isAppLevel && (
+        <>
+          <Separator />
+          <MenuItem onClick={onDelete} variant="destructive">
+            <Trash2 className="h-3.5 w-3.5" />
+            <span className="flex-1">{t('skillMenu.delete', 'Delete Skill')}</span>
+          </MenuItem>
+        </>
+      )}
     </>
   )
 }

@@ -1234,6 +1234,8 @@ export class SessionManager {
           enabled: true,
           logFilePath: getLogFilePath(),
         } : undefined,
+        // App-level preset skills directory (bundled with the app)
+        appSkillsDir: join(__dirname, 'resources/skills'),
       })
       sessionLog.info(`Created agent for session ${managed.id}${managed.sdkSessionId ? ' (resuming)' : ''}`)
 

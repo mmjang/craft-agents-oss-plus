@@ -40,4 +40,6 @@ export interface LoadedSkill {
   iconPath?: string;
   /** Absolute path to skill directory */
   path: string;
+  /** Whether this is an app-level preset skill (read-only, not deletable) */
+  isAppLevel?: boolean;
 }

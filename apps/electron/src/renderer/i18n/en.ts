@@ -41,6 +41,8 @@ export default {
   'sourceMenu.delete': 'Delete Source',
   'skillMenu.showInFinder': 'Show in Finder',
   'skillMenu.delete': 'Delete Skill',
+  'skill.badge.builtin': 'Built-in',
+  'skill.cannotDelete.appLevel': 'Built-in skills cannot be deleted',
   'rightSidebar.filesComingSoon': 'Files panel - Coming soon',
   'rightSidebar.historyComingSoon': 'History panel - Coming soon',
   'sessionMeta.title': 'Chat Info',

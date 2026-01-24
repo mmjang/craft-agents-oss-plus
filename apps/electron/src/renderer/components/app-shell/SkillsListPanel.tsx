@@ -25,6 +25,7 @@ import { DropdownMenuProvider, ContextMenuProvider } from '@/components/ui/menu-
 import { SkillMenu } from './SkillMenu'
 import { EditPopover, getEditConfig } from '@/components/ui/EditPopover'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/i18n/I18nContext'
 import type { LoadedSkill } from '../../../shared/types'
 
 export interface SkillsListPanelProps {
@@ -100,6 +101,7 @@ interface SkillItemProps {
 function SkillItem({ skill, isSelected, isFirst, workspaceId, onClick, onDelete }: SkillItemProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [contextMenuOpen, setContextMenuOpen] = useState(false)
+  const { t } = useI18n()
 
   return (
     <div className="skill-item" data-selected={isSelected || undefined}>
@@ -131,11 +133,16 @@ function SkillItem({ skill, isSelected, isFirst, workspaceId, onClick, onDelete 
           <div className="w-5 h-5 shrink-0" />
           {/* Content column */}
           <div className="flex flex-col gap-1 min-w-0 flex-1">
-            {/* Title - skill name */}
+            {/* Title - skill name with optional built-in badge */}
             <div className="flex items-start gap-2 w-full pr-6 min-w-0">
               <div className="font-medium font-sans line-clamp-2 min-w-0 -mb-[2px]">
                 {skill.metadata.name}
               </div>
+              {skill.isAppLevel && (
+                <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-medium bg-foreground/5 text-foreground/60 rounded">
+                  {t('skill.badge.builtin', 'Built-in')}
+                </span>
+              )}
             </div>
             {/* Subtitle - description */}
             <div className="flex items-center gap-1.5 text-xs text-foreground/70 w-full -mb-[2px] pr-6 min-w-0">
@@ -165,6 +172,7 @@ function SkillItem({ skill, isSelected, isFirst, workspaceId, onClick, onDelete 
                   <SkillMenu
                     skillSlug={skill.slug}
                     skillName={skill.metadata.name}
+                    isAppLevel={skill.isAppLevel}
                     onOpenInNewWindow={() => {
                       window.electronAPI.openUrl(`craftagents://skills/skill/${skill.slug}?window=focused`)
                     }}
@@ -188,6 +196,7 @@ function SkillItem({ skill, isSelected, isFirst, workspaceId, onClick, onDelete 
             <SkillMenu
               skillSlug={skill.slug}
               skillName={skill.metadata.name}
+              isAppLevel={skill.isAppLevel}
               onOpenInNewWindow={() => {
                 window.electronAPI.openUrl(`craftagents://skills/skill/${skill.slug}?window=focused`)
               }}

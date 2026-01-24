@@ -136,6 +136,108 @@ export function loadWorkspaceSkills(workspaceRoot: string): LoadedSkill[] {
 }
 
 /**
+ * Load a single skill from a directory
+ * @param skillDir - Absolute path to skill directory
+ * @param isAppLevel - Whether this is an app-level preset skill
+ */
+export function loadSkillFromDir(skillDir: string, isAppLevel = false): LoadedSkill | null {
+  const skillFile = join(skillDir, 'SKILL.md');
+
+  // Check directory exists
+  if (!existsSync(skillDir) || !statSync(skillDir).isDirectory()) {
+    return null;
+  }
+
+  // Check SKILL.md exists
+  if (!existsSync(skillFile)) {
+    return null;
+  }
+
+  // Read and parse SKILL.md
+  let content: string;
+  try {
+    content = readFileSync(skillFile, 'utf-8');
+  } catch {
+    return null;
+  }
+
+  const parsed = parseSkillFile(content);
+  if (!parsed) {
+    return null;
+  }
+
+  // Extract slug from directory name
+  const slug = skillDir.split('/').pop() || skillDir.split('\\').pop() || '';
+
+  return {
+    slug,
+    metadata: parsed.metadata,
+    content: parsed.body,
+    iconPath: findIconFile(skillDir),
+    path: skillDir,
+    isAppLevel,
+  };
+}
+
+/**
+ * Load all app-level preset skills
+ * @param appSkillsDir - Absolute path to app-level skills directory (e.g., resources/skills)
+ */
+export function loadAppSkills(appSkillsDir: string): LoadedSkill[] {
+  if (!existsSync(appSkillsDir)) {
+    return [];
+  }
+
+  const skills: LoadedSkill[] = [];
+
+  try {
+    const entries = readdirSync(appSkillsDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+
+      const skillDir = join(appSkillsDir, entry.name);
+      const skill = loadSkillFromDir(skillDir, true);
+      if (skill) {
+        skills.push(skill);
+      }
+    }
+  } catch {
+    // Ignore errors reading app skills directory
+  }
+
+  return skills;
+}
+
+/**
+ * Load merged skills from both app-level and workspace
+ * Workspace skills override app-level skills with the same slug
+ * @param workspaceRoot - Absolute path to workspace root
+ * @param appSkillsDir - Absolute path to app-level skills directory
+ */
+export function loadMergedSkills(workspaceRoot: string, appSkillsDir: string): LoadedSkill[] {
+  // Load app-level skills first (lower priority)
+  const appSkills = loadAppSkills(appSkillsDir);
+
+  // Load workspace skills (higher priority)
+  const workspaceSkills = loadWorkspaceSkills(workspaceRoot);
+
+  // Create a map for merging (workspace skills override app-level)
+  const skillMap = new Map<string, LoadedSkill>();
+
+  // Add app-level skills first
+  for (const skill of appSkills) {
+    skillMap.set(skill.slug, skill);
+  }
+
+  // Override with workspace skills
+  for (const skill of workspaceSkills) {
+    skillMap.set(skill.slug, skill);
+  }
+
+  return Array.from(skillMap.values());
+}
+
+/**
  * Get icon path for a skill
  * @param workspaceRoot - Absolute path to workspace root
  * @param slug - Skill directory name

@@ -41,6 +41,8 @@ export default {
   'sourceMenu.delete': '删除来源',
   'skillMenu.showInFinder': '在访达中显示',
   'skillMenu.delete': '删除技能',
+  'skill.badge.builtin': '内置',
+  'skill.cannotDelete.appLevel': '内置技能无法删除',
   'rightSidebar.filesComingSoon': '文件面板 - 敬请期待',
   'rightSidebar.historyComingSoon': '历史面板 - 敬请期待',
   'sessionMeta.title': '对话信息',

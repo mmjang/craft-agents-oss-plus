@@ -1659,7 +1659,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
   // Skills (Workspace-scoped)
   // ============================================================
 
-  // Get all skills for a workspace
+  // Get all skills for a workspace (merged: app-level + workspace)
   ipcMain.handle(IPC_CHANNELS.SKILLS_GET, async (_event, workspaceId: string) => {
     ipcLog.info(`SKILLS_GET: Loading skills for workspace: ${workspaceId}`)
     const workspace = getWorkspaceByNameOrId(workspaceId)
@@ -1667,9 +1667,11 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
       ipcLog.error(`SKILLS_GET: Workspace not found: ${workspaceId}`)
       return []
     }
-    const { loadWorkspaceSkills } = await import('@craft-agent/shared/skills')
-    const skills = loadWorkspaceSkills(workspace.rootPath)
-    ipcLog.info(`SKILLS_GET: Loaded ${skills.length} skills from ${workspace.rootPath}`)
+    const { loadMergedSkills } = await import('@craft-agent/shared/skills')
+    // App-level skills are in resources/skills (bundled with the app)
+    const appSkillsDir = join(__dirname, 'resources/skills')
+    const skills = loadMergedSkills(workspace.rootPath, appSkillsDir)
+    ipcLog.info(`SKILLS_GET: Loaded ${skills.length} skills (app-level + workspace)`)
     return skills
   })
 
@@ -1731,41 +1733,68 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     return scanDirectory(skillDir)
   })
 
-  // Delete a skill from a workspace
+  // Delete a skill from a workspace (app-level skills cannot be deleted)
   ipcMain.handle(IPC_CHANNELS.SKILLS_DELETE, async (_event, workspaceId: string, skillSlug: string) => {
     const workspace = getWorkspaceByNameOrId(workspaceId)
     if (!workspace) throw new Error('Workspace not found')
 
-    const { deleteSkill } = await import('@craft-agent/shared/skills')
+    // Check if this is an app-level skill (cannot be deleted)
+    const { loadMergedSkills, deleteSkill } = await import('@craft-agent/shared/skills')
+    const appSkillsDir = join(__dirname, 'resources/skills')
+    const skills = loadMergedSkills(workspace.rootPath, appSkillsDir)
+    const skill = skills.find(s => s.slug === skillSlug)
+
+    if (skill?.isAppLevel) {
+      throw new Error('Built-in skills cannot be deleted')
+    }
+
     deleteSkill(workspace.rootPath, skillSlug)
     ipcLog.info(`Deleted skill: ${skillSlug}`)
   })
 
-  // Open skill SKILL.md in editor
+  // Open skill SKILL.md in editor (handles both workspace and app-level skills)
   ipcMain.handle(IPC_CHANNELS.SKILLS_OPEN_EDITOR, async (_event, workspaceId: string, skillSlug: string) => {
     const workspace = getWorkspaceByNameOrId(workspaceId)
     if (!workspace) throw new Error('Workspace not found')
 
     const { join } = await import('path')
     const { shell } = await import('electron')
+    const { existsSync } = await import('fs')
     const { getWorkspaceSkillsPath } = await import('@craft-agent/shared/workspaces')
 
+    // First check workspace skills
     const skillsDir = getWorkspaceSkillsPath(workspace.rootPath)
-    const skillFile = join(skillsDir, skillSlug, 'SKILL.md')
+    let skillFile = join(skillsDir, skillSlug, 'SKILL.md')
+
+    // If not found in workspace, check app-level skills
+    if (!existsSync(skillFile)) {
+      const appSkillsDir = join(__dirname, 'resources/skills')
+      skillFile = join(appSkillsDir, skillSlug, 'SKILL.md')
+    }
+
     await shell.openPath(skillFile)
   })
 
-  // Open skill folder in Finder/Explorer
+  // Open skill folder in Finder/Explorer (handles both workspace and app-level skills)
   ipcMain.handle(IPC_CHANNELS.SKILLS_OPEN_FINDER, async (_event, workspaceId: string, skillSlug: string) => {
     const workspace = getWorkspaceByNameOrId(workspaceId)
     if (!workspace) throw new Error('Workspace not found')
 
     const { join } = await import('path')
     const { shell } = await import('electron')
+    const { existsSync } = await import('fs')
     const { getWorkspaceSkillsPath } = await import('@craft-agent/shared/workspaces')
 
+    // First check workspace skills
     const skillsDir = getWorkspaceSkillsPath(workspace.rootPath)
-    const skillDir = join(skillsDir, skillSlug)
+    let skillDir = join(skillsDir, skillSlug)
+
+    // If not found in workspace, check app-level skills
+    if (!existsSync(skillDir)) {
+      const appSkillsDir = join(__dirname, 'resources/skills')
+      skillDir = join(appSkillsDir, skillSlug)
+    }
+
     await shell.showItemInFolder(skillDir)
   })
 

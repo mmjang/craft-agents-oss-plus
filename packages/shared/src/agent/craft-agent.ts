@@ -117,6 +117,8 @@ export interface CraftAgentConfig {
     enabled: boolean;          // Whether debug mode is active
     logFilePath?: string;      // Path to the log file for querying
   };
+  /** Path to app-level preset skills directory (e.g., resources/skills) */
+  appSkillsDir?: string;
 }
 
 // Permission request tracking
@@ -1463,8 +1465,14 @@ export class CraftAgent {
         },
         // Selectively disable tools - file tools are disabled (use MCP), web/code controlled by settings
         disallowedTools,
-        // Load workspace as SDK plugin (enables skills, commands, agents from workspace)
-        plugins: [{ type: 'local' as const, path: this.workspaceRootPath }],
+        // Load plugins: app-level skills (lower priority) + workspace (higher priority)
+        // Workspace skills can override app-level skills with the same slug
+        plugins: [
+          // App-level preset skills (if configured)
+          ...(this.config.appSkillsDir ? [{ type: 'local' as const, path: this.config.appSkillsDir }] : []),
+          // Workspace skills (higher priority - loaded second to override app-level)
+          { type: 'local' as const, path: this.workspaceRootPath },
+        ],
       };
 
       // Track whether we're trying to resume a session (for error handling)
