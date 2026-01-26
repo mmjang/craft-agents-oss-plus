@@ -3,6 +3,11 @@
 import { loadShellEnv } from './shell-env'
 loadShellEnv()
 
+// Setup portable runtime (Python, Node.js) for users without dev tools
+// Also configures Chinese mirror sources for npm and pip
+import { setupPortableRuntime } from './portable-runtime'
+setupPortableRuntime('china')
+
 import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'

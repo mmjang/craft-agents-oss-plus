@@ -1,0 +1,205 @@
+/**
+ * Portable Runtime Setup
+ *
+ * This module configures bundled portable runtimes (Python, Node.js) for users
+ * who don't have development tools installed. It also configures Chinese mirror
+ * sources for npm and pip to improve download speeds in mainland China.
+ *
+ * On Windows, it also configures Git Bash which is required by Claude Agent SDK.
+ */
+
+import { app } from 'electron'
+import { join } from 'path'
+import { existsSync } from 'fs'
+import { mainLog } from './logger'
+
+interface MirrorConfig {
+  npm: string
+  pip: string
+  pipTrustedHost: string
+}
+
+const MIRROR_PRESETS: Record<string, MirrorConfig> = {
+  china: {
+    npm: 'https://registry.npmmirror.com',
+    pip: 'https://pypi.tuna.tsinghua.edu.cn/simple',
+    pipTrustedHost: 'pypi.tuna.tsinghua.edu.cn',
+  },
+  china_aliyun: {
+    npm: 'https://registry.npmmirror.com',
+    pip: 'https://mirrors.aliyun.com/pypi/simple',
+    pipTrustedHost: 'mirrors.aliyun.com',
+  },
+  global: {
+    npm: 'https://registry.npmjs.org',
+    pip: 'https://pypi.org/simple',
+    pipTrustedHost: 'pypi.org',
+  },
+}
+
+/**
+ * Get the path to the portable runtime directory based on platform
+ */
+function getPortablePath(): string {
+  // In packaged app, resources are in app.getPath('exe')/../Resources
+  // In dev mode, they're in the resources folder relative to __dirname
+  const resourcesPath = app.isPackaged
+    ? join(process.resourcesPath || '', '')
+    : join(__dirname, '../resources')
+
+  const isWindows = process.platform === 'win32'
+  const isMac = process.platform === 'darwin'
+
+  const platformDir = isWindows ? 'portable-win' : isMac ? 'portable-darwin' : 'portable-linux'
+
+  return join(resourcesPath, platformDir)
+}
+
+/**
+ * Setup portable runtime environment
+ *
+ * This function:
+ * 1. Adds bundled Python and Node.js to PATH (if available)
+ * 2. Configures Git Bash for Windows (required by Claude Agent SDK)
+ * 3. Sets up mirror sources for npm and pip
+ *
+ * @param mirrorPreset - Which mirror preset to use ('china', 'china_aliyun', 'global')
+ */
+export function setupPortableRuntime(mirrorPreset: string = 'china'): void {
+  const portablePath = getPortablePath()
+  const mirror = MIRROR_PRESETS[mirrorPreset] || MIRROR_PRESETS.china
+  const isWindows = process.platform === 'win32'
+  const pathSeparator = isWindows ? ';' : ':'
+
+  mainLog.info(`[portable-runtime] Checking portable runtime at: ${portablePath}`)
+
+  // Check if portable directory exists
+  if (!existsSync(portablePath)) {
+    mainLog.info('[portable-runtime] Portable runtime directory not found, skipping')
+    // Still configure mirrors even without portable runtime
+    configureMirrors(mirror)
+    return
+  }
+
+  // ========== Windows: Git Bash Configuration ==========
+  if (isWindows) {
+    const gitPath = join(portablePath, 'git')
+    const bashExe = join(gitPath, 'bin', 'bash.exe')
+
+    if (existsSync(bashExe)) {
+      // Claude Agent SDK requires this environment variable on Windows
+      process.env.CLAUDE_CODE_GIT_BASH_PATH = bashExe
+
+      // Add Git tools to PATH
+      const gitBinPath = join(gitPath, 'bin')
+      const gitUsrBinPath = join(gitPath, 'usr', 'bin')
+      process.env.PATH = [gitBinPath, gitUsrBinPath, process.env.PATH].join(pathSeparator)
+
+      mainLog.info(`[portable-runtime] Git Bash configured: ${bashExe}`)
+    } else {
+      mainLog.warn('[portable-runtime] Git Bash not found - Claude Agent SDK may not work properly on Windows')
+    }
+  }
+
+  // ========== Python Configuration ==========
+  const pythonPath = join(portablePath, 'python')
+  const pythonBin = isWindows
+    ? join(pythonPath, 'python.exe')
+    : join(pythonPath, 'bin', 'python3')
+
+  if (existsSync(pythonBin)) {
+    if (isWindows) {
+      process.env.PATH = [pythonPath, join(pythonPath, 'Scripts'), process.env.PATH].join(
+        pathSeparator
+      )
+    } else {
+      process.env.PATH = [join(pythonPath, 'bin'), process.env.PATH].join(pathSeparator)
+    }
+    mainLog.info(`[portable-runtime] Python configured: ${pythonBin}`)
+  } else {
+    mainLog.info('[portable-runtime] Portable Python not found')
+  }
+
+  // ========== Node.js Configuration ==========
+  const nodePath = join(portablePath, 'node')
+  const nodeBin = isWindows ? join(nodePath, 'node.exe') : join(nodePath, 'bin', 'node')
+
+  if (existsSync(nodeBin)) {
+    if (isWindows) {
+      process.env.PATH = [nodePath, process.env.PATH].join(pathSeparator)
+    } else {
+      process.env.PATH = [join(nodePath, 'bin'), process.env.PATH].join(pathSeparator)
+    }
+    mainLog.info(`[portable-runtime] Node.js configured: ${nodeBin}`)
+  } else {
+    mainLog.info('[portable-runtime] Portable Node.js not found')
+  }
+
+  // ========== Configure Mirrors ==========
+  configureMirrors(mirror)
+
+  mainLog.info(`[portable-runtime] Setup complete (mirror: ${mirrorPreset})`)
+}
+
+/**
+ * Configure package manager mirrors
+ */
+function configureMirrors(mirror: MirrorConfig): void {
+  // npm/yarn/pnpm mirrors
+  process.env.npm_config_registry = mirror.npm
+  process.env.YARN_REGISTRY = mirror.npm
+
+  // pip mirrors
+  process.env.PIP_INDEX_URL = mirror.pip
+  process.env.PIP_TRUSTED_HOST = mirror.pipTrustedHost
+
+  // Other binary mirrors (for packages that download binaries during install)
+  process.env.ELECTRON_MIRROR = 'https://npmmirror.com/mirrors/electron/'
+  process.env.SASS_BINARY_SITE = 'https://npmmirror.com/mirrors/node-sass/'
+  process.env.PUPPETEER_DOWNLOAD_HOST = 'https://npmmirror.com/mirrors'
+
+  mainLog.info(`[portable-runtime] Mirrors configured: npm=${mirror.npm}, pip=${mirror.pip}`)
+}
+
+/**
+ * Get the status of portable runtime components
+ */
+export function getPortableRuntimeStatus(): {
+  available: boolean
+  gitBash: boolean
+  python: boolean
+  node: boolean
+  pythonVersion?: string
+  nodeVersion?: string
+} {
+  const portablePath = getPortablePath()
+  const isWindows = process.platform === 'win32'
+
+  if (!existsSync(portablePath)) {
+    return {
+      available: false,
+      gitBash: !isWindows, // macOS/Linux have bash built-in
+      python: false,
+      node: false,
+    }
+  }
+
+  const pythonBin = isWindows
+    ? join(portablePath, 'python', 'python.exe')
+    : join(portablePath, 'python', 'bin', 'python3')
+
+  const nodeBin = isWindows
+    ? join(portablePath, 'node', 'node.exe')
+    : join(portablePath, 'node', 'bin', 'node')
+
+  const gitBashExists = isWindows
+    ? existsSync(join(portablePath, 'git', 'bin', 'bash.exe'))
+    : true
+
+  return {
+    available: true,
+    gitBash: gitBashExists,
+    python: existsSync(pythonBin),
+    node: existsSync(nodeBin),
+  }
+}
