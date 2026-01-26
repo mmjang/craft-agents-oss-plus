@@ -350,4 +350,21 @@ export default {
   'workspaceTree.title': '工作区文件',
   'workspaceTree.empty': '工作区中没有文件。',
   'workspaceTree.loading': '加载中...',
+
+  // Claude Code 安装
+  'onboarding.claudeCode.title': 'Claude Code',
+  'onboarding.claudeCode.checking': '正在检查 Claude Code...',
+  'onboarding.claudeCode.checkingDesc': '正在检查 Claude Code 是否已安装...',
+  'onboarding.claudeCode.notInstalled': '需要安装 Claude Code',
+  'onboarding.claudeCode.installing': '安装中...',
+  'onboarding.claudeCode.installingTitle': '正在安装 Claude Code',
+  'onboarding.claudeCode.installingDesc': '正在安装 Claude Code...',
+  'onboarding.claudeCode.successTitle': 'Claude Code 已就绪',
+  'onboarding.claudeCode.successDesc': 'Claude Code 已准备就绪。',
+  'onboarding.claudeCode.alreadyInstalled': 'Claude Code 已安装',
+  'onboarding.claudeCode.errorTitle': '安装失败',
+  'onboarding.claudeCode.errorDesc': '安装 Claude Code 失败。',
+  'onboarding.claudeCode.retry': '重试',
+  'onboarding.claudeCode.preparing': '准备中...',
+  'onboarding.claudeCode.desc': '此应用需要 Claude Code。',
 }

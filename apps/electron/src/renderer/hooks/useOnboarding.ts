@@ -2,11 +2,12 @@
  * useOnboarding Hook
  *
  * Manages the state machine for the onboarding wizard.
- * Simplified billing-only flow:
+ * Flow:
  * 1. Welcome
- * 2. Billing Method (API Key / Claude OAuth)
- * 3. Credentials (API Key or Claude OAuth)
- * 4. Complete
+ * 2. Claude Code Install (if not already installed)
+ * 3. Billing Method (API Key / Claude OAuth)
+ * 4. Credentials (API Key or Claude OAuth)
+ * 5. Complete
  */
 import { useState, useCallback, useEffect } from 'react'
 import type {
@@ -126,6 +127,10 @@ export function useOnboarding({
   const handleContinue = useCallback(async () => {
     switch (state.step) {
       case 'welcome':
+        setState(s => ({ ...s, step: 'claude-code-install' }))
+        break
+
+      case 'claude-code-install':
         setState(s => ({ ...s, step: 'billing-method' }))
         break
 
@@ -147,8 +152,11 @@ export function useOnboarding({
   // Go back to previous step
   const handleBack = useCallback(() => {
     switch (state.step) {
-      case 'billing-method':
+      case 'claude-code-install':
         setState(s => ({ ...s, step: 'welcome' }))
+        break
+      case 'billing-method':
+        setState(s => ({ ...s, step: 'claude-code-install' }))
         break
       case 'credentials':
         setState(s => ({ ...s, step: 'billing-method', credentialStatus: 'idle', errorMessage: undefined }))
@@ -220,6 +228,19 @@ export function useOnboarding({
   const [claudeOAuthChecked, setClaudeOAuthChecked] = useState(false)
   // Two-step OAuth flow state
   const [isWaitingForCode, setIsWaitingForCode] = useState(false)
+
+  // Check if Claude CLI is installed at initialization (for ClaudeCodeInstallStep)
+  useEffect(() => {
+    const checkClaudeCliInstalled = async () => {
+      try {
+        const installed = await window.electronAPI.isClaudeCliInstalled()
+        setIsClaudeCliInstalled(installed)
+      } catch (error) {
+        console.error('Failed to check Claude CLI installation:', error)
+      }
+    }
+    checkClaudeCliInstalled()
+  }, [])
 
   // Check for existing Claude token when reaching credentials step with oauth billing
   useEffect(() => {

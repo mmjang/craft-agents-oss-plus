@@ -1,11 +1,13 @@
 import { cn } from "@/lib/utils"
 import { WelcomeStep } from "./WelcomeStep"
+import { ClaudeCodeInstallStep } from "./ClaudeCodeInstallStep"
 import { BillingMethodStep, type BillingMethod } from "./BillingMethodStep"
 import { CredentialsStep, type ApiCredentialPayload, type CredentialStatus } from "./CredentialsStep"
 import { CompletionStep } from "./CompletionStep"
 
 export type OnboardingStep =
   | 'welcome'
+  | 'claude-code-install'
   | 'billing-method'
   | 'credentials'
   | 'complete'
@@ -51,9 +53,10 @@ interface OnboardingWizardProps {
  *
  * Manages the step-by-step flow for setting up Craft Agent:
  * 1. Welcome
- * 2. Billing Method (choose: API Key / Claude OAuth)
- * 3. Credentials (API Key or Claude OAuth)
- * 4. Completion
+ * 2. Claude Code Install (if not already installed)
+ * 3. Billing Method (choose: API Key / Claude OAuth)
+ * 4. Credentials (API Key or Claude OAuth)
+ * 5. Completion
  */
 export function OnboardingWizard({
   state,
@@ -79,6 +82,15 @@ export function OnboardingWizard({
           <WelcomeStep
             isExistingUser={state.isExistingUser}
             onContinue={onContinue}
+          />
+        )
+
+      case 'claude-code-install':
+        return (
+          <ClaudeCodeInstallStep
+            isClaudeCliInstalled={isClaudeCliInstalled}
+            onContinue={onContinue}
+            onBack={onBack}
           />
         )
 

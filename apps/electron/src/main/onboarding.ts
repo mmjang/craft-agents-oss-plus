@@ -3,7 +3,7 @@
  *
  * Handles workspace setup and configuration persistence.
  */
-import { ipcMain } from 'electron'
+import { ipcMain, BrowserWindow } from 'electron'
 import { mainLog } from './logger'
 import { getAuthState, getSetupNeeds } from '@craft-agent/shared/auth'
 import { getCredentialManager } from '@craft-agent/shared/credentials'
@@ -12,6 +12,7 @@ import { getDefaultWorkspacesDir } from '@craft-agent/shared/workspaces'
 import { CraftOAuth, getMcpBaseUrl } from '@craft-agent/shared/auth'
 import { validateMcpConnection } from '@craft-agent/shared/mcp'
 import { getExistingClaudeToken, getExistingClaudeCredentials, isClaudeCliInstalled, runClaudeSetupToken, startClaudeOAuth, exchangeClaudeCode, hasValidOAuthState, clearOAuthState } from '@craft-agent/shared/auth'
+import { installClaudeCode } from './claude-code-installer'
 import { getCredentialManager as getCredentialManagerFn } from '@craft-agent/shared/credentials'
 import {
   IPC_CHANNELS,
@@ -344,5 +345,37 @@ export function registerOnboardingHandlers(sessionManager: SessionManager): void
   ipcMain.handle(IPC_CHANNELS.ONBOARDING_CLEAR_CLAUDE_OAUTH_STATE, async () => {
     clearOAuthState()
     return { success: true }
+  })
+
+  // Install Claude Code using portable npm
+  let currentInstallCancel: (() => void) | null = null
+
+  ipcMain.handle(IPC_CHANNELS.CLAUDE_CODE_INSTALL, async (event) => {
+    mainLog.info('[Onboarding] Starting Claude Code installation...')
+
+    // Cancel any existing installation
+    if (currentInstallCancel) {
+      currentInstallCancel()
+      currentInstallCancel = null
+    }
+
+    const webContents = event.sender
+    const { promise, cancel } = installClaudeCode((progress) => {
+      // Send progress to renderer
+      webContents.send(IPC_CHANNELS.CLAUDE_CODE_INSTALL_PROGRESS, progress)
+    })
+
+    currentInstallCancel = cancel
+
+    try {
+      await promise
+      mainLog.info('[Onboarding] Claude Code installation completed')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      mainLog.error('[Onboarding] Claude Code installation failed:', message)
+      throw error
+    } finally {
+      currentInstallCancel = null
+    }
   })
 }

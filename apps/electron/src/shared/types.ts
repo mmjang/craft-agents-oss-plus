@@ -208,6 +208,15 @@ export interface OnboardingSaveResult {
 }
 
 /**
+ * Claude Code installation progress
+ */
+export interface ClaudeCodeInstallProgress {
+  status: 'checking' | 'installing' | 'success' | 'error' | 'already_installed'
+  message: string
+  progress?: number // 0-100
+}
+
+/**
  * File attachment for sending with messages
  * Matches the FileAttachment interface from src/utils/files.ts
  */
@@ -538,6 +547,9 @@ export const IPC_CHANNELS = {
   ONBOARDING_EXCHANGE_CLAUDE_CODE: 'onboarding:exchangeClaudeCode',
   ONBOARDING_HAS_CLAUDE_OAUTH_STATE: 'onboarding:hasClaudeOAuthState',
   ONBOARDING_CLEAR_CLAUDE_OAUTH_STATE: 'onboarding:clearClaudeOAuthState',
+  // Claude Code installation
+  CLAUDE_CODE_INSTALL: 'claudeCode:install',
+  CLAUDE_CODE_INSTALL_PROGRESS: 'claudeCode:installProgress',
 
   // Settings - Billing
   SETTINGS_GET_BILLING_METHOD: 'settings:getBillingMethod',
@@ -739,6 +751,9 @@ export interface ElectronAPI {
   exchangeClaudeCode(code: string): Promise<ClaudeOAuthResult>
   hasClaudeOAuthState(): Promise<boolean>
   clearClaudeOAuthState(): Promise<{ success: boolean }>
+  // Claude Code installation
+  installClaudeCode(): Promise<void>
+  onClaudeCodeInstallProgress(callback: (progress: ClaudeCodeInstallProgress) => void): () => void
 
   // Settings - Billing
   getBillingMethod(): Promise<BillingMethodInfo>

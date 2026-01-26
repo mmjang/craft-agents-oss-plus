@@ -166,6 +166,15 @@ const api: ElectronAPI = {
   exchangeClaudeCode: (code: string) => ipcRenderer.invoke(IPC_CHANNELS.ONBOARDING_EXCHANGE_CLAUDE_CODE, code),
   hasClaudeOAuthState: () => ipcRenderer.invoke(IPC_CHANNELS.ONBOARDING_HAS_CLAUDE_OAUTH_STATE),
   clearClaudeOAuthState: () => ipcRenderer.invoke(IPC_CHANNELS.ONBOARDING_CLEAR_CLAUDE_OAUTH_STATE),
+  // Claude Code installation
+  installClaudeCode: () => ipcRenderer.invoke(IPC_CHANNELS.CLAUDE_CODE_INSTALL),
+  onClaudeCodeInstallProgress: (callback: (progress: import('../shared/types').ClaudeCodeInstallProgress) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, progress: import('../shared/types').ClaudeCodeInstallProgress) => {
+      callback(progress)
+    }
+    ipcRenderer.on(IPC_CHANNELS.CLAUDE_CODE_INSTALL_PROGRESS, handler)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.CLAUDE_CODE_INSTALL_PROGRESS, handler)
+  },
 
   // Settings - Billing
   getBillingMethod: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET_BILLING_METHOD),

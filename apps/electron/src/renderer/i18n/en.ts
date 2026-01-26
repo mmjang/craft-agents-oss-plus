@@ -350,4 +350,21 @@ export default {
   'workspaceTree.title': 'Workspace Files',
   'workspaceTree.empty': 'No files in workspace.',
   'workspaceTree.loading': 'Loading...',
+
+  // Claude Code Installation
+  'onboarding.claudeCode.title': 'Claude Code',
+  'onboarding.claudeCode.checking': 'Checking Claude Code...',
+  'onboarding.claudeCode.checkingDesc': 'Checking if Claude Code is installed...',
+  'onboarding.claudeCode.notInstalled': 'Claude Code needs to be installed',
+  'onboarding.claudeCode.installing': 'Installing...',
+  'onboarding.claudeCode.installingTitle': 'Installing Claude Code',
+  'onboarding.claudeCode.installingDesc': 'Installing Claude Code...',
+  'onboarding.claudeCode.successTitle': 'Claude Code Ready',
+  'onboarding.claudeCode.successDesc': 'Claude Code is ready to use.',
+  'onboarding.claudeCode.alreadyInstalled': 'Claude Code is already installed',
+  'onboarding.claudeCode.errorTitle': 'Installation Failed',
+  'onboarding.claudeCode.errorDesc': 'Failed to install Claude Code.',
+  'onboarding.claudeCode.retry': 'Retry',
+  'onboarding.claudeCode.preparing': 'Preparing...',
+  'onboarding.claudeCode.desc': 'Claude Code is required for this application.',
 }
