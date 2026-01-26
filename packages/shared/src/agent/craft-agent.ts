@@ -117,7 +117,7 @@ export interface CraftAgentConfig {
     enabled: boolean;          // Whether debug mode is active
     logFilePath?: string;      // Path to the log file for querying
   };
-  /** Path to app-level preset skills directory (e.g., resources/skills) */
+  /** Path to app-level preset skills plugin directory (e.g., resources/app-plugin) */
   appSkillsDir?: string;
 }
 
@@ -1474,6 +1474,35 @@ export class CraftAgent {
           { type: 'local' as const, path: this.workspaceRootPath },
         ],
       };
+
+      // Debug: Log plugins configuration
+      console.error(`[CraftAgent] SDK plugins configuration:`, JSON.stringify(options.plugins, null, 2));
+      console.error(`[CraftAgent] appSkillsDir: ${this.config.appSkillsDir}`);
+      console.error(`[CraftAgent] workspaceRootPath: ${this.workspaceRootPath}`);
+
+      // Debug: Check if plugin.json exists in each plugin path
+      const { existsSync } = await import('fs');
+      const { join } = await import('path');
+      for (const plugin of options.plugins || []) {
+        if (plugin.type === 'local') {
+          const pluginJsonPath = join(plugin.path, '.claude-plugin', 'plugin.json');
+          const skillsDir = join(plugin.path, 'skills');
+          console.error(`[CraftAgent] Plugin path: ${plugin.path}`);
+          console.error(`[CraftAgent]   - plugin.json exists: ${existsSync(pluginJsonPath)}`);
+          console.error(`[CraftAgent]   - skills dir exists: ${existsSync(skillsDir)}`);
+          if (existsSync(skillsDir)) {
+            const { readdirSync } = await import('fs');
+            try {
+              const skills = readdirSync(skillsDir, { withFileTypes: true })
+                .filter(d => d.isDirectory())
+                .map(d => d.name);
+              console.error(`[CraftAgent]   - skills found: ${JSON.stringify(skills)}`);
+            } catch (e) {
+              console.error(`[CraftAgent]   - error reading skills:`, e);
+            }
+          }
+        }
+      }
 
       // Track whether we're trying to resume a session (for error handling)
       const wasResuming = !_isRetry && !!this.sessionId;

@@ -1668,8 +1668,8 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
       return []
     }
     const { loadMergedSkills } = await import('@craft-agent/shared/skills')
-    // App-level skills are in resources/skills (bundled with the app)
-    const appSkillsDir = join(__dirname, 'resources/skills')
+    // App-level skills are in resources/app-plugin/skills (bundled with the app)
+    const appSkillsDir = join(__dirname, 'resources/app-plugin/skills')
     const skills = loadMergedSkills(workspace.rootPath, appSkillsDir)
     ipcLog.info(`SKILLS_GET: Loaded ${skills.length} skills (app-level + workspace)`)
     return skills
@@ -1740,7 +1740,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
 
     // Check if this is an app-level skill (cannot be deleted)
     const { loadMergedSkills, deleteSkill } = await import('@craft-agent/shared/skills')
-    const appSkillsDir = join(__dirname, 'resources/skills')
+    const appSkillsDir = join(__dirname, 'resources/app-plugin/skills')
     const skills = loadMergedSkills(workspace.rootPath, appSkillsDir)
     const skill = skills.find(s => s.slug === skillSlug)
 
@@ -1768,7 +1768,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
 
     // If not found in workspace, check app-level skills
     if (!existsSync(skillFile)) {
-      const appSkillsDir = join(__dirname, 'resources/skills')
+      const appSkillsDir = join(__dirname, 'resources/app-plugin/skills')
       skillFile = join(appSkillsDir, skillSlug, 'SKILL.md')
     }
 
@@ -1791,7 +1791,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
 
     // If not found in workspace, check app-level skills
     if (!existsSync(skillDir)) {
-      const appSkillsDir = join(__dirname, 'resources/skills')
+      const appSkillsDir = join(__dirname, 'resources/app-plugin/skills')
       skillDir = join(appSkillsDir, skillSlug)
     }
 
