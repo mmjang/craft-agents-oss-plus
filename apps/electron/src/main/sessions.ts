@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'
+import { homedir } from 'os'
 import { rm, readFile } from 'fs/promises'
 import { CraftAgent, type AgentEvent, setPermissionMode, type PermissionMode, unregisterSessionScopedToolCallbacks, AbortReason, type AuthRequest, type AuthResult, type CredentialAuthRequest } from '@craft-agent/shared/agent'
 import { sessionLog, isDebugMode, getLogFilePath } from './logger'
@@ -582,6 +583,11 @@ export class SessionManager {
 
     // Set up authentication environment variables (critical for SDK to work)
     await this.reinitializeAuth()
+
+    // Set AGENT_BROWSER_PROFILE for persistent browser profile (used by agent-browser)
+    const agentBrowserProfile = join(homedir(), '.craft-agent-profile')
+    process.env.AGENT_BROWSER_PROFILE = agentBrowserProfile
+    sessionLog.info('Setting AGENT_BROWSER_PROFILE:', agentBrowserProfile)
 
     // Load existing sessions from disk
     this.loadSessionsFromDisk()

@@ -6,17 +6,78 @@ allowed-tools: Bash(agent-browser:*)
 
 # Browser Automation with agent-browser
 
-## Quick start
+## Setup
 
-Important: Prefer `--headed` mode for browser runs, reuse existing sessions when possible, and assume `agent-browser` is already installed.
+if agent-browser command not found, install it with:
 
 ```bash
-agent-browser open <url>        # Navigate to page
-agent-browser snapshot -i       # Get interactive elements with refs
-agent-browser click @e1         # Click element by ref
-agent-browser fill @e2 "text"   # Fill input by ref
-agent-browser close             # Close browser
+npm install -g agent-browser
+agent-browser install  # Download Chromium
 ```
+
+## Quick start
+
+**IMPORTANT:** Always use `--headed` mode and `--session` flag. Never run headless browsers.
+
+```bash
+agent-browser --session main --headed open <url>  # Navigate to page (ALWAYS use --headed)
+agent-browser --session main snapshot -i          # Get interactive elements with refs
+agent-browser --session main click @e1            # Click element by ref
+agent-browser --session main fill @e2 "text"      # Fill input by ref
+```
+
+## Session Reuse (Best Practice)
+
+**CRITICAL RULES:**
+1. **ALWAYS use `--headed` mode** - Never run browsers in headless mode
+2. **ALWAYS use `--session` flag** - Never create anonymous sessions
+3. **ALWAYS reuse existing sessions** - Check `session list` before creating new ones
+
+### Before starting any browser task:
+
+1. **Check for existing sessions first:**
+   ```bash
+   agent-browser session list
+   ```
+
+2. **If a session exists, reuse it (with --headed):**
+   ```bash
+   agent-browser --session <existing-session-name> --headed open <url>
+   ```
+
+3. **If no session exists, create a named session (with --headed):**
+   ```bash
+   agent-browser --session main --headed open <url>
+   ```
+
+### Session naming conventions:
+
+- Use `main` for general browsing tasks
+- Use descriptive names for specific tasks: `--session weixin`, `--session github`, `--session testing`
+- All subsequent commands must include the same `--session` flag
+
+### Example workflow:
+
+```bash
+# First, check existing sessions
+agent-browser session list
+
+# If "main" session exists, reuse it (always with --headed)
+agent-browser --session main --headed open https://example.com
+
+# If no session, create one (always with --headed)
+agent-browser --session main --headed open https://example.com
+
+# All subsequent commands use the same session
+agent-browser --session main snapshot -i
+agent-browser --session main click @e1
+```
+
+### Do NOT:
+- Run browsers without `--headed` flag (headless mode is forbidden)
+- Start a new browser without checking `session list` first
+- Use commands without `--session` flag (creates anonymous sessions that can't be reused)
+- Close the browser unless explicitly requested by the user
 
 ## Core workflow
 
