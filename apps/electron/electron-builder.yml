@@ -15,6 +15,10 @@ files:
   - dist/**/*
   - "!dist/renderer/src/**"
   - "!**/*.map"
+  # Exclude portable runtimes from dist - they are added via platform-specific extraResources
+  - "!dist/resources/portable-darwin/**"
+  - "!dist/resources/portable-win/**"
+  - "!dist/resources/portable-linux/**"
   - package.json
   # Include SDK for subprocess execution
   - node_modules/@anthropic-ai/claude-agent-sdk/**/*

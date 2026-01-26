@@ -24,7 +24,7 @@
     "electron:build:preload": "esbuild apps/electron/src/preload/index.ts --bundle --platform=node --format=cjs --outfile=apps/electron/dist/preload.cjs --external:electron",
     "electron:build:renderer": "rm -rf apps/electron/dist/renderer && vite build --config apps/electron/vite.config.ts",
     "electron:build:renderer:win": "powershell -Command \"if (Test-Path apps/electron/dist/renderer) { Remove-Item -Recurse -Force apps/electron/dist/renderer }\"; vite build --config apps/electron/vite.config.ts",
-    "electron:build:resources": "cp -r apps/electron/resources apps/electron/dist/",
+    "electron:build:resources": "rsync -av --exclude='portable-*' apps/electron/resources/ apps/electron/dist/resources/",
     "electron:build:resources:win": "powershell -Command \"Copy-Item -Path 'apps/electron/resources' -Destination 'apps/electron/dist/resources' -Recurse -Force\"",
     "electron:build": "bun run electron:build:main && bun run electron:build:preload && bun run electron:build:renderer && bun run electron:build:resources",
     "electron:build:win": "bun run electron:build:main:win && bun run electron:build:preload && bun run electron:build:renderer:win && bun run electron:build:resources:win",

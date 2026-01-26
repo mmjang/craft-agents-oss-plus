@@ -11,6 +11,7 @@
 import { app } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'
+import { homedir } from 'os'
 import { mainLog } from './logger'
 
 interface MirrorConfig {
@@ -133,6 +134,18 @@ export function setupPortableRuntime(mirrorPreset: string = 'china'): void {
     mainLog.info(`[portable-runtime] Node.js configured: ${nodeBin}`)
   } else {
     mainLog.info('[portable-runtime] Portable Node.js not found')
+  }
+
+  // ========== Craft Agent npm-global bin (for Claude Code installed via portable npm) ==========
+  const npmGlobalBin = isWindows
+    ? join(homedir(), '.craft-agent', 'npm-global')
+    : join(homedir(), '.craft-agent', 'npm-global', 'bin')
+
+  if (existsSync(npmGlobalBin)) {
+    process.env.PATH = [npmGlobalBin, process.env.PATH].join(pathSeparator)
+    mainLog.info(`[portable-runtime] npm-global bin added to PATH: ${npmGlobalBin}`)
+  } else {
+    mainLog.info(`[portable-runtime] npm-global bin not found (will be created on first Claude Code install): ${npmGlobalBin}`)
   }
 
   // ========== Configure Mirrors ==========

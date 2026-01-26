@@ -26,7 +26,7 @@ function getPortableNodePath(): string {
   const platform = process.platform === 'darwin' ? 'portable-darwin' : 'portable-win'
   const resourcesPath = app.isPackaged
     ? process.resourcesPath
-    : join(__dirname, '..', '..', 'resources')
+    : join(__dirname, '..', 'resources')
 
   return join(resourcesPath, platform, 'node')
 }
@@ -47,6 +47,7 @@ function getNpmPath(): string {
  */
 function getNodePath(): string {
   const nodePath = getPortableNodePath()
+  console.log('Portable Node Path:', nodePath)
   if (process.platform === 'win32') {
     return join(nodePath, 'node.exe')
   }
