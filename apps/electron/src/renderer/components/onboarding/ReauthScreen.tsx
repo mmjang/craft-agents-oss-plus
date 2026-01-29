@@ -3,6 +3,7 @@ import { AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@craft-agent/ui"
 import { CraftAgentsSymbol } from "@/components/icons/CraftAgentsSymbol"
+import { useI18n } from "@/i18n/I18nContext"
 import { StepFormLayout } from "./primitives"
 
 interface ReauthScreenProps {
@@ -17,6 +18,7 @@ interface ReauthScreenProps {
  * is missing or expired. Much simpler than full onboarding - just re-authenticate.
  */
 export function ReauthScreen({ onLogin, onReset }: ReauthScreenProps) {
+  const { t } = useI18n()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -26,7 +28,7 @@ export function ReauthScreen({ onLogin, onReset }: ReauthScreenProps) {
     try {
       await onLogin()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : t('onboarding.reauth.loginFailed', 'Login failed'))
       setIsLoading(false)
     }
   }
@@ -44,15 +46,15 @@ export function ReauthScreen({ onLogin, onReset }: ReauthScreenProps) {
               <AlertCircle className="size-8 text-info" />
             </div>
           }
-          title="Session Expired"
+          title={t('onboarding.reauth.title', 'Session Expired')}
           description={
             <>
-              Your Craft session has expired or is no longer valid.
+              {t('onboarding.reauth.desc1', 'Your Craft session has expired or is no longer valid.')}
               <br />
-              Please log in again to continue using Craft Agents.
+              {t('onboarding.reauth.desc2', 'Please log in again to continue using Craft Agents.')}
               <br />
               <span className="text-muted-foreground/70 text-xs mt-2 block">
-                Your conversations and settings are preserved.
+                {t('onboarding.reauth.preserved', 'Your conversations and settings are preserved.')}
               </span>
             </>
           }
@@ -67,12 +69,12 @@ export function ReauthScreen({ onLogin, onReset }: ReauthScreenProps) {
                 {isLoading ? (
                   <>
                     <Spinner className="mr-2" />
-                    Logging in...
+                    {t('onboarding.reauth.loggingIn', 'Logging in...')}
                   </>
                 ) : (
                   <>
                     <RefreshCw className="mr-2 size-4" />
-                    Log In with Craft
+                    {t('onboarding.reauth.logIn', 'Log In with Craft')}
                   </>
                 )}
               </Button>
@@ -83,7 +85,7 @@ export function ReauthScreen({ onLogin, onReset }: ReauthScreenProps) {
                 className="w-full max-w-[320px] bg-foreground-2 shadow-minimal text-foreground hover:bg-foreground/5 rounded-lg"
                 size="sm"
               >
-                Reset app and start fresh...
+                {t('onboarding.reauth.reset', 'Reset app and start fresh...')}
               </Button>
             </div>
           }

@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { Eye, EyeOff, ExternalLink, CheckCircle2, XCircle } from "lucide-react"
 import { Spinner } from "@craft-agent/ui"
+import { useI18n } from "@/i18n/I18nContext"
 import type { BillingMethod } from "./BillingMethodStep"
 import { StepFormLayout, BackButton, ContinueButton, type StepIconVariant } from "./primitives"
 
@@ -49,22 +50,27 @@ function getOAuthIconVariant(status: CredentialStatus): StepIconVariant {
   }
 }
 
-const OAUTH_STATUS_CONTENT: Record<CredentialStatus, { title: string; description: string }> = {
+interface OAuthStatusContent {
+  titleKey: string
+  descKey: string
+}
+
+const OAUTH_STATUS_CONTENT: Record<CredentialStatus, OAuthStatusContent> = {
   idle: {
-    title: 'Connect Claude Account',
-    description: 'Use your Claude subscription to power multi-agent workflows.',
+    titleKey: 'onboarding.credentials.connectTitle',
+    descKey: 'onboarding.credentials.connectDesc',
   },
   validating: {
-    title: 'Connecting...',
-    description: 'Waiting for authentication to complete...',
+    titleKey: 'onboarding.credentials.connecting',
+    descKey: 'onboarding.credentials.connectingDesc',
   },
   success: {
-    title: 'Connected!',
-    description: 'Your Claude account is connected.',
+    titleKey: 'onboarding.credentials.connected',
+    descKey: 'onboarding.credentials.connectedDesc',
   },
   error: {
-    title: 'Connection failed',
-    description: '', // Will use errorMessage prop
+    titleKey: 'onboarding.credentials.connectionFailed',
+    descKey: '', // Will use errorMessage prop
   },
 }
 
@@ -89,6 +95,7 @@ export function CredentialsStep({
   onSubmitAuthCode,
   onCancelOAuth,
 }: CredentialsStepProps) {
+  const { t } = useI18n()
   const [value, setValue] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
   const [showValue, setShowValue] = useState(false)
@@ -124,24 +131,24 @@ export function CredentialsStep({
     if (isWaitingForCode) {
       return (
         <StepFormLayout
-          title="Enter Authorization Code"
-          description="Copy the code from the browser page and paste it below."
+          title={t('onboarding.credentials.enterAuthCode', 'Enter Authorization Code')}
+          description={t('onboarding.credentials.enterAuthCodeDesc', 'Copy the code from the browser page and paste it below.')}
           actions={
             <>
-              <BackButton onClick={onCancelOAuth} disabled={status === 'validating'}>Cancel</BackButton>
+              <BackButton onClick={onCancelOAuth} disabled={status === 'validating'}>{t('onboarding.credentials.cancel', 'Cancel')}</BackButton>
               <ContinueButton
                 type="submit"
                 form="auth-code-form"
                 disabled={!authCode.trim()}
                 loading={status === 'validating'}
-                loadingText="Connecting..."
+                loadingText={t('onboarding.credentials.connecting', 'Connecting...')}
               />
             </>
           }
         >
           <form id="auth-code-form" onSubmit={handleAuthCodeSubmit}>
             <div className="space-y-2">
-              <Label htmlFor="auth-code">Authorization Code</Label>
+              <Label htmlFor="auth-code">{t('onboarding.credentials.authCodeLabel', 'Authorization Code')}</Label>
               <div className={cn(
                 "relative rounded-md shadow-minimal transition-colors",
                 "bg-foreground-2 focus-within:bg-background"
@@ -151,7 +158,7 @@ export function CredentialsStep({
                   type="text"
                   value={authCode}
                   onChange={(e) => setAuthCode(e.target.value)}
-                  placeholder="Paste your authorization code here"
+                  placeholder={t('onboarding.credentials.authCodePlaceholder', 'Paste your authorization code here')}
                   className={cn(
                     "border-0 bg-transparent shadow-none font-mono text-sm",
                     status === 'error' && "focus-visible:ring-destructive"
@@ -177,26 +184,26 @@ export function CredentialsStep({
             {hasExistingToken ? (
               <ContinueButton onClick={onUseExistingClaudeToken} className="gap-2">
                 <CheckCircle2 className="size-4" />
-                Use Existing Token
+                {t('onboarding.credentials.useExistingToken', 'Use Existing Token')}
               </ContinueButton>
             ) : (
               <ContinueButton onClick={onStartOAuth} className="gap-2">
                 <ExternalLink className="size-4" />
-                Sign in with Claude
+                {t('onboarding.credentials.signInWithClaude', 'Sign in with Claude')}
               </ContinueButton>
             )}
           </>
         )}
 
         {status === 'validating' && (
-          <BackButton onClick={onBack} className="w-full">Cancel</BackButton>
+          <BackButton onClick={onBack} className="w-full">{t('onboarding.credentials.cancel', 'Cancel')}</BackButton>
         )}
 
         {status === 'error' && (
           <>
             <BackButton onClick={onBack} />
             <ContinueButton onClick={hasExistingToken ? onUseExistingClaudeToken : onStartOAuth}>
-              Try Again
+              {t('onboarding.credentials.tryAgain', 'Try Again')}
             </ContinueButton>
           </>
         )}
@@ -204,16 +211,16 @@ export function CredentialsStep({
     )
 
     // Dynamic description based on state
-    let description = content.description
+    let description = t(content.descKey, content.descKey)
     if (status === 'idle') {
       if (hasExistingToken && existingClaudeToken) {
         // Show preview of detected token (first 20 chars)
         const tokenPreview = existingClaudeToken.length > 20
           ? `${existingClaudeToken.slice(0, 20)}...`
           : existingClaudeToken
-        description = `Found existing token: ${tokenPreview}`
+        description = t('onboarding.credentials.foundToken', 'Found existing token: {{token}}', { token: tokenPreview })
       } else {
-        description = 'Click below to sign in with your Claude Pro or Max subscription.'
+        description = t('onboarding.credentials.clickToSignIn', 'Click below to sign in with your Claude Pro or Max subscription.')
       }
     }
 
@@ -221,8 +228,8 @@ export function CredentialsStep({
       <StepFormLayout
         icon={getOAuthIcon(status)}
         iconVariant={getOAuthIconVariant(status)}
-        title={content.title}
-        description={status === 'error' ? (errorMessage || 'Something went wrong. Please try again.') : description}
+        title={t(content.titleKey, content.titleKey)}
+        description={status === 'error' ? (errorMessage || t('onboarding.credentials.somethingWrong', 'Something went wrong. Please try again.')) : description}
         actions={actions}
       >
         {/* Show secondary option if we have an existing token */}
@@ -232,7 +239,7 @@ export function CredentialsStep({
               onClick={onStartOAuth}
               className="text-sm text-muted-foreground hover:text-foreground underline"
             >
-              Or sign in with a different account
+              {t('onboarding.credentials.signInDifferent', 'Or sign in with a different account')}
             </button>
           </div>
         )}
@@ -243,10 +250,10 @@ export function CredentialsStep({
   // API Key flow
   return (
     <StepFormLayout
-      title="Enter API Key"
+      title={t('onboarding.credentials.enterApiKey', 'Enter API Key')}
       description={
         <>
-          Get your API key from{' '}
+          {t('onboarding.credentials.getApiKey', 'Get your API key from')}{' '}
           <a
             href="https://console.anthropic.com"
             target="_blank"
@@ -265,7 +272,7 @@ export function CredentialsStep({
             form="api-key-form"
             disabled={!value.trim()}
             loading={status === 'validating'}
-            loadingText="Validating..."
+            loadingText={t('onboarding.credentials.validating', 'Validating...')}
           />
         </>
       }
@@ -273,7 +280,7 @@ export function CredentialsStep({
       <form id="api-key-form" onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="api-key">Anthropic API Key</Label>
+            <Label htmlFor="api-key">{t('onboarding.credentials.apiKeyLabel', 'Anthropic API Key')}</Label>
             <div className={cn(
               "relative rounded-md shadow-minimal transition-colors",
               "bg-foreground-2 focus-within:bg-background"
@@ -307,7 +314,7 @@ export function CredentialsStep({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="api-base-url">API Base URL (optional)</Label>
+            <Label htmlFor="api-base-url">{t('onboarding.credentials.baseUrlLabel', 'API Base URL (optional)')}</Label>
             <div className={cn(
               "rounded-md shadow-minimal transition-colors",
               "bg-foreground-2 focus-within:bg-background"
@@ -326,7 +333,7 @@ export function CredentialsStep({
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              Leave blank to use Anthropic&apos;s default endpoint or set your proxy URL here.
+              {t('onboarding.credentials.baseUrlHint', "Leave blank to use Anthropic's default endpoint or set your proxy URL here.")}
             </p>
           </div>
 

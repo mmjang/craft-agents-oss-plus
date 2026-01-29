@@ -71,15 +71,6 @@ function formatTokenCount(tokens: number): string {
   return tokens.toString()
 }
 
-/** Default rotating placeholders for onboarding/empty state */
-const DEFAULT_PLACEHOLDERS = [
-  'What would you like to work on?',
-  'Ask me to analyze your codebase...',
-  'Describe a bug you need help fixing...',
-  'I can help you write documentation...',
-  'Let\'s refactor some code together...',
-]
-
 export interface FreeFormInputProps {
   /** Placeholder text(s) for the textarea - can be array for rotation */
   placeholder?: string | string[]
@@ -168,7 +159,7 @@ export interface FreeFormInputProps {
  * - Active option badges
  */
 export function FreeFormInput({
-  placeholder = DEFAULT_PLACEHOLDERS,
+  placeholder,
   disabled = false,
   isProcessing = false,
   onSubmit,
@@ -1280,7 +1271,7 @@ export function FreeFormInput({
                   </button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent side="top">Model</TooltipContent>
+              <TooltipContent side="top">{t('freeform.model.tooltip', 'Model')}</TooltipContent>
             </Tooltip>
             <StyledDropdownMenuContent side="top" align="end" sideOffset={8} className="min-w-[240px]">
               {/* Model options - dynamically based on API base URL */}
@@ -1288,12 +1279,12 @@ export function FreeFormInput({
                 const isSelected = currentModel === model.id
                 const descriptions: Record<string, string> = {
                   // Claude models
-                  'claude-opus-4-5-20251101': 'Most capable for complex work',
-                  'claude-sonnet-4-5-20250929': 'Best for everyday tasks',
-                  'claude-haiku-4-5-20251001': 'Fastest for quick answers',
+                  'claude-opus-4-5-20251101': t('freeform.model.opus', 'Most capable for complex work'),
+                  'claude-sonnet-4-5-20250929': t('freeform.model.sonnet', 'Best for everyday tasks'),
+                  'claude-haiku-4-5-20251001': t('freeform.model.haiku', 'Fastest for quick answers'),
                   // Zhipu models
-                  'glm-4.7': 'Most capable for complex work',
-                  'glm-4.5-air': 'Balanced performance',
+                  'glm-4.7': t('freeform.model.glm47', 'Most capable for complex work'),
+                  'glm-4.5-air': t('freeform.model.glm45air', 'Balanced performance'),
                 }
                 return (
                   <StyledDropdownMenuItem
@@ -1320,7 +1311,7 @@ export function FreeFormInput({
                 <StyledDropdownMenuSubTrigger className="flex items-center justify-between px-2 py-2 rounded-lg">
                   <div className="text-left flex-1">
                     <div className="font-medium text-sm">{getThinkingLevelName(thinkingLevel)}</div>
-                    <div className="text-xs text-muted-foreground">Extended reasoning depth</div>
+                    <div className="text-xs text-muted-foreground">{t('freeform.thinking.desc', 'Extended reasoning depth')}</div>
                   </div>
                 </StyledDropdownMenuSubTrigger>
                 <StyledDropdownMenuSubContent className="min-w-[220px]">
@@ -1351,7 +1342,7 @@ export function FreeFormInput({
                   <StyledDropdownMenuSeparator className="my-1" />
                   <div className="px-2 py-1.5 select-none">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Context</span>
+                      <span>{t('freeform.context.label', 'Context')}</span>
                       <span className="flex items-center gap-1.5">
                         {contextStatus.isCompacting && (
                           <Loader2 className="h-3 w-3 animate-spin" />

@@ -1,13 +1,14 @@
 import { cn } from "@/lib/utils"
 import { Check, CreditCard, Key } from "lucide-react"
+import { useI18n } from "@/i18n/I18nContext"
 import { StepFormLayout, BackButton, ContinueButton } from "./primitives"
 
 export type BillingMethod = 'api_key' | 'claude_oauth'
 
 interface BillingOption {
   id: BillingMethod
-  name: string
-  description: string
+  nameKey: string
+  descKey: string
   icon: React.ReactNode
   recommended?: boolean
 }
@@ -15,15 +16,15 @@ interface BillingOption {
 const BILLING_OPTIONS: BillingOption[] = [
   {
     id: 'claude_oauth',
-    name: 'Claude Pro/Max',
-    description: 'Use your Claude subscription for unlimited access.',
+    nameKey: 'onboarding.billing.claudePro',
+    descKey: 'onboarding.billing.claudeProDesc',
     icon: <CreditCard className="size-4" />,
     recommended: true,
   },
   {
     id: 'api_key',
-    name: 'Anthropic API Key',
-    description: 'Pay-as-you-go with your own API key.',
+    nameKey: 'onboarding.billing.apiKey',
+    descKey: 'onboarding.billing.apiKeyDesc',
     icon: <Key className="size-4" />,
   },
 ]
@@ -48,10 +49,12 @@ export function BillingMethodStep({
   onContinue,
   onBack
 }: BillingMethodStepProps) {
+  const { t } = useI18n()
+
   return (
     <StepFormLayout
-      title="Choose Billing Method"
-      description="Select how you'd like to power your AI agents."
+      title={t('onboarding.billing.title', 'Choose Billing Method')}
+      description={t('onboarding.billing.desc', "Select how you'd like to power your AI agents.")}
       actions={
         <>
           <BackButton onClick={onBack} />
@@ -90,15 +93,15 @@ export function BillingMethodStep({
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">{option.name}</span>
+                  <span className="font-medium text-sm">{t(option.nameKey, option.nameKey)}</span>
                   {option.recommended && (
                     <span className="bg-foreground/5 px-2 py-0.5 text-[11px] font-medium text-foreground/70">
-                      Recommended
+                      {t('onboarding.billing.recommended', 'Recommended')}
                     </span>
                   )}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {option.description}
+                  {t(option.descKey, option.descKey)}
                 </p>
               </div>
 

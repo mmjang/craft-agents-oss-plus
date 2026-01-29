@@ -1,5 +1,6 @@
 import { FolderPlus, FolderOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useI18n } from "@/i18n/I18nContext"
 import { AddWorkspaceContainer, AddWorkspaceStepHeader } from "./primitives"
 
 interface AddWorkspaceStep_ChoiceProps {
@@ -56,27 +57,29 @@ export function AddWorkspaceStep_Choice({
   onCreateNew,
   onOpenFolder
 }: AddWorkspaceStep_ChoiceProps) {
+  const { t } = useI18n()
+
   return (
     <AddWorkspaceContainer>
       <div className="mt-2" />
       <AddWorkspaceStepHeader
-        title="Add Workspace"
-        description="Where your ideas meet the tools to make them happen."
+        title={t('workspace.add.title', 'Add Workspace')}
+        description={t('workspace.add.desc', 'Where your ideas meet the tools to make them happen.')}
       />
 
       <div className="mt-8 w-full space-y-3">
         <ChoiceCard
           icon={<FolderPlus className="h-5 w-5" />}
-          title="Create new"
-          description="Start fresh with an empty workspace."
+          title={t('workspace.add.createNew', 'Create new')}
+          description={t('workspace.add.createNewDesc', 'Start fresh with an empty workspace.')}
           onClick={onCreateNew}
           variant="primary"
         />
 
         <ChoiceCard
           icon={<FolderOpen className="h-5 w-5" />}
-          title="Open folder"
-          description="Choose an existing folder as workspace."
+          title={t('workspace.add.openFolder', 'Open folder')}
+          description={t('workspace.add.openFolderDesc', 'Choose an existing folder as workspace.')}
           onClick={onOpenFolder}
         />
       </div>

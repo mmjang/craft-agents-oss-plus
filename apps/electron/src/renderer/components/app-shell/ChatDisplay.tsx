@@ -35,6 +35,7 @@ import {
 } from "@craft-agent/ui"
 import { useFocusZone } from "@/hooks/keyboard"
 import { useTheme } from "@/hooks/useTheme"
+import { useI18n } from "@/i18n/I18nContext"
 import type { Session, Message, FileAttachment, StoredAttachment, PermissionRequest, CredentialRequest, CredentialResponse, LoadedSource, LoadedSkill } from "../../../shared/types"
 import type { PermissionMode } from "@craft-agent/shared/agent/modes"
 import type { ThinkingLevel } from "@craft-agent/shared/agent/thinking-levels"
@@ -370,6 +371,7 @@ export function ChatDisplay({
   // Get isDark from useTheme hook for overlay theme
   // This accounts for scenic themes (like Haze) that force dark mode
   const { isDark } = useTheme()
+  const { t } = useI18n()
 
   // Register as focus zone - when zone gains focus, focus the textarea
   const { zoneRef, isFocused } = useFocusZone({
@@ -416,9 +418,9 @@ export function ChatDisplay({
     setOverlayState({
       type: 'markdown',
       content: message.content,
-      title: 'Message Preview',
+      title: t('chat.overlay.messagePreview', 'Message Preview'),
     })
-  }, [session])
+  }, [session, t])
 
   // Ref to track total turn count for scroll handler
   const totalTurnCountRef = React.useRef(0)
@@ -635,7 +637,7 @@ export function ChatDisplay({
                   {/* Load more indicator - shown when there are older messages */}
                   {hasMoreAbove && (
                     <div className="text-center text-muted-foreground/60 text-xs py-3 select-none">
-                      ↑ Scroll up for earlier messages ({startIndex} more)
+                      {t('chat.scrollUp', '↑ Scroll up for earlier messages ({{count}} more)', { count: startIndex })}
                     </div>
                   )}
                   {turns.map((turn, index) => {
@@ -703,7 +705,7 @@ export function ChatDisplay({
                         isLastResponse={isLastResponse}
                         onAcceptPlan={() => {
                           window.dispatchEvent(new CustomEvent('craft:approve-plan', {
-                            detail: { text: 'Plan approved, please execute.', sessionId: session?.id }
+                            detail: { text: t('chat.planApproved', 'Plan approved, please execute.'), sessionId: session?.id }
                           }))
                         }}
                         onAcceptPlanWithCompact={() => {
@@ -724,7 +726,7 @@ export function ChatDisplay({
                           setOverlayState({
                             type: 'markdown',
                             content: text,
-                            title: 'Response Preview',
+                            title: t('chat.overlay.responsePreview', 'Response Preview'),
                           })
                         }}
                         onOpenDetails={() => {
@@ -733,7 +735,7 @@ export function ChatDisplay({
                           setOverlayState({
                             type: 'markdown',
                             content: markdown,
-                            title: 'Turn Details',
+                            title: t('chat.overlay.turnDetails', 'Turn Details'),
                           })
                         }}
                         onOpenActivityDetails={(activity) => {
@@ -1025,6 +1027,7 @@ interface MessageBubbleProps {
  * ErrorMessage - Separate component for error messages to allow useState hook
  */
 function ErrorMessage({ message }: { message: Message }) {
+  const { t } = useI18n()
   const hasDetails = (message.errorDetails && message.errorDetails.length > 0) || message.errorOriginal
   const [detailsOpen, setDetailsOpen] = React.useState(false)
 
@@ -1040,7 +1043,7 @@ function ErrorMessage({ message }: { message: Message }) {
         } as React.CSSProperties}
       >
         <div className="text-xs text-destructive/50 mb-0.5 font-semibold">
-          {message.errorTitle || 'Error'}
+          {message.errorTitle || t('chat.error', 'Error')}
         </div>
         <p className="text-sm text-destructive">{message.content}</p>
 
@@ -1052,7 +1055,7 @@ function ErrorMessage({ message }: { message: Message }) {
               className="flex items-center gap-1 text-xs text-destructive/70 hover:text-destructive transition-colors"
             >
               {detailsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-              <span>{detailsOpen ? 'Hide' : 'Show'} technical details</span>
+              <span>{detailsOpen ? t('chat.hideDetails', 'Hide technical details') : t('chat.showDetails', 'Show technical details')}</span>
             </button>
 
             <AnimatedCollapsibleContent isOpen={detailsOpen} className="overflow-hidden">
@@ -1079,6 +1082,8 @@ function MessageBubble({
   renderMode = 'minimal',
   onPopOut,
 }: MessageBubbleProps) {
+  const { t } = useI18n()
+
   // === USER MESSAGE: Right-aligned bubble with attachments above ===
   if (message.role === 'user') {
     return (
@@ -1105,7 +1110,7 @@ function MessageBubble({
             <button
               onClick={() => onPopOut(message)}
               className="absolute top-2 right-2 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-foreground/5"
-              title="Open in new window"
+              title={t('chat.openInNewWindow', 'Open in new window')}
             >
               <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-foreground" />
             </button>
@@ -1165,7 +1170,7 @@ function MessageBubble({
         <div className="flex items-center gap-3 my-12 px-3">
           <div className="flex-1 h-px bg-border" />
           <span className="text-sm text-muted-foreground/70 select-none">
-            Conversation Compacted
+            {t('chat.conversationCompacted', 'Conversation Compacted')}
           </span>
           <div className="flex-1 h-px bg-border" />
         </div>
@@ -1197,7 +1202,7 @@ function MessageBubble({
       <div className="flex justify-start">
         <div className="max-w-[80%] bg-info/10 rounded-[8px] pl-5 pr-4 pt-2 pb-2.5 break-words select-none">
           <div className="text-xs text-info/50 mb-0.5 font-semibold">
-            Warning
+            {t('chat.warning', 'Warning')}
           </div>
           <p className="text-sm text-info">{message.content}</p>
         </div>
