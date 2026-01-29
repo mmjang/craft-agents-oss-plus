@@ -6,15 +6,87 @@ allowed-tools: Bash(agent-browser:*)
 
 # Browser Automation with agent-browser
 
-## Quick start
+## Setup (First-time only)
+
+**Use the initialization script**
 
 ```bash
-agent-browser open <url>        # Navigate to page
-agent-browser snapshot -i       # Get interactive elements with refs
-agent-browser click @e1         # Click element by ref
-agent-browser fill @e2 "text"   # Fill input by ref
-agent-browser close             # Close browser
+./templates/browser-init.sh
 ```
+
+This script automatically:
+- Checks if CDP port 9222 is already available
+- Installs agent-browser if not found
+- Finds local Chrome or installs Chromium via agent-browser
+- Launches Chrome with CDP enabled and persistent profile
+- Connects agent-browser to CDP port
+
+After the script completes:
+
+```bash
+agent-browser open <url>
+agent-browser snapshot -i
+```
+
+## Critical Rules (MUST follow)
+
+**This skill uses CDP (Chrome DevTools Protocol) mode for stability and login persistence.**
+
+**Always run the initialization script first:**
+
+```bash
+./templates/browser-init.sh
+```
+
+This ensures Chrome is running with CDP and agent-browser is connected. Then use commands normally:
+
+```bash
+agent-browser open <url>
+agent-browser snapshot -i
+agent-browser click @e1
+agent-browser fill @e2 "text"
+```
+
+** if the opened page require login, ask the user to login manually and tell the agent to continue.
+
+**Why CDP mode:**
+- `--user-data-dir` - Persists login state, cookies, localStorage permanently
+- `--remote-debugging-port` - Allows agent-browser to control the browser
+- User can see and interact with the browser window directly
+- Browser stays open between agent sessions (no repeated logins)
+
+**Do NOT:**
+- Start a new Chrome instance if CDP port 9222 is already in use
+- Close Chrome unless user explicitly requests
+- Use `agent-browser close` (this disconnects from Chrome, not closes it)
+- Clear cookies or profile unless user explicitly requests
+
+## Quick Start
+
+```bash
+# Run initialization script (handles everything automatically)
+./templates/browser-init.sh
+
+# Navigate and interact
+agent-browser open <url>
+agent-browser snapshot -i
+agent-browser click @e1
+agent-browser fill @e2 "text"
+```
+
+**Connect agent-browser:**
+
+`browser-init.sh` will handle the connect process automatically.
+
+```bash
+agent-browser connect 9222
+```
+
+**Login persistence:**
+- The profile directory (`~/.craft-agent-profile`) automatically saves all login states
+- Once user logs in manually in the browser, the state is preserved
+- Chrome stays open between agent sessions - no re-login needed
+- If a website requires re-login, it's because the website's session expired
 
 ## Core workflow
 
@@ -220,6 +292,7 @@ agent-browser eval "document.title"   # Run JavaScript
 
 ```bash
 agent-browser --session <name> ...    # Isolated browser session
+agent-browser --profile <path> ...    # Persistent profile directory (saves login state)
 agent-browser --json ...              # JSON output for parsing
 agent-browser --headed ...            # Show browser window (not headless)
 agent-browser --full ...              # Full page screenshot (-f)
@@ -245,17 +318,22 @@ agent-browser --proxy socks5://proxy.com:1080 open example.com
 ## Environment variables
 
 ```bash
-AGENT_BROWSER_SESSION="mysession"            # Default session name
-AGENT_BROWSER_EXECUTABLE_PATH="/path/chrome" # Custom browser path
-AGENT_BROWSER_EXTENSIONS="/ext1,/ext2"       # Comma-separated extension paths
-AGENT_BROWSER_PROVIDER="your-cloud-browser-provider"  # Cloud browser provider (select browseruse or browserbase)
-AGENT_BROWSER_STREAM_PORT="9223"             # WebSocket streaming port
-AGENT_BROWSER_HOME="/path/to/agent-browser"  # Custom install location (for daemon.js)
+AGENT_BROWSER_SESSION="main"                  # Default session name (reuse browser instance)
+AGENT_BROWSER_PROFILE="~/.craft-agent-profile" # Profile directory (persist login state)
+AGENT_BROWSER_EXECUTABLE_PATH="/path/chrome"  # Custom browser path
+AGENT_BROWSER_EXTENSIONS="/ext1,/ext2"        # Comma-separated extension paths
+AGENT_BROWSER_PROVIDER="your-cloud-browser-provider"  # Cloud browser provider
+AGENT_BROWSER_STREAM_PORT="9223"              # WebSocket streaming port
+AGENT_BROWSER_HOME="/path/to/agent-browser"   # Custom install location (for daemon.js)
 ```
 
-## Example: Form submission
+## Example: Form submission (CDP mode)
 
 ```bash
+# Initialize (run once per session)
+./templates/browser-init.sh
+
+# Navigate and interact
 agent-browser open https://example.com/form
 agent-browser snapshot -i
 # Output shows: textbox "Email" [ref=e1], textbox "Password" [ref=e2], button "Submit" [ref=e3]
@@ -267,9 +345,12 @@ agent-browser wait --load networkidle
 agent-browser snapshot -i  # Check result
 ```
 
-## Example: Authentication with saved state
+## Example: Authentication with persistent profile (CDP mode)
 
 ```bash
+# Initialize (handles Chrome startup and connection)
+./templates/browser-init.sh
+
 # Login once
 agent-browser open https://app.example.com/login
 agent-browser snapshot -i
@@ -277,10 +358,10 @@ agent-browser fill @e1 "username"
 agent-browser fill @e2 "password"
 agent-browser click @e3
 agent-browser wait --url "**/dashboard"
-agent-browser state save auth.json
 
-# Later sessions: load saved state
-agent-browser state load auth.json
+# Later sessions: Chrome is still running with login state preserved
+# Just run init script again (it will detect existing CDP and connect)
+./templates/browser-init.sh
 agent-browser open https://app.example.com/dashboard
 ```
 
@@ -336,12 +417,14 @@ Executable workflow scripts for common patterns:
 
 | Template | Description |
 |----------|-------------|
+| [templates/browser-init.sh](templates/browser-init.sh) | Prepare Chrome with CDP and connect agent-browser |
 | [templates/form-automation.sh](templates/form-automation.sh) | Form filling with validation |
 | [templates/authenticated-session.sh](templates/authenticated-session.sh) | Login once, reuse state |
 | [templates/capture-workflow.sh](templates/capture-workflow.sh) | Content extraction with screenshots |
 
 Usage:
 ```bash
+source ./templates/browser-init.sh https://example.com
 ./templates/form-automation.sh https://example.com/form
 ./templates/authenticated-session.sh https://app.example.com/login
 ./templates/capture-workflow.sh https://example.com ./output
