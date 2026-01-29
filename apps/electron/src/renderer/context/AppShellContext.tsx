@@ -36,6 +36,8 @@ export interface AppShellContextType {
   workspaces: Workspace[]
   activeWorkspaceId: string | null
   currentModel: string
+  /** API base URL for model selection (determines which models to show) */
+  apiBaseUrl: string | null
   pendingPermissions: Map<string, PermissionRequest[]>
   pendingCredentials: Map<string, CredentialRequest[]>
   /** Get draft input text for a session - reads from ref without triggering re-renders */

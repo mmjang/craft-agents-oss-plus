@@ -32,6 +32,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
   const {
     activeWorkspaceId,
     currentModel,
+    apiBaseUrl,
     onSendMessage,
     onOpenFile,
     onOpenUrl,
@@ -332,6 +333,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
                 onOpenUrl={handleOpenUrl}
                 currentModel={effectiveModel}
                 onModelChange={handleModelChange}
+                apiBaseUrl={apiBaseUrl}
                 textareaRef={textareaRef}
                 pendingPermission={undefined}
                 onRespondToPermission={onRespondToPermission}
@@ -397,6 +399,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
             onOpenUrl={handleOpenUrl}
             currentModel={effectiveModel}
             onModelChange={handleModelChange}
+            apiBaseUrl={apiBaseUrl}
             textareaRef={textareaRef}
             pendingPermission={pendingPermission}
             onRespondToPermission={onRespondToPermission}

@@ -80,6 +80,8 @@ interface ChatDisplayProps {
   // Model selection
   currentModel: string
   onModelChange: (model: string) => void
+  /** API base URL for determining which models to show */
+  apiBaseUrl?: string | null
   /** Ref for the input, used for external focus control */
   textareaRef?: React.RefObject<RichTextInputHandle>
   /** When true, disables input (e.g., when agent needs activation) */
@@ -315,6 +317,7 @@ export function ChatDisplay({
   onOpenUrl,
   currentModel,
   onModelChange,
+  apiBaseUrl,
   textareaRef: externalTextareaRef,
   disabled = false,
   pendingPermission,
@@ -861,6 +864,7 @@ export function ChatDisplay({
               textareaRef={textareaRef}
               currentModel={currentModel}
               onModelChange={onModelChange}
+              apiBaseUrl={apiBaseUrl}
               thinkingLevel={thinkingLevel}
               onThinkingLevelChange={onThinkingLevelChange}
               ultrathinkEnabled={ultrathinkEnabled}

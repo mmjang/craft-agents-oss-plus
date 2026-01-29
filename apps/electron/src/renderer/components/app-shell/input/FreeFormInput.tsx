@@ -47,7 +47,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { cn } from '@/lib/utils'
 import { applySmartTypography } from '@/lib/smart-typography'
 import { AttachmentPreview } from '../AttachmentPreview'
-import { MODELS, getModelShortName } from '@config/models'
+import { getModelsForBaseUrl, getModelShortName } from '@config/models'
 import { SourceAvatar } from '@/components/ui/source-avatar'
 import { FreeFormInputContextBadge } from './FreeFormInputContextBadge'
 import type { FileAttachment, LoadedSource, LoadedSkill } from '../../../../shared/types'
@@ -97,6 +97,8 @@ export interface FreeFormInputProps {
   currentModel: string
   /** Callback when model changes */
   onModelChange: (model: string) => void
+  /** API base URL for determining which models to show */
+  apiBaseUrl?: string | null
   // Thinking level (session-level setting)
   /** Current thinking level ('off', 'think', 'max') */
   thinkingLevel?: ThinkingLevel
@@ -174,6 +176,7 @@ export function FreeFormInput({
   inputRef: externalInputRef,
   currentModel,
   onModelChange,
+  apiBaseUrl,
   thinkingLevel = 'think',
   onThinkingLevelChange,
   ultrathinkEnabled = false,
@@ -1280,13 +1283,17 @@ export function FreeFormInput({
               <TooltipContent side="top">Model</TooltipContent>
             </Tooltip>
             <StyledDropdownMenuContent side="top" align="end" sideOffset={8} className="min-w-[240px]">
-              {/* Model options */}
-              {MODELS.map((model) => {
+              {/* Model options - dynamically based on API base URL */}
+              {getModelsForBaseUrl(apiBaseUrl).map((model) => {
                 const isSelected = currentModel === model.id
                 const descriptions: Record<string, string> = {
+                  // Claude models
                   'claude-opus-4-5-20251101': 'Most capable for complex work',
                   'claude-sonnet-4-5-20250929': 'Best for everyday tasks',
                   'claude-haiku-4-5-20251001': 'Fastest for quick answers',
+                  // Zhipu models
+                  'glm-4.7': 'Most capable for complex work',
+                  'glm-4.5-air': 'Balanced performance',
                 }
                 return (
                   <StyledDropdownMenuItem

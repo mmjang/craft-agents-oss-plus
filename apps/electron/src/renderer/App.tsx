@@ -25,7 +25,7 @@ import { useUpdateChecker } from '@/hooks/useUpdateChecker'
 import { NavigationProvider } from '@/contexts/NavigationContext'
 import { navigate, routes } from './lib/navigate'
 import { initRendererPerf } from './lib/perf'
-import { DEFAULT_MODEL } from '@config/models'
+import { DEFAULT_MODEL, getModelsForBaseUrl, getDefaultModelForBaseUrl } from '@config/models'
 import {
   initializeSessionsAtom,
   addSessionAtom,
@@ -169,6 +169,8 @@ export default function App() {
   // Window's workspace ID - fixed for this window (multi-window architecture)
   const [windowWorkspaceId, setWindowWorkspaceId] = useState<string | null>(null)
   const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL)
+  // API base URL for model selection (determines which models to show)
+  const [apiBaseUrl, setApiBaseUrl] = useState<string | null>(null)
   const [menuNewChatTrigger, setMenuNewChatTrigger] = useState(0)
   // Permission requests per session (queue to handle multiple concurrent requests)
   const [pendingPermissions, setPendingPermissions] = useState<Map<string, PermissionRequest[]>>(new Map())
@@ -333,6 +335,26 @@ export default function App() {
 
     window.electronAPI.getWorkspaces().then(setWorkspaces)
     window.electronAPI.getNotificationsEnabled().then(setNotificationsEnabled)
+    // Load API base URL and model together to ensure compatibility
+    Promise.all([
+      window.electronAPI.getBillingMethod(),
+      window.electronAPI.getModel(),
+    ]).then(([billing, storedModel]) => {
+      const baseUrl = billing.baseUrl ?? null
+      setApiBaseUrl(baseUrl)
+
+      // Check if stored model is compatible with current API base URL
+      const availableModels = getModelsForBaseUrl(baseUrl)
+      const isModelCompatible = storedModel && availableModels.some(m => m.id === storedModel)
+
+      if (isModelCompatible) {
+        setCurrentModel(storedModel)
+      } else {
+        // Switch to default model for this API base URL
+        const defaultModel = getDefaultModelForBaseUrl(baseUrl)
+        setCurrentModel(defaultModel)
+      }
+    })
     window.electronAPI.getSessions().then((loadedSessions) => {
       // Initialize per-session atoms and metadata map
       // NOTE: No sessionsAtom used - sessions are only in per-session atoms
@@ -361,12 +383,6 @@ export default function App() {
         if (session) {
           navigate(routes.view.allChats(session.id))
         }
-      }
-    })
-    // Load stored model preference
-    window.electronAPI.getModel().then((storedModel) => {
-      if (storedModel) {
-        setCurrentModel(storedModel)
       }
     })
     // Load persisted input drafts into ref (no re-render needed)
@@ -1108,6 +1124,7 @@ export default function App() {
     workspaces,
     activeWorkspaceId: windowWorkspaceId,
     currentModel,
+    apiBaseUrl,
     pendingPermissions,
     pendingCredentials,
     getDraft,
@@ -1147,6 +1164,7 @@ export default function App() {
     workspaces,
     windowWorkspaceId,
     currentModel,
+    apiBaseUrl,
     pendingPermissions,
     pendingCredentials,
     getDraft,

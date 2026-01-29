@@ -14,18 +14,58 @@ export interface ModelDefinition {
 // USER-SELECTABLE MODELS (shown in UI)
 // ============================================
 
-export const MODELS: ModelDefinition[] = [
+/** Claude models (default) */
+export const CLAUDE_MODELS: ModelDefinition[] = [
   { id: 'claude-opus-4-5-20251101', name: 'Opus 4.5', shortName: 'Opus', description: 'Most capable' },
   { id: 'claude-sonnet-4-5-20250929', name: 'Sonnet 4.5', shortName: 'Sonnet', description: 'Balanced' },
   { id: 'claude-haiku-4-5-20251001', name: 'Haiku 4.5', shortName: 'Haiku', description: 'Fast & efficient' },
 ];
 
+/** Zhipu AI models (for bigmodel.cn API) */
+export const ZHIPU_MODELS: ModelDefinition[] = [
+  { id: 'glm-4.7', name: 'GLM-4.7', shortName: 'GLM-4.7', description: 'Most capable' },
+  { id: 'glm-4.5-air', name: 'GLM-4.5 Air', shortName: 'GLM-4.5', description: 'Balanced' },
+];
+
+/** Zhipu API base URL pattern */
+const ZHIPU_BASE_URL_PATTERN = /bigmodel\.cn/i;
+
+/**
+ * Check if the given base URL is for Zhipu AI
+ */
+export function isZhipuBaseUrl(baseUrl: string | null | undefined): boolean {
+  if (!baseUrl) return false;
+  return ZHIPU_BASE_URL_PATTERN.test(baseUrl);
+}
+
+/**
+ * Get the appropriate models list based on the API base URL.
+ * Returns Zhipu models if the base URL contains 'bigmodel.cn',
+ * otherwise returns Claude models.
+ */
+export function getModelsForBaseUrl(baseUrl: string | null | undefined): ModelDefinition[] {
+  return isZhipuBaseUrl(baseUrl) ? ZHIPU_MODELS : CLAUDE_MODELS;
+}
+
+/**
+ * Get the default model for the given API base URL.
+ */
+export function getDefaultModelForBaseUrl(baseUrl: string | null | undefined): string {
+  return isZhipuBaseUrl(baseUrl) ? DEFAULT_ZHIPU_MODEL : DEFAULT_MODEL;
+}
+
+// Legacy export for backward compatibility
+export const MODELS: ModelDefinition[] = CLAUDE_MODELS;
+
 // ============================================
 // PURPOSE-SPECIFIC DEFAULTS
 // ============================================
 
-/** Default model for main chat (user-facing) */
+/** Default model for main chat (user-facing) - Claude */
 export const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
+
+/** Default model for main chat (user-facing) - Zhipu */
+export const DEFAULT_ZHIPU_MODEL = 'glm-4.7';
 
 /** Model for agent definition extraction (always high quality) */
 export const EXTRACTION_MODEL = 'claude-opus-4-5-20251101';
@@ -40,9 +80,12 @@ export const INSTRUCTION_UPDATE_MODEL = 'claude-opus-4-5-20251101';
 // HELPER FUNCTIONS
 // ============================================
 
+/** All models combined for lookup */
+const ALL_MODELS = [...CLAUDE_MODELS, ...ZHIPU_MODELS];
+
 /** Get display name for a model ID (full name with version) */
 export function getModelDisplayName(modelId: string): string {
-  const model = MODELS.find(m => m.id === modelId);
+  const model = ALL_MODELS.find(m => m.id === modelId);
   if (model) return model.name;
   // Fallback: strip prefix and date suffix
   return modelId.replace('claude-', '').replace(/-\d{8}$/, '');
@@ -50,7 +93,7 @@ export function getModelDisplayName(modelId: string): string {
 
 /** Get short display name for a model ID (without version number) */
 export function getModelShortName(modelId: string): string {
-  const model = MODELS.find(m => m.id === modelId);
+  const model = ALL_MODELS.find(m => m.id === modelId);
   if (model) return model.shortName;
   // Fallback: strip prefix and date suffix
   return modelId.replace('claude-', '').replace(/-[\d.-]+$/, '');
