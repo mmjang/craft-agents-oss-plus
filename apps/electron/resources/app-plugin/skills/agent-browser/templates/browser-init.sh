@@ -82,11 +82,16 @@ echo "Profile: $CHROME_PROFILE"
 # Step 4: Launch Chrome with CDP
 echo "Starting Chrome with CDP on port ${CDP_PORT}..."
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HOME_PAGE="file://${SCRIPT_DIR}/agent-browser-home.html"
+
 "$CHROME_PATH" \
     --remote-debugging-port="${CDP_PORT}" \
     --user-data-dir="${CHROME_PROFILE}" \
     --no-first-run \
     --no-default-browser-check \
+    "$HOME_PAGE" \
     > /dev/null 2>&1 &
 
 # Wait for CDP to become available
