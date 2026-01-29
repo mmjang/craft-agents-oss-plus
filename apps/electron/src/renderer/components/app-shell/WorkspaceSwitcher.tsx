@@ -143,7 +143,7 @@ export function WorkspaceSwitcher({
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             isCollapsed && "h-9 w-9 shrink-0 justify-center p-0"
           )}
-          aria-label="Select workspace"
+          aria-label={t('common.selectWorkspace', 'Select workspace')}
         >
           {/* Workspace Avatar: Image with crossfade, border, first letter fallback */}
           <CrossfadeAvatar
@@ -157,7 +157,7 @@ export function WorkspaceSwitcher({
           {!isCollapsed && (
             <>
               <FadingText className="ml-1 font-sans min-w-0 text-sm" fadeWidth={36}>
-                {selectedWorkspace?.name || 'Select workspace'}
+                {selectedWorkspace?.name || t('common.selectWorkspace', 'Select workspace')}
               </FadingText>
               <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
             </>

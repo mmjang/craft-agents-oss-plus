@@ -8,6 +8,10 @@ loadShellEnv()
 import { setupPortableRuntime } from './portable-runtime'
 setupPortableRuntime('china')
 
+// CDP debugging support (must be before app.whenReady)
+import { setupCdp } from './cdp'
+setupCdp()
+
 import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'

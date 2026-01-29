@@ -342,6 +342,82 @@ export function getEditConfig(key: EditContextKey, location: string): EditConfig
 }
 
 /**
+ * Translation key mapping for edit config examples and placeholders.
+ * Maps English example text to translation keys for automatic localization.
+ */
+const EXAMPLE_TRANSLATION_MAP: Record<string, string> = {
+  "Allow running 'make build' in Explore mode": 'editPopover.example.workspacePermissions',
+  'Allow git fetch command': 'editPopover.example.defaultPermissions',
+  'Add error handling guidelines': 'editPopover.example.skillInstructions',
+  'Update the skill description': 'editPopover.example.skillMetadata',
+  'Add rate limit documentation': 'editPopover.example.sourceGuide',
+  'Update the display name': 'editPopover.example.sourceConfig',
+  'Allow list operations in Explore mode': 'editPopover.example.sourcePermissions',
+  'Only allow read operations (list, get, search)': 'editPopover.example.sourceToolPermissions',
+  'Add coding style preferences': 'editPopover.example.preferencesNotes',
+  'Connect to my Craft space': 'editPopover.example.addSource',
+  'Connect to the OpenAI API': 'editPopover.example.addSourceApi',
+  'Connect to Linear': 'editPopover.example.addSourceMcp',
+  'Connect to my Obsidian vault': 'editPopover.example.addSourceLocal',
+  'Review PRs following our code standards': 'editPopover.example.addSkill',
+  'Add a "Blocked" status': 'editPopover.example.editStatuses',
+}
+
+const PLACEHOLDER_TRANSLATION_MAP: Record<string, string> = {
+  'What would you like to connect?': 'editPopover.placeholder.addSource',
+  'What API would you like to connect?': 'editPopover.placeholder.addSourceApi',
+  'What MCP server would you like to connect?': 'editPopover.placeholder.addSourceMcp',
+  'What folder would you like to connect?': 'editPopover.placeholder.addSourceLocal',
+  'What should I learn to do?': 'editPopover.placeholder.addSkill',
+}
+
+/**
+ * Translation key mapping for edit config examples and placeholders.
+ * Used by useTranslatedEditConfig hook to get localized strings.
+ */
+const EDIT_CONFIG_TRANSLATION_KEYS: Record<EditContextKey, { example: string; placeholder?: string }> = {
+  'workspace-permissions': { example: 'editPopover.example.workspacePermissions' },
+  'default-permissions': { example: 'editPopover.example.defaultPermissions' },
+  'skill-instructions': { example: 'editPopover.example.skillInstructions' },
+  'skill-metadata': { example: 'editPopover.example.skillMetadata' },
+  'source-guide': { example: 'editPopover.example.sourceGuide' },
+  'source-config': { example: 'editPopover.example.sourceConfig' },
+  'source-permissions': { example: 'editPopover.example.sourcePermissions' },
+  'source-tool-permissions': { example: 'editPopover.example.sourceToolPermissions' },
+  'preferences-notes': { example: 'editPopover.example.preferencesNotes' },
+  'add-source': { example: 'editPopover.example.addSource', placeholder: 'editPopover.placeholder.addSource' },
+  'add-source-api': { example: 'editPopover.example.addSourceApi', placeholder: 'editPopover.placeholder.addSourceApi' },
+  'add-source-mcp': { example: 'editPopover.example.addSourceMcp', placeholder: 'editPopover.placeholder.addSourceMcp' },
+  'add-source-local': { example: 'editPopover.example.addSourceLocal', placeholder: 'editPopover.placeholder.addSourceLocal' },
+  'add-skill': { example: 'editPopover.example.addSkill', placeholder: 'editPopover.placeholder.addSkill' },
+  'edit-statuses': { example: 'editPopover.example.editStatuses' },
+}
+
+/**
+ * Hook to get translated edit config. Use this in components that need localized
+ * example and placeholder text.
+ *
+ * @param key - The edit context key
+ * @param location - Base path (e.g., workspace root path)
+ *
+ * @example
+ * const { context, example, overridePlaceholder } = useTranslatedEditConfig('add-source', workspace.rootPath)
+ */
+export function useTranslatedEditConfig(key: EditContextKey, location: string): EditConfig {
+  const { t } = useI18n()
+  const baseConfig = getEditConfig(key, location)
+  const translationKeys = EDIT_CONFIG_TRANSLATION_KEYS[key]
+
+  return {
+    ...baseConfig,
+    example: t(translationKeys.example as any, baseConfig.example),
+    overridePlaceholder: translationKeys.placeholder
+      ? t(translationKeys.placeholder as any, baseConfig.overridePlaceholder)
+      : baseConfig.overridePlaceholder,
+  }
+}
+
+/**
  * Optional secondary action button displayed on the left side of the popover footer.
  * Styled as plain text with underline on hover - typically used for "Edit File" actions.
  */
@@ -467,12 +543,28 @@ export function EditPopover({
   onOpenChange: controlledOnOpenChange,
   modal = false,
 }: EditPopoverProps) {
+  const { t } = useI18n()
+
+  // Translate example and placeholder if translation keys exist
+  const translatedExample = example
+    ? (EXAMPLE_TRANSLATION_MAP[example]
+        ? t(EXAMPLE_TRANSLATION_MAP[example] as any, example)
+        : example)
+    : undefined
+
+  const translatedPlaceholder = overridePlaceholder
+    ? (PLACEHOLDER_TRANSLATION_MAP[overridePlaceholder]
+        ? t(PLACEHOLDER_TRANSLATION_MAP[overridePlaceholder] as any, overridePlaceholder)
+        : overridePlaceholder)
+    : undefined
+
   // Build placeholder: use override if provided, otherwise default to "change" wording
   // overridePlaceholder allows contexts like add-source/add-skill to say "add" instead of "change"
-  const basePlaceholder = overridePlaceholder ?? "Describe what you'd like to change..."
-  const placeholder = example
-    ? `${basePlaceholder.replace(/\.{3}$/, '')}, e.g., "${example}"`
+  const basePlaceholder = translatedPlaceholder ?? t('editPopover.defaultPlaceholder', "Describe what you'd like to change...")
+  const placeholder = translatedExample
+    ? `${basePlaceholder.replace(/\.{3}$/, '')}, e.g., "${translatedExample}"`
     : basePlaceholder
+
   // Support both controlled and uncontrolled modes:
   // - Uncontrolled (default): internal state manages open/close
   // - Controlled: parent manages state via open/onOpenChange props

@@ -20,6 +20,7 @@ import {
   Info_Table,
   Info_Markdown,
 } from '@/components/info'
+import { useI18n } from '@/i18n/I18nContext'
 import type { LoadedSkill } from '../../shared/types'
 
 interface SkillInfoPageProps {
@@ -28,6 +29,7 @@ interface SkillInfoPageProps {
 }
 
 export default function SkillInfoPage({ skillSlug, workspaceId }: SkillInfoPageProps) {
+  const { t } = useI18n()
   const [skill, setSkill] = useState<LoadedSkill | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -166,26 +168,26 @@ export default function SkillInfoPage({ skillSlug, workspaceId }: SkillInfoPageP
 
           {/* Metadata */}
           <Info_Section
-            title="Metadata"
+            title={t('skills.metadata.title', 'Metadata')}
             actions={
               // EditPopover for AI-assisted metadata editing (name, description in frontmatter)
               <EditPopover
                 trigger={<EditButton />}
                 {...getEditConfig('skill-metadata', skill.path)}
                 secondaryAction={{
-                  label: 'Edit File',
+                  label: t('common.edit', 'Edit File'),
                   onClick: handleEdit,
                 }}
               />
             }
           >
             <Info_Table>
-              <Info_Table.Row label="Slug" value={skill.slug} />
-              <Info_Table.Row label="Name">{skill.metadata.name}</Info_Table.Row>
-              <Info_Table.Row label="Description">
+              <Info_Table.Row label={t('skills.metadata.slug', 'Slug')} value={skill.slug} />
+              <Info_Table.Row label={t('skills.metadata.name', 'Name')}>{skill.metadata.name}</Info_Table.Row>
+              <Info_Table.Row label={t('skills.metadata.description', 'Description')}>
                 {skill.metadata.description}
               </Info_Table.Row>
-              <Info_Table.Row label="Location">
+              <Info_Table.Row label={t('skills.metadata.location', 'Location')}>
                 <button
                   onClick={handleLocationClick}
                   className="hover:underline cursor-pointer text-left"
@@ -198,33 +200,33 @@ export default function SkillInfoPage({ skillSlug, workspaceId }: SkillInfoPageP
 
           {/* Permission Modes */}
           {skill.metadata.alwaysAllow && skill.metadata.alwaysAllow.length > 0 && (
-            <Info_Section title="Permission Modes">
+            <Info_Section title={t('skills.permissionModes.title', 'Permission Modes')}>
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground mb-3">
-                  How "Always Allowed Tools" interacts with permission modes:
+                  {t('skills.permissionModes.desc', 'How "Always Allowed Tools" interacts with permission modes:')}
                 </p>
                 <div className="rounded-[8px] border border-border/50 overflow-hidden">
                   <table className="w-full text-sm">
                     <tbody>
                       <tr className="border-b border-border/30">
-                        <td className="px-3 py-2 font-medium text-muted-foreground w-[140px]">Explore</td>
+                        <td className="px-3 py-2 font-medium text-muted-foreground w-[140px]">{t('skills.permissionModes.explore', 'Explore')}</td>
                         <td className="px-3 py-2 flex items-center gap-2">
                           <X className="h-3.5 w-3.5 text-destructive shrink-0" />
-                          <span className="text-foreground/80">Blocked — write tools blocked regardless</span>
+                          <span className="text-foreground/80">{t('skills.permissionModes.exploreDesc', 'Blocked — write tools blocked regardless')}</span>
                         </td>
                       </tr>
                       <tr className="border-b border-border/30">
-                        <td className="px-3 py-2 font-medium text-muted-foreground">Ask to Edit</td>
+                        <td className="px-3 py-2 font-medium text-muted-foreground">{t('skills.permissionModes.askToEdit', 'Ask to Edit')}</td>
                         <td className="px-3 py-2 flex items-center gap-2">
                           <Check className="h-3.5 w-3.5 text-success shrink-0" />
-                          <span className="text-foreground/80">Auto-approved — no prompts for allowed tools</span>
+                          <span className="text-foreground/80">{t('skills.permissionModes.askToEditDesc', 'Auto-approved — no prompts for allowed tools')}</span>
                         </td>
                       </tr>
                       <tr>
-                        <td className="px-3 py-2 font-medium text-muted-foreground">Auto</td>
+                        <td className="px-3 py-2 font-medium text-muted-foreground">{t('skills.permissionModes.auto', 'Auto')}</td>
                         <td className="px-3 py-2 flex items-center gap-2">
                           <Minus className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-foreground/80">No effect — all tools already auto-approved</span>
+                          <span className="text-foreground/80">{t('skills.permissionModes.autoDesc', 'No effect — all tools already auto-approved')}</span>
                         </td>
                       </tr>
                     </tbody>
@@ -236,14 +238,14 @@ export default function SkillInfoPage({ skillSlug, workspaceId }: SkillInfoPageP
 
           {/* Instructions */}
           <Info_Section
-            title="Instructions"
+            title={t('skills.instructions.title', 'Instructions')}
             actions={
               // EditPopover for AI-assisted editing with "Edit File" as secondary action
               <EditPopover
                 trigger={<EditButton />}
                 {...getEditConfig('skill-instructions', skill.path)}
                 secondaryAction={{
-                  label: 'Edit File',
+                  label: t('common.edit', 'Edit File'),
                   onClick: handleEdit,
                 }}
               />

@@ -26,6 +26,7 @@ import { DropdownMenuProvider, ContextMenuProvider } from '@/components/ui/menu-
 import { SourceMenu } from './SourceMenu'
 import { EditPopover, getEditConfig } from '@/components/ui/EditPopover'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/i18n/I18nContext'
 import type { LoadedSource, SourceConnectionStatus, SourceFilter } from '../../../shared/types'
 
 export interface SourcesListPanelProps {
@@ -68,6 +69,8 @@ export function SourcesListPanel({
   localMcpEnabled = true,
   className,
 }: SourcesListPanelProps) {
+  const { t } = useI18n()
+
   // Filter sources based on type filter if active
   const filteredSources = React.useMemo(() => {
     if (!sourceFilter || sourceFilter.kind === 'all') {
@@ -80,10 +83,17 @@ export function SourcesListPanel({
   // Build empty state message based on filter
   const emptyMessage = React.useMemo(() => {
     if (sourceFilter?.kind === 'type') {
-      return `No ${getSourceTypeFilterLabel(sourceFilter.sourceType)} sources configured.`
+      switch (sourceFilter.sourceType) {
+        case 'api':
+          return t('sources.empty.noApiSources', 'No API sources configured.')
+        case 'mcp':
+          return t('sources.empty.noMcpSources', 'No MCP sources configured.')
+        case 'local':
+          return t('sources.empty.noLocalSources', 'No local folder sources configured.')
+      }
     }
-    return 'No sources configured.'
-  }, [sourceFilter])
+    return t('sources.empty.noSources', 'No sources configured.')
+  }, [sourceFilter, t])
 
   return (
     <ScrollArea className={cn('flex-1', className)}>
@@ -98,7 +108,7 @@ export function SourcesListPanel({
                 <EditPopover
                   trigger={
                     <button className="text-sm text-foreground hover:underline">
-                      Add your first source
+                      {t('sources.empty.addFirst', 'Add your first source')}
                     </button>
                   }
                   {...getEditConfig(

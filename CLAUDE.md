@@ -86,7 +86,21 @@ bun install
 
 **Run dev server:**
 ```bash
-bun run electron:dev        # Hot reload
+bun run electron:dev        # Hot reload (CDP enabled on port 9333 by default)
+```
+
+**CDP Debugging with Agent Browser:**
+
+Dev server enables CDP (Chrome DevTools Protocol) on port 9333 by default. Use [agent-browser](https://github.com/vercel-labs/agent-browser) to automate and debug the app:
+```bash
+npx agent-browser connect 9333   # Connect to running app
+npx agent-browser --help         # See all commands
+```
+
+To disable or change CDP port:
+```bash
+CDP_PORT=0 bun run electron:dev      # Disable CDP
+CDP_PORT=9222 bun run electron:dev   # Use different port
 ```
 
 **Type checking:**
