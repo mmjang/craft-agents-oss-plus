@@ -41,7 +41,8 @@ import { sourcesAtom } from '@/atoms/sources'
 import { skillsAtom } from '@/atoms/skills'
 import { extractBadges } from '@/lib/mentions'
 import { getDefaultStore } from 'jotai'
-import { ShikiThemeProvider, PlatformProvider } from '@craft-agent/ui'
+import { ShikiThemeProvider, PlatformProvider, UITranslationProvider } from '@craft-agent/ui'
+import { useI18n } from '@/i18n/I18nContext'
 
 type AppState = 'loading' | 'onboarding' | 'reauth' | 'ready'
 
@@ -223,6 +224,9 @@ export default function App() {
   // shikiTheme is passed to ShikiThemeProvider to ensure correct syntax highlighting
   // theme for dark-only themes in light system mode
   const { shikiTheme } = useTheme({ appTheme })
+
+  // Get translation function for UITranslationProvider (packages/ui components)
+  const { t } = useI18n()
 
   // Ref for sessionOptions to access current value in event handlers without re-registering
   const sessionOptionsRef = useRef(sessionOptions)
@@ -1262,6 +1266,7 @@ export default function App() {
   // Ready state - main app with splash overlay during data loading
   return (
     <PlatformProvider actions={platformActions}>
+    <UITranslationProvider t={t}>
     <ShikiThemeProvider shikiTheme={shikiTheme}>
       <FocusProvider>
         <ModalProvider>
@@ -1304,6 +1309,7 @@ export default function App() {
         </ModalProvider>
       </FocusProvider>
     </ShikiThemeProvider>
+    </UITranslationProvider>
     </PlatformProvider>
   )
 }

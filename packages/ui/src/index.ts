@@ -23,6 +23,10 @@ export {
   ShikiThemeProvider,
   useShikiTheme,
   type ShikiThemeProviderProps,
+  UITranslationProvider,
+  useUITranslation,
+  type TranslationFunction,
+  type UITranslationProviderProps,
 } from './context'
 
 // Chat components

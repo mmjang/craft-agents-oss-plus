@@ -501,4 +501,16 @@ export default {
   'auth.username': '用户名',
   'auth.password': '密码',
   'auth.enterPlaceholder': '输入{{field}}',
+
+  // TurnCard (packages/ui)
+  'turnCard.viewFullscreen': '全屏查看',
+  'turnCard.plan': '计划',
+  'turnCard.copy': '复制',
+  'turnCard.copied': '已复制！',
+  'turnCard.viewAsMarkdown': '查看 Markdown',
+  'turnCard.feedbackHint': '在聊天中输入反馈或',
+  'turnCard.streaming': '正在输出...',
+  'turnCard.todoList': '待办列表',
+  'turnCard.thinking': '思考中...',
+  'turnCard.preparingResponse': '准备回复中...',
 }

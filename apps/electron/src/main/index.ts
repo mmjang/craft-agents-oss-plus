@@ -25,6 +25,9 @@ import { setPerfEnabled, enableDebug } from '@craft-agent/shared/utils'
 import { initNotificationService, clearBadgeCount, initBadgeIcon, initInstanceBadge } from './notifications'
 import { checkForUpdatesOnLaunch, checkPendingUpdateAndInstall, setWindowManager as setAutoUpdateWindowManager } from './auto-update'
 
+// Temporary flag to disable auto-update functionality
+const DISABLE_AUTO_UPDATE = true
+
 // Initialize electron-log for renderer process support
 log.initialize()
 
@@ -159,7 +162,7 @@ app.whenReady().then(async () => {
   // Check for pending update and auto-install if available
   // This must happen early, before creating windows
   // Skip in dev mode to avoid accidentally installing over /Applications version
-  if (app.isPackaged) {
+  if (app.isPackaged && !DISABLE_AUTO_UPDATE) {
     const isAutoInstalling = await checkPendingUpdateAndInstall()
     if (isAutoInstalling) {
       // App will quit and install update - don't proceed with startup
@@ -215,12 +218,12 @@ app.whenReady().then(async () => {
     // Initialize auto-update (check immediately on launch)
     // Skip in dev mode to avoid replacing /Applications app and launching it instead
     setAutoUpdateWindowManager(windowManager)
-    if (app.isPackaged) {
+    if (app.isPackaged && !DISABLE_AUTO_UPDATE) {
       checkForUpdatesOnLaunch().catch(err => {
         mainLog.error('[auto-update] Launch check failed:', err)
       })
     } else {
-      mainLog.info('[auto-update] Skipping auto-update in dev mode')
+      mainLog.info('[auto-update] Skipping auto-update (disabled or dev mode)')
     }
 
     // Process pending deep link from cold start

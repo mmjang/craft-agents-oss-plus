@@ -377,6 +377,8 @@ export default function AppSettingsPage() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
 
   // Auto-update state
+  // Temporary flag to disable auto-update UI
+  const DISABLE_AUTO_UPDATE_UI = true
   const updateChecker = useUpdateChecker()
   const [isCheckingForUpdates, setIsCheckingForUpdates] = useState(false)
 
@@ -449,6 +451,19 @@ export default function AppSettingsPage() {
 
   // Handle clicking on a billing method option
   const handleMethodClick = useCallback(async (method: AuthType) => {
+    // For API key method, allow toggling the dialog even when credential exists
+    // This enables users to modify their existing API key
+    if (method === 'api_key') {
+      if (expandedMethod === 'api_key') {
+        setExpandedMethod(null)
+      } else {
+        setExpandedMethod(method)
+        setApiKeyError(undefined)
+      }
+      return
+    }
+
+    // For OAuth method, close if already selected with credential
     if (method === authType && hasCredential) {
       setExpandedMethod(null)
       return
@@ -458,7 +473,7 @@ export default function AppSettingsPage() {
     setApiKeyError(undefined)
     setClaudeOAuthStatus('idle')
     setClaudeOAuthError(undefined)
-  }, [authType, hasCredential])
+  }, [authType, hasCredential, expandedMethod])
 
   // Cancel billing method expansion
   const handleCancel = useCallback(() => {
@@ -791,7 +806,7 @@ export default function AppSettingsPage() {
                     <span className="text-muted-foreground">
                       {updateChecker.updateInfo?.currentVersion ?? t('common.loading', 'Loading...')}
                     </span>
-                    {updateChecker.updateAvailable && updateChecker.updateInfo?.latestVersion && (
+                    {!DISABLE_AUTO_UPDATE_UI && updateChecker.updateAvailable && updateChecker.updateInfo?.latestVersion && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -802,24 +817,26 @@ export default function AppSettingsPage() {
                     )}
                   </div>
                 </SettingsRow>
-                <SettingsRow label={t('appSettings.about.check', 'Check for updates')}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCheckForUpdates}
-                    disabled={isCheckingForUpdates}
-                  >
-                    {isCheckingForUpdates ? (
-                      <>
-                        <Spinner className="mr-1.5" />
-                        {t('appSettings.about.checking', 'Checking...')}
-                      </>
-                    ) : (
-                      t('appSettings.about.checkNow', 'Check Now')
-                    )}
-                  </Button>
-                </SettingsRow>
-                {updateChecker.isReadyToInstall && (
+                {!DISABLE_AUTO_UPDATE_UI && (
+                  <SettingsRow label={t('appSettings.about.check', 'Check for updates')}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCheckForUpdates}
+                      disabled={isCheckingForUpdates}
+                    >
+                      {isCheckingForUpdates ? (
+                        <>
+                          <Spinner className="mr-1.5" />
+                          {t('appSettings.about.checking', 'Checking...')}
+                        </>
+                      ) : (
+                        t('appSettings.about.checkNow', 'Check Now')
+                      )}
+                    </Button>
+                  </SettingsRow>
+                )}
+                {!DISABLE_AUTO_UPDATE_UI && updateChecker.isReadyToInstall && (
                   <SettingsRow label={t('appSettings.about.install', 'Install update')}>
                     <Button
                       size="sm"

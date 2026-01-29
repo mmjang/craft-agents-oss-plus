@@ -501,4 +501,16 @@ export default {
   'auth.username': 'Username',
   'auth.password': 'Password',
   'auth.enterPlaceholder': 'Enter {{field}}',
+
+  // TurnCard (packages/ui)
+  'turnCard.viewFullscreen': 'View Fullscreen',
+  'turnCard.plan': 'Plan',
+  'turnCard.copy': 'Copy',
+  'turnCard.copied': 'Copied!',
+  'turnCard.viewAsMarkdown': 'View as Markdown',
+  'turnCard.feedbackHint': 'Type your feedback in chat or',
+  'turnCard.streaming': 'Streaming...',
+  'turnCard.todoList': 'Todo List',
+  'turnCard.thinking': 'Thinking...',
+  'turnCard.preparingResponse': 'Preparing response...',
 }

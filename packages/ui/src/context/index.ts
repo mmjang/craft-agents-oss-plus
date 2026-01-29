@@ -14,3 +14,10 @@ export {
   useShikiTheme,
   type ShikiThemeProviderProps,
 } from './ShikiThemeContext'
+
+export {
+  UITranslationProvider,
+  useUITranslation,
+  type TranslationFunction,
+  type UITranslationProviderProps,
+} from './I18nContext'

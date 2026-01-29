@@ -27,6 +27,7 @@ import { TurnCardActionsMenu } from './TurnCardActionsMenu'
 import { computeLastChildSet, groupActivitiesByParent, isActivityGroup, formatDuration, formatTokens, deriveTurnPhase, shouldShowThinkingIndicator, type ActivityGroup, type AssistantTurn } from './turn-utils'
 import { DocumentFormattedMarkdownOverlay } from '../overlay'
 import { AcceptPlanDropdown } from './AcceptPlanDropdown'
+import { useUITranslation } from '../../context/I18nContext'
 
 // ============================================================================
 // Utilities
@@ -951,6 +952,7 @@ export function ResponseCard({
   isLastResponse = true,
   showAcceptPlan = true,
 }: ResponseCardProps) {
+  const t = useUITranslation()
   // Throttled content for display - updates every CONTENT_THROTTLE_MS during streaming
   const [displayedText, setDisplayedText] = useState(text)
   const lastUpdateRef = useRef(Date.now())
@@ -1042,7 +1044,7 @@ export function ResponseCard({
               "text-muted-foreground/50 hover:text-foreground",
               "focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:opacity-100"
             )}
-            title="View Fullscreen"
+            title={t('turnCard.viewFullscreen', 'View Fullscreen')}
           >
             <Maximize2 className="w-3.5 h-3.5" />
           </button>
@@ -1056,7 +1058,7 @@ export function ResponseCard({
               )}
             >
               <ListTodo className={cn(SIZE_CONFIG.iconSize, "text-success")} />
-              <span className="font-medium text-success">Plan</span>
+              <span className="font-medium text-success">{t('turnCard.plan', 'Plan')}</span>
             </div>
           )}
 
@@ -1099,12 +1101,12 @@ export function ResponseCard({
                 {copied ? (
                   <>
                     <Check className={SIZE_CONFIG.iconSize} />
-                    <span>Copied!</span>
+                    <span>{t('turnCard.copied', 'Copied!')}</span>
                   </>
                 ) : (
                   <>
                     <Copy className={SIZE_CONFIG.iconSize} />
-                    <span>Copy</span>
+                    <span>{t('turnCard.copy', 'Copy')}</span>
                   </>
                 )}
               </button>
@@ -1118,7 +1120,7 @@ export function ResponseCard({
                   )}
                 >
                   <ExternalLink className={SIZE_CONFIG.iconSize} />
-                  <span>View as Markdown</span>
+                  <span>{t('turnCard.viewAsMarkdown', 'View as Markdown')}</span>
                 </button>
               )}
             </div>
@@ -1134,7 +1136,7 @@ export function ResponseCard({
                 )}
               >
                 <span className="text-xs text-muted-foreground">
-                  Type your feedback in chat or
+                  {t('turnCard.feedbackHint', 'Type your feedback in chat or')}
                 </span>
                 <AcceptPlanDropdown
                   onAccept={onAccept}
@@ -1187,7 +1189,7 @@ export function ResponseCard({
       <div className={cn("px-4 py-2 border-t border-border/30 flex items-center bg-muted/20", SIZE_CONFIG.fontSize)}>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Spinner className={SIZE_CONFIG.spinnerSize} />
-          <span>Streaming...</span>
+          <span>{t('turnCard.streaming', 'Streaming...')}</span>
         </div>
       </div>
     </div>
@@ -1248,13 +1250,14 @@ interface TodoListProps {
  * Styled to blend with TurnCard activities
  */
 function TodoList({ todos }: TodoListProps) {
+  const t = useUITranslation()
   if (todos.length === 0) return null
 
   return (
     <div className="pl-4 pr-2 pt-2.5 pb-1.5 space-y-0.5 border-l-2 border-muted ml-[13px]">
       {/* Header */}
       <div className={cn("text-muted-foreground pb-1", SIZE_CONFIG.fontSize)}>
-        Todo List
+        {t('turnCard.todoList', 'Todo List')}
       </div>
       {/* Todo items */}
       {todos.map((todo, index) => (
@@ -1311,6 +1314,7 @@ export const TurnCard = React.memo(function TurnCard({
   isLastResponse,
   sessionFolderPath,
 }: TurnCardProps) {
+  const t = useUITranslation()
   // Derive the turn phase from props using the state machine.
   // This provides a single source of truth for lifecycle state,
   // replacing the old ad-hoc boolean combinations.
@@ -1563,7 +1567,7 @@ export const TurnCard = React.memo(function TurnCard({
                       className={cn("flex items-center gap-2 py-0.5 text-muted-foreground/70", SIZE_CONFIG.fontSize)}
                     >
                       <Spinner className={SIZE_CONFIG.spinnerSize} />
-                      <span>{isBuffering ? 'Preparing response...' : 'Thinking...'}</span>
+                      <span>{isBuffering ? t('turnCard.preparingResponse', 'Preparing response...') : t('turnCard.thinking', 'Thinking...')}</span>
                     </motion.div>
                   )}
                 </div>
@@ -1581,7 +1585,7 @@ export const TurnCard = React.memo(function TurnCard({
       {!hasActivities && isThinking && (
         <div className={cn("flex items-center gap-2 px-3 py-1.5 text-muted-foreground", SIZE_CONFIG.fontSize)}>
           <Spinner className={SIZE_CONFIG.spinnerSize} />
-          <span>{isBuffering ? 'Preparing response...' : 'Thinking...'}</span>
+          <span>{isBuffering ? t('turnCard.preparingResponse', 'Preparing response...') : t('turnCard.thinking', 'Thinking...')}</span>
         </div>
       )}
 
