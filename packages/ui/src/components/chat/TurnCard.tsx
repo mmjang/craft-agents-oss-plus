@@ -27,7 +27,7 @@ import { TurnCardActionsMenu } from './TurnCardActionsMenu'
 import { computeLastChildSet, groupActivitiesByParent, isActivityGroup, formatDuration, formatTokens, deriveTurnPhase, shouldShowThinkingIndicator, type ActivityGroup, type AssistantTurn } from './turn-utils'
 import { DocumentFormattedMarkdownOverlay } from '../overlay'
 import { AcceptPlanDropdown } from './AcceptPlanDropdown'
-import { useUITranslation } from '../../context/I18nContext'
+import { useUITranslation, type TranslationFunction } from '../../context/I18nContext'
 
 // ============================================================================
 // Utilities
@@ -422,6 +422,7 @@ function formatToolInput(
 /** Get the primary preview text for collapsed state */
 function getPreviewText(
   activities: ActivityItem[],
+  t: TranslationFunction,
   intent?: string,
   isStreaming?: boolean,
   hasResponse?: boolean,
@@ -435,7 +436,7 @@ function getPreviewText(
   if (activityWithIntent?.intent) return activityWithIntent.intent
 
   // Check if we're in responding state
-  if (isStreaming && hasResponse) return 'Responding...'
+  if (isStreaming && hasResponse) return t('turnCard.responding', 'Responding...')
 
   // Find running Task tools and show their description
   const runningTask = activities.find(a => a.toolName === 'Task' && a.status === 'running')
@@ -458,6 +459,15 @@ function getPreviewText(
   const runningTools = activities.filter(a => a.status === 'running' && a.toolName)
   const errorCount = activities.filter(a => a.status === 'error').length
 
+  // Helper to format error suffix
+  const getErrorSuffix = () => {
+    if (errorCount === 0) return ''
+    const errorText = errorCount > 1
+      ? t('turnCard.errorCountPlural', '{{count}} errors', { count: errorCount })
+      : t('turnCard.errorCount', '{{count}} error', { count: errorCount })
+    return ` · ${errorText}`
+  }
+
   // Show running tool names
   if (runningTools.length > 0) {
     const toolNames = runningTools
@@ -469,21 +479,15 @@ function getPreviewText(
   // When complete, show first Task's description if available
   const firstTask = activities.find(a => a.toolName === 'Task')
   if (firstTask?.toolInput?.description) {
-    const errorSuffix = errorCount > 0
-      ? ` · ${errorCount} error${errorCount > 1 ? 's' : ''}`
-      : ''
-    return `${firstTask.toolInput.description as string}${errorSuffix}`
+    return `${firstTask.toolInput.description as string}${getErrorSuffix()}`
   }
 
   // When complete, show summary (badge already shows count)
   if (isComplete || (!isStreaming && activities.length > 0)) {
-    const errorSuffix = errorCount > 0
-      ? ` · ${errorCount} error${errorCount > 1 ? 's' : ''}`
-      : ''
-    return `Steps Completed${errorSuffix}`
+    return `${t('turnCard.stepsCompleted', 'Steps Completed')}${getErrorSuffix()}`
   }
 
-  return 'Starting...'
+  return t('turnCard.starting', 'Starting...')
 }
 
 
@@ -1364,8 +1368,8 @@ export const TurnCard = React.memo(function TurnCard({
 
   // Compute preview text with cross-fade animation
   const previewText = useMemo(
-    () => getPreviewText(activities, intent, isStreaming, !!response, isComplete),
-    [activities, intent, isStreaming, response, isComplete]
+    () => getPreviewText(activities, t, intent, isStreaming, !!response, isComplete),
+    [activities, t, intent, isStreaming, response, isComplete]
   )
 
   // Sort activities by timestamp for correct chronological order

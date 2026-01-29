@@ -2,6 +2,7 @@ import * as React from 'react'
 import { MoreHorizontal, FileDiff, ArrowUpRight } from 'lucide-react'
 import { SimpleDropdown, SimpleDropdownItem } from '../ui/SimpleDropdown'
 import { cn } from '../../lib/utils'
+import { useUITranslation } from '../../context/I18nContext'
 
 export interface TurnCardActionsMenuProps {
   /** Callback to open turn details in a new window */
@@ -27,6 +28,7 @@ export function TurnCardActionsMenu({
   hasEditOrWriteActivities,
   className,
 }: TurnCardActionsMenuProps) {
+  const t = useUITranslation()
   const [isOpen, setIsOpen] = React.useState(false)
 
   // Don't render if no actions available
@@ -66,7 +68,7 @@ export function TurnCardActionsMenu({
           onClick={onOpenMultiFileDiff}
           icon={<FileDiff />}
         >
-          View file changes
+          {t('turnCard.viewFileChanges', 'View file changes')}
         </SimpleDropdownItem>
       )}
       {onOpenDetails && (
@@ -74,7 +76,7 @@ export function TurnCardActionsMenu({
           onClick={onOpenDetails}
           icon={<ArrowUpRight />}
         >
-          View turn details
+          {t('turnCard.viewTurnDetails', 'View turn details')}
         </SimpleDropdownItem>
       )}
     </SimpleDropdown>
