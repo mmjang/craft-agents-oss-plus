@@ -41,7 +41,7 @@ import { sourcesAtom } from '@/atoms/sources'
 import { skillsAtom } from '@/atoms/skills'
 import { extractBadges } from '@/lib/mentions'
 import { getDefaultStore } from 'jotai'
-import { ShikiThemeProvider, PlatformProvider, UITranslationProvider } from '@craft-agent/ui'
+import { ShikiThemeProvider, PlatformProvider, UITranslationProvider, type TranslationFunction } from '@craft-agent/ui'
 import { useI18n } from '@/i18n/I18nContext'
 
 type AppState = 'loading' | 'onboarding' | 'reauth' | 'ready'
@@ -1266,7 +1266,7 @@ export default function App() {
   // Ready state - main app with splash overlay during data loading
   return (
     <PlatformProvider actions={platformActions}>
-    <UITranslationProvider t={t}>
+    <UITranslationProvider t={t as TranslationFunction}>
     <ShikiThemeProvider shikiTheme={shikiTheme}>
       <FocusProvider>
         <ModalProvider>

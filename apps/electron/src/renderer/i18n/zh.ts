@@ -19,6 +19,7 @@ export default {
   'common.change': '更改',
   'common.clear': '清除',
   'common.revert': '还原',
+  'common.continue': '继续',
   'dialog.close': '关闭',
   'renameDialog.placeholder': '输入名称…',
   'slashMenu.search': '搜索命令…',
@@ -513,4 +514,11 @@ export default {
   'turnCard.todoList': '待办列表',
   'turnCard.thinking': '思考中...',
   'turnCard.preparingResponse': '准备回复中...',
-}
+  'turnCard.responding': '正在回复...',
+  'turnCard.stepsCompleted': '步骤已完成',
+  'turnCard.starting': '正在开始...',
+  'turnCard.errorCount': '{{count}} 个错误',
+  'turnCard.errorCountPlural': '{{count}} 个错误',
+  'turnCard.viewFileChanges': '查看文件更改',
+  'turnCard.viewTurnDetails': '查看轮次详情',
+} as const

@@ -1,9 +1,10 @@
 import type { Session } from "../../shared/types"
 import type { SessionMeta } from "../atoms/sessions"
+import type { TranslationKey } from "../i18n/translations"
 
 /** Common session fields used by getSessionTitle */
 type SessionLike = Pick<Session, 'name' | 'preview'> & { messages?: Session['messages'] }
-type Translator = (key: string, fallback?: string) => string
+type Translator = (key: TranslationKey, fallback?: string) => string
 
 /**
  * Sanitize content for display as session title.

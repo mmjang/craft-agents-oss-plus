@@ -19,6 +19,7 @@ export default {
   'common.change': 'Change',
   'common.clear': 'Clear',
   'common.revert': 'Revert',
+  'common.continue': 'Continue',
   'dialog.close': 'Close',
   'renameDialog.placeholder': 'Enter a name...',
   'slashMenu.search': 'Search commands...',
@@ -513,4 +514,11 @@ export default {
   'turnCard.todoList': 'Todo List',
   'turnCard.thinking': 'Thinking...',
   'turnCard.preparingResponse': 'Preparing response...',
-}
+  'turnCard.responding': 'Responding...',
+  'turnCard.stepsCompleted': 'Steps Completed',
+  'turnCard.starting': 'Starting...',
+  'turnCard.errorCount': '{{count}} error',
+  'turnCard.errorCountPlural': '{{count}} errors',
+  'turnCard.viewFileChanges': 'View file changes',
+  'turnCard.viewTurnDetails': 'View turn details',
+} as const

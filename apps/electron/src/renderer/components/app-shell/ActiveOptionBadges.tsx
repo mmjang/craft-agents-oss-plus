@@ -6,6 +6,7 @@ import { ChevronDown, X } from 'lucide-react'
 import { PERMISSION_MODE_CONFIG, type PermissionMode } from '@craft-agent/shared/agent/modes'
 import { ActiveTasksBar, type BackgroundTask } from './ActiveTasksBar'
 import { useI18n } from '@/i18n/I18nContext'
+import type { TranslationKey } from '@/i18n/translations'
 
 // ============================================================================
 // Permission Mode Icon Component
@@ -143,7 +144,7 @@ function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onP
 
   // Get config for current mode (use optimistic state for instant UI update)
   const config = PERMISSION_MODE_CONFIG[optimisticMode]
-  const modeLabelKeys: Record<PermissionMode, string> = {
+  const modeLabelKeys: Record<PermissionMode, TranslationKey> = {
     safe: 'permissions.mode.safe',
     ask: 'permissions.mode.ask',
     'allow-all': 'permissions.mode.allow-all',

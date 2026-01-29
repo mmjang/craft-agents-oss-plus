@@ -1,11 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import * as storage from '@/lib/local-storage'
-import { DEFAULT_LOCALE, supportedLocales, translations, type Locale } from './translations'
+import { DEFAULT_LOCALE, supportedLocales, translations, type Locale, type TranslationKey } from './translations'
 
 interface I18nContextType {
   locale: Locale
   setLocale: (locale: Locale) => void
-  t: (key: string, fallback?: string, values?: Record<string, string | number>) => string
+  t: (key: TranslationKey, fallback?: string, values?: Record<string, string | number>) => string
   availableLocales: Locale[]
 }
 
@@ -48,7 +48,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const t = useCallback((key: string, fallback?: string, values?: Record<string, string | number>) => {
+  const t = useCallback((key: TranslationKey, fallback?: string, values?: Record<string, string | number>) => {
     const template = translations[locale]?.[key] ?? translations[DEFAULT_LOCALE]?.[key] ?? fallback ?? key
     return formatTemplate(template, values)
   }, [locale])

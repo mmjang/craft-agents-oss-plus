@@ -13,12 +13,13 @@ import { createContext, useContext, type ReactNode } from 'react'
 
 /**
  * Translation function type
+ * Generic TKey allows consuming apps to provide type-safe keys
  * @param key - Translation key (e.g., 'turnCard.copy')
  * @param fallback - Fallback string if translation not found
  * @param vars - Optional template variables
  */
-export type TranslationFunction = (
-  key: string,
+export type TranslationFunction<TKey extends string = string> = (
+  key: TKey,
   fallback: string,
   vars?: Record<string, string | number>
 ) => string

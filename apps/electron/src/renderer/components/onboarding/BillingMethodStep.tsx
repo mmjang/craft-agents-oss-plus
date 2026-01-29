@@ -1,14 +1,15 @@
 import { cn } from "@/lib/utils"
 import { Check, CreditCard, Key } from "lucide-react"
 import { useI18n } from "@/i18n/I18nContext"
+import type { TranslationKey } from "@/i18n/translations"
 import { StepFormLayout, BackButton, ContinueButton } from "./primitives"
 
 export type BillingMethod = 'api_key' | 'claude_oauth'
 
 interface BillingOption {
   id: BillingMethod
-  nameKey: string
-  descKey: string
+  nameKey: TranslationKey
+  descKey: TranslationKey
   icon: React.ReactNode
   recommended?: boolean
 }

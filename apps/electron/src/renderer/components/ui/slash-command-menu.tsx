@@ -5,6 +5,7 @@ import { Icon_Folder } from '@craft-agent/ui'
 import { cn } from '@/lib/utils'
 import { PERMISSION_MODE_CONFIG, PERMISSION_MODE_ORDER, type PermissionMode } from '@craft-agent/shared/agent/modes'
 import { useI18n } from '@/i18n/I18nContext'
+import type { TranslationKey } from '@/i18n/translations'
 
 // ============================================================================
 // Types
@@ -217,12 +218,12 @@ export function SlashCommandMenu({
     }
 
     if (cmd.id === 'safe' || cmd.id === 'ask' || cmd.id === 'allow-all') {
-      const modeLabelKey: Record<string, string> = {
+      const modeLabelKey: Record<string, TranslationKey> = {
         safe: 'permissions.mode.safe',
         ask: 'permissions.mode.ask',
         'allow-all': 'permissions.mode.allow-all',
       }
-      const modeDescriptionKey: Record<string, string> = {
+      const modeDescriptionKey: Record<string, TranslationKey> = {
         safe: 'permissions.mode.safeDescMenu',
         ask: 'permissions.mode.askDescMenu',
         'allow-all': 'permissions.mode.allowAllDescMenu',

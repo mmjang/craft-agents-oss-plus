@@ -101,6 +101,7 @@ import { RightSidebar } from "./RightSidebar"
 import type { RichTextInputHandle } from "@/components/ui/rich-text-input"
 import { hasOpenOverlay } from "@/lib/overlay-detection"
 import { useI18n } from "@/i18n/I18nContext"
+import type { TranslationKey } from "@/i18n/translations"
 
 /**
  * AppShellProps - Minimal props interface for AppShell component
@@ -409,7 +410,7 @@ function AppShellContent({
 
   // Convert StatusConfig to TodoState with resolved icons
   const localizeTodoStates = React.useCallback((states: TodoState[]) => {
-    const statusLabelKeys: Record<string, string> = {
+    const statusLabelKeys: Record<string, TranslationKey> = {
       backlog: 'status.backlog',
       todo: 'status.todo',
       'needs-review': 'status.needsReview',

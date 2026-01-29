@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { Eye, EyeOff, ExternalLink, CheckCircle2, XCircle } from "lucide-react"
 import { Spinner } from "@craft-agent/ui"
 import { useI18n } from "@/i18n/I18nContext"
+import type { TranslationKey } from "@/i18n/translations"
 import type { BillingMethod } from "./BillingMethodStep"
 import { StepFormLayout, BackButton, ContinueButton, type StepIconVariant } from "./primitives"
 
@@ -51,8 +52,8 @@ function getOAuthIconVariant(status: CredentialStatus): StepIconVariant {
 }
 
 interface OAuthStatusContent {
-  titleKey: string
-  descKey: string
+  titleKey: TranslationKey
+  descKey: TranslationKey | ''
 }
 
 const OAUTH_STATUS_CONTENT: Record<CredentialStatus, OAuthStatusContent> = {
@@ -211,7 +212,7 @@ export function CredentialsStep({
     )
 
     // Dynamic description based on state
-    let description = t(content.descKey, content.descKey)
+    let description = content.descKey ? t(content.descKey, content.descKey) : ''
     if (status === 'idle') {
       if (hasExistingToken && existingClaudeToken) {
         // Show preview of detected token (first 20 chars)
