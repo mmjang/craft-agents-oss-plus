@@ -59,62 +59,22 @@ export interface StoredConfig {
 }
 
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
-const CONFIG_DEFAULTS_FILE = join(CONFIG_DIR, 'config-defaults.json');
 
 /**
- * Load config defaults from file, or use bundled defaults as fallback.
+ * Load config defaults.
+ * Always returns BUNDLED_CONFIG_DEFAULTS to ensure consistent behavior
+ * across all users and to pick up default value changes in new versions.
  */
 export function loadConfigDefaults(): ConfigDefaults {
-  try {
-    if (existsSync(CONFIG_DEFAULTS_FILE)) {
-      const content = readFileSync(CONFIG_DEFAULTS_FILE, 'utf-8');
-      return JSON.parse(content) as ConfigDefaults;
-    }
-  } catch {
-    // Fall through to bundled defaults
-  }
   return BUNDLED_CONFIG_DEFAULTS;
 }
 
-/**
- * Ensure config-defaults.json exists (copy from bundled if not).
- */
-export function ensureConfigDefaults(bundledDefaultsPath?: string): void {
-  if (existsSync(CONFIG_DEFAULTS_FILE)) {
-    return; // Already exists, don't overwrite
-  }
-
-  // Try to copy from bundled resources
-  if (bundledDefaultsPath && existsSync(bundledDefaultsPath)) {
-    try {
-      const content = readFileSync(bundledDefaultsPath, 'utf-8');
-      writeFileSync(CONFIG_DEFAULTS_FILE, content, 'utf-8');
-      return;
-    } catch {
-      // Fall through to write bundled defaults
-    }
-  }
-
-  // Fallback: write bundled defaults directly
-  writeFileSync(
-    CONFIG_DEFAULTS_FILE,
-    JSON.stringify(BUNDLED_CONFIG_DEFAULTS, null, 2),
-    'utf-8'
-  );
-}
-
-export function ensureConfigDir(bundledResourcesDir?: string): void {
+export function ensureConfigDir(): void {
   if (!existsSync(CONFIG_DIR)) {
     mkdirSync(CONFIG_DIR, { recursive: true });
   }
   // Initialize bundled docs (creates ~/.craft-agent/docs/ with sources.md, agents.md, permissions.md)
   initializeDocs();
-
-  // Initialize config defaults
-  const bundledDefaultsPath = bundledResourcesDir
-    ? join(bundledResourcesDir, 'config-defaults.json')
-    : undefined;
-  ensureConfigDefaults(bundledDefaultsPath);
 }
 
 export function loadStoredConfig(): StoredConfig | null {
