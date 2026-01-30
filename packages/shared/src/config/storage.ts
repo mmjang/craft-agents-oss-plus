@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, statSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, statSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { getCredentialManager } from '../credentials/index.ts';
 import { getOrCreateLatestSession, type SessionConfig } from '../sessions/index.ts';
@@ -7,6 +7,9 @@ import {
   loadWorkspaceConfig,
   createWorkspaceAtPath,
   isValidWorkspace,
+  generateSlug,
+  generateUniqueSlug,
+  getDefaultWorkspacesDir,
 } from '../workspaces/storage.ts';
 import { findIconFile } from '../utils/icon.ts';
 import { initializeDocs } from '../docs/index.ts';
@@ -285,6 +288,62 @@ export function generateWorkspaceId(): string {
   const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
 }
+
+/**
+ * Get existing workspace directory names in the default workspaces location.
+ * Used for checking slug uniqueness when creating new workspaces.
+ */
+export function getExistingWorkspaceSlugs(): Set<string> {
+  const workspacesDir = getDefaultWorkspacesDir();
+  const slugs = new Set<string>();
+
+  if (!existsSync(workspacesDir)) {
+    return slugs;
+  }
+
+  try {
+    const entries = readdirSync(workspacesDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        slugs.add(entry.name);
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+
+  return slugs;
+}
+
+/**
+ * Generate a unique workspace path in the default location.
+ * Uses the workspace name to create a user-friendly directory name,
+ * adding a hash suffix if a directory with the same name already exists.
+ *
+ * @param name - Display name for the workspace
+ * @returns Absolute path to the workspace directory
+ */
+export function generateWorkspacePath(name: string): string {
+  const existingSlugs = getExistingWorkspaceSlugs();
+  const slug = generateUniqueSlug(name, existingSlugs);
+  return join(getDefaultWorkspacesDir(), slug);
+}
+
+/**
+ * Check if a workspace slug already exists in the default location.
+ * @param slug - The slug to check
+ * @returns true if a workspace with this slug exists
+ */
+export function checkWorkspaceSlugExists(slug: string): boolean {
+  const existingSlugs = getExistingWorkspaceSlugs();
+  return existingSlugs.has(slug);
+}
+
+/**
+ * Generate a slug from a workspace name (for preview purposes).
+ * Re-exported from workspaces/storage for convenience.
+ */
+export { generateSlug } from '../workspaces/storage.ts';
 
 /**
  * Find workspace icon file at workspace_root/icon.*
@@ -731,7 +790,6 @@ export function getAllSessionDrafts(): Record<string, string> {
 // ============================================
 
 import type { ThemeOverrides, ThemeFile, PresetTheme } from './theme.ts';
-import { readdirSync } from 'fs';
 
 const APP_THEME_FILE = join(CONFIG_DIR, 'theme.json');
 const APP_THEMES_DIR = join(CONFIG_DIR, 'themes');

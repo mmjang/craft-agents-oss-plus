@@ -7,8 +7,7 @@ import { ipcMain, BrowserWindow } from 'electron'
 import { mainLog } from './logger'
 import { getAuthState, getSetupNeeds } from '@craft-agent/shared/auth'
 import { getCredentialManager } from '@craft-agent/shared/credentials'
-import { saveConfig, loadStoredConfig, generateWorkspaceId, type AuthType, type StoredConfig } from '@craft-agent/shared/config'
-import { getDefaultWorkspacesDir } from '@craft-agent/shared/workspaces'
+import { saveConfig, loadStoredConfig, generateWorkspaceId, generateWorkspacePath, type AuthType, type StoredConfig } from '@craft-agent/shared/config'
 import { CraftOAuth, getMcpBaseUrl } from '@craft-agent/shared/auth'
 import { validateMcpConnection } from '@craft-agent/shared/mcp'
 import { getExistingClaudeToken, getExistingClaudeCredentials, isClaudeCliInstalled, runClaudeSetupToken, startClaudeOAuth, exchangeClaudeCode, hasValidOAuthState, clearOAuthState } from '@craft-agent/shared/auth'
@@ -163,7 +162,7 @@ export function registerOnboardingHandlers(sessionManager: SessionManager): void
         const workspace = {
           id: workspaceId,
           name: config.workspace.name,
-          rootPath: existingWorkspace?.rootPath ?? `${getDefaultWorkspacesDir()}/${workspaceId}`,
+          rootPath: existingWorkspace?.rootPath ?? generateWorkspacePath(config.workspace.name),
           createdAt: existingWorkspace?.createdAt ?? Date.now(), // Preserve original creation time
           iconUrl: config.workspace.iconUrl,
           mcpUrl: config.workspace.mcpUrl,
@@ -190,7 +189,7 @@ export function registerOnboardingHandlers(sessionManager: SessionManager): void
           const defaultWorkspace = {
             id: workspaceId,
             name: 'Default',
-            rootPath: `${getDefaultWorkspacesDir()}/${workspaceId}`,
+            rootPath: generateWorkspacePath('Default'),
             createdAt: Date.now(),
           }
           newConfig.workspaces.push(defaultWorkspace)

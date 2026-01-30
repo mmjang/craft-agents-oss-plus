@@ -559,6 +559,13 @@ export default {
   'skills.permissionModes.auto': 'Auto',
   'skills.permissionModes.autoDesc': 'No effect — all tools already auto-approved',
 
+  // Permission Request
+  'permission.required': 'Permission Required',
+  'permission.allow': 'Allow',
+  'permission.alwaysAllow': 'Always Allow',
+  'permission.deny': 'Deny',
+  'permission.alwaysAllowHint': '"Always Allow" remembers this command for the session',
+
   // Permissions table
   'permissions.table.access': 'Access',
   'permissions.table.type': 'Type',

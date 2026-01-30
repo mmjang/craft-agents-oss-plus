@@ -559,6 +559,13 @@ export default {
   'skills.permissionModes.auto': '自动',
   'skills.permissionModes.autoDesc': '无影响 — 所有工具已自动批准',
 
+  // 权限请求
+  'permission.required': '需要权限',
+  'permission.allow': '允许',
+  'permission.alwaysAllow': '始终允许',
+  'permission.deny': '拒绝',
+  'permission.alwaysAllowHint': '"始终允许"会在本次会话中记住此命令',
+
   // 权限表格
   'permissions.table.access': '访问',
   'permissions.table.type': '类型',

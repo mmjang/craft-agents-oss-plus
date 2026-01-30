@@ -297,6 +297,39 @@ function AppShellContent({
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  // Auto-expand right sidebar when window is wide enough
+  // Threshold: when there's enough space for inline sidebar without overlay mode
+  const AUTO_EXPAND_THRESHOLD = 1400 // px - wide enough for comfortable viewing
+  const prevWindowWidthRef = React.useRef(windowWidth)
+
+  React.useEffect(() => {
+    const prevWidth = prevWindowWidthRef.current
+    prevWindowWidthRef.current = windowWidth
+
+    // Only auto-expand if:
+    // 1. Window width crossed the threshold from below
+    // 2. Currently in chat view with a session selected
+    // 3. Sidebar is not already visible
+    const crossedThreshold = prevWidth < AUTO_EXPAND_THRESHOLD && windowWidth >= AUTO_EXPAND_THRESHOLD
+    const isInChatView = isChatsNavigation(navState) && navState.details
+
+    if (crossedThreshold && isInChatView && !isRightSidebarVisible) {
+      setIsRightSidebarVisible(true)
+    }
+  }, [windowWidth, navState, isRightSidebarVisible])
+
+  // Auto-expand on initial load if window is wide enough and in chat view
+  const hasAutoExpandedOnLoadRef = React.useRef(false)
+  React.useEffect(() => {
+    if (hasAutoExpandedOnLoadRef.current) return
+
+    const isInChatView = isChatsNavigation(navState) && navState.details
+    if (windowWidth >= AUTO_EXPAND_THRESHOLD && isInChatView && !isRightSidebarVisible) {
+      hasAutoExpandedOnLoadRef.current = true
+      setIsRightSidebarVisible(true)
+    }
+  }, [windowWidth, navState, isRightSidebarVisible])
+
   // Unified sidebar keyboard navigation state
   // Load expanded folders from localStorage (default: all collapsed)
   const [expandedFolders, setExpandedFolders] = React.useState<Set<string>>(() => {

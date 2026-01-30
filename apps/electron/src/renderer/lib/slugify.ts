@@ -2,34 +2,43 @@
  * Slugify utility for workspace names
  *
  * Converts a human-readable name into a filesystem-safe slug.
- * Example: "My Project" → "my-project"
+ * Preserves Unicode characters (e.g., Chinese), only removes filesystem-unsafe characters.
+ *
+ * Examples:
+ * - "My Project" → "My-Project"
+ * - "我的项目" → "我的项目"
+ * - "Project: Alpha" → "Project-Alpha"
  */
 
 /**
- * Convert a string to a URL/filesystem-safe slug
- * - Lowercase
- * - Replace spaces and underscores with hyphens
- * - Remove non-alphanumeric characters (except hyphens)
- * - Collapse multiple hyphens
- * - Trim leading/trailing hyphens
+ * Convert a string to a filesystem-safe slug
+ * - Preserves Unicode characters (Chinese, Japanese, etc.)
+ * - Removes filesystem-unsafe characters: / \ : * ? " < > |
+ * - Replaces spaces with hyphens
+ * - Collapses multiple hyphens
+ * - Trims leading/trailing hyphens
  */
 export function slugify(str: string): string {
   return str
-    .toLowerCase()
     .trim()
-    // Replace spaces and underscores with hyphens
-    .replace(/[\s_]+/g, '-')
-    // Remove non-alphanumeric characters except hyphens
-    .replace(/[^a-z0-9-]/g, '')
-    // Collapse multiple hyphens into one
-    .replace(/-+/g, '-')
+    // Remove filesystem-unsafe characters: / \ : * ? " < > |
+    .replace(/[\/\\:*?"<>|]+/g, '-')
+    // Merge consecutive whitespace and hyphens
+    .replace(/[\s-]+/g, '-')
     // Remove leading/trailing hyphens
     .replace(/^-|-$/g, '')
+    .substring(0, 50)
 }
 
 /**
- * Check if a string is a valid slug (already slugified)
+ * Check if a string is a valid slug (filesystem-safe)
+ * Allows Unicode characters but not filesystem-unsafe characters
  */
 export function isValidSlug(str: string): boolean {
-  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(str)
+  // Check for filesystem-unsafe characters
+  if (/[\/\\:*?"<>|]/.test(str)) {
+    return false
+  }
+  // Must not be empty and not start/end with hyphen
+  return str.length > 0 && !str.startsWith('-') && !str.endsWith('-')
 }

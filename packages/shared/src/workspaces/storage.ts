@@ -17,7 +17,7 @@ import {
 } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHash } from 'crypto';
 import { expandPath, toPortablePath } from '../utils/paths.ts';
 import { getDefaultStatusConfig, saveStatusConfig, ensureDefaultIconFiles } from '../statuses/storage.ts';
 import { loadConfigDefaults } from '../config/storage.ts';
@@ -213,12 +213,22 @@ export function getWorkspaceSummary(rootPath: string): WorkspaceSummary | null {
 // ============================================================
 
 /**
- * Generate URL-safe slug from name
+ * Generate filesystem-safe slug from name.
+ * Preserves Unicode characters (e.g., Chinese), only removes filesystem-unsafe characters.
+ *
+ * Examples:
+ * - "My Project" → "my-project"
+ * - "我的项目" → "我的项目"
+ * - "Project: Alpha" → "project-alpha"
  */
 export function generateSlug(name: string): string {
   let slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
+    .trim()
+    // Remove filesystem-unsafe characters: / \ : * ? " < > |
+    .replace(/[\/\\:*?"<>|]+/g, '-')
+    // Merge consecutive whitespace and hyphens
+    .replace(/[\s-]+/g, '-')
+    // Remove leading/trailing hyphens
     .replace(/^-|-$/g, '')
     .substring(0, 50);
 
@@ -227,6 +237,33 @@ export function generateSlug(name: string): string {
   }
 
   return slug;
+}
+
+/**
+ * Generate a unique slug by appending a short hash if the base slug already exists.
+ *
+ * @param name - Display name for the workspace
+ * @param existingSlugs - Set of existing directory names to check against
+ * @returns A unique slug
+ *
+ * Examples:
+ * - "My Project" (no conflict) → "My-Project"
+ * - "My Project" (conflict) → "My-Project-a3f2"
+ */
+export function generateUniqueSlug(name: string, existingSlugs: Set<string>): string {
+  const baseSlug = generateSlug(name);
+
+  if (!existingSlugs.has(baseSlug)) {
+    return baseSlug;
+  }
+
+  // Add 4-character hash suffix for uniqueness
+  const hash = createHash('sha256')
+    .update(name + Date.now())
+    .digest('hex')
+    .substring(0, 4);
+
+  return `${baseSlug}-${hash}`;
 }
 
 /**
