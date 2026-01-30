@@ -375,7 +375,6 @@ export function WorkspaceTreePanel({ workspaceId, closeButton, className }: Work
 
   // Open workspace folder in Finder
   const handleOpenFolder = useCallback(() => {
-    console.log('[WorkspaceTreePanel] Opening folder:', activeWorkspace?.rootPath)
     if (activeWorkspace?.rootPath) {
       window.electronAPI.openFile(activeWorkspace.rootPath)
     }
@@ -383,20 +382,12 @@ export function WorkspaceTreePanel({ workspaceId, closeButton, className }: Work
 
   // Import files via file dialog
   const handleImportFiles = useCallback(async () => {
-    console.log('[WorkspaceTreePanel] Import files clicked, workspaceId:', workspaceId)
-    console.log('[WorkspaceTreePanel] activeWorkspace:', activeWorkspace)
-    if (!workspaceId) {
-      console.log('[WorkspaceTreePanel] No workspaceId, aborting')
-      return
-    }
+    if (!workspaceId) return
     const paths = await window.electronAPI.openFileDialog()
-    console.log('[WorkspaceTreePanel] Selected files:', paths)
     if (paths.length > 0) {
-      console.log('[WorkspaceTreePanel] Calling importFilesToWorkspace with workspaceId:', workspaceId, 'paths:', paths)
-      const result = await window.electronAPI.importFilesToWorkspace(workspaceId, paths)
-      console.log('[WorkspaceTreePanel] Import result:', result)
+      await window.electronAPI.importFilesToWorkspace(workspaceId, paths)
     }
-  }, [workspaceId, activeWorkspace])
+  }, [workspaceId])
 
   // Drag and drop handlers
   const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -428,32 +419,21 @@ export function WorkspaceTreePanel({ workspaceId, closeButton, className }: Work
     dragCounterRef.current = 0
     setIsDragOver(false)
 
-    console.log('[WorkspaceTreePanel] Drop event, workspaceId:', workspaceId)
-    if (!workspaceId) {
-      console.log('[WorkspaceTreePanel] No workspaceId, aborting drop')
-      return
-    }
+    if (!workspaceId) return
 
     const files = e.dataTransfer.files
-    console.log('[WorkspaceTreePanel] Dropped files count:', files.length)
     if (files.length > 0) {
       const paths: string[] = []
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
         // Use Electron's webUtils.getPathForFile to get the file path
         const filePath = window.electronAPI.getPathForFile(file)
-        console.log('[WorkspaceTreePanel] File:', file.name, 'path:', filePath)
         if (filePath) {
           paths.push(filePath)
         }
       }
-      console.log('[WorkspaceTreePanel] Collected paths:', paths)
       if (paths.length > 0) {
-        console.log('[WorkspaceTreePanel] Calling importFilesToWorkspace with workspaceId:', workspaceId, 'paths:', paths)
-        const result = await window.electronAPI.importFilesToWorkspace(workspaceId, paths)
-        console.log('[WorkspaceTreePanel] Import result:', result)
-      } else {
-        console.log('[WorkspaceTreePanel] No valid paths collected from dropped files')
+        await window.electronAPI.importFilesToWorkspace(workspaceId, paths)
       }
     }
   }, [workspaceId])
