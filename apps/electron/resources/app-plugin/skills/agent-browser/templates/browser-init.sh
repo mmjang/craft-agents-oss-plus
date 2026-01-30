@@ -40,7 +40,13 @@ find_chrome() {
     return 1
 }
 
-# Step 1: Check if CDP is already available
+# Step 1: Install agent-browser if not found
+if ! command -v agent-browser &> /dev/null; then
+    echo "Installing agent-browser..."
+    npm install -g agent-browser
+fi
+
+# Step 2: Check if CDP is already available
 if check_cdp; then
     echo "CDP port ${CDP_PORT} is already available."
     echo "Connecting agent-browser..."
@@ -52,11 +58,6 @@ if check_cdp; then
     exit 0
 fi
 
-# Step 2: Install agent-browser if not found
-if ! command -v agent-browser &> /dev/null; then
-    echo "Installing agent-browser..."
-    npm install -g agent-browser
-fi
 
 # Step 3: Find Chrome or install Chromium
 CHROME_PATH=$(find_chrome || true)
