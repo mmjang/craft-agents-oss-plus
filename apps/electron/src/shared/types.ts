@@ -493,6 +493,7 @@ export const IPC_CHANNELS = {
   WATCH_WORKSPACE_FILES: 'workspace:watchFiles',
   UNWATCH_WORKSPACE_FILES: 'workspace:unwatchFiles',
   WORKSPACE_FILES_CHANGED: 'workspace:filesChanged',
+  IMPORT_FILES_TO_WORKSPACE: 'workspace:importFiles',
 
   // Theme
   GET_SYSTEM_THEME: 'theme:getSystemPreference',
@@ -647,6 +648,9 @@ import type { Workspace, SessionMetadata, StoredAttachment as StoredAttachmentTy
 
 // Type-safe IPC API exposed to renderer
 export interface ElectronAPI {
+  // Utility to get file path from dropped File object
+  getPathForFile(file: File): string
+
   // Session management
   getSessions(): Promise<Session[]>
   getSessionMessages(sessionId: string): Promise<Session | null>
@@ -796,6 +800,7 @@ export interface ElectronAPI {
   watchWorkspaceFiles(workspaceId: string): Promise<void>
   unwatchWorkspaceFiles(): Promise<void>
   onWorkspaceFilesChanged(callback: (workspaceId: string) => void): () => void
+  importFilesToWorkspace(workspaceId: string, filePaths: string[]): Promise<{ success: boolean; error?: string; results?: { path: string; success: boolean; error?: string }[] }>
 
   // Sources
   getSources(workspaceId: string): Promise<LoadedSource[]>

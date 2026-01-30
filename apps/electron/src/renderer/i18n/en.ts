@@ -319,6 +319,7 @@ export default {
   'status.needsReview': 'Needs Review',
   'status.done': 'Done',
   'status.cancelled': 'Cancelled',
+  'permissions.mode.label': 'Mode',
   'permissions.mode.safe': 'Explore',
   'permissions.mode.ask': 'Ask to Edit',
   'permissions.mode.allow-all': 'Auto',
@@ -348,6 +349,7 @@ export default {
   'freeform.sources.none': 'No sources configured.',
   'freeform.sources.addHint': 'Add sources in Settings.',
   'freeform.sources.tooltip': 'Sources',
+  'freeform.model.label': 'Model',
   'freeform.model.tooltip': 'Model',
   'freeform.model.opus': 'Most capable for complex work',
   'freeform.model.sonnet': 'Best for everyday tasks',
@@ -384,6 +386,9 @@ export default {
   'workspaceTree.title': 'Workspace Files',
   'workspaceTree.empty': 'No files in workspace.',
   'workspaceTree.loading': 'Loading...',
+  'workspaceTree.openFolder': 'Open in Finder',
+  'workspaceTree.importFiles': 'Import Files',
+  'workspaceTree.dropHint': 'Drop files here to import',
 
   // Claude Code Installation
   'onboarding.claudeCode.title': 'Claude Code',

@@ -1255,24 +1255,26 @@ export function FreeFormInput({
           <div className="flex-1" />
 
           {/* 5. Model Selector - Radix DropdownMenu for automatic positioning and submenu support */}
-          <DropdownMenu open={modelDropdownOpen} onOpenChange={setModelDropdownOpen}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "inline-flex items-center h-7 px-1.5 gap-0.5 text-[13px] shrink-0 rounded-[6px] hover:bg-foreground/5 transition-colors select-none",
-                      modelDropdownOpen && "bg-foreground/5"
-                    )}
-                  >
-                    {getModelShortName(currentModel)}
-                    <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
-                  </button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="top">{t('freeform.model.tooltip', 'Model')}</TooltipContent>
-            </Tooltip>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground select-none">{t('freeform.model.label', 'Model')}</span>
+            <DropdownMenu open={modelDropdownOpen} onOpenChange={setModelDropdownOpen}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        "inline-flex items-center h-7 px-1.5 gap-0.5 text-[13px] shrink-0 rounded-[6px] hover:bg-foreground/5 transition-colors select-none",
+                        modelDropdownOpen && "bg-foreground/5"
+                      )}
+                    >
+                      {getModelShortName(currentModel)}
+                      <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
+                    </button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="top">{t('freeform.model.tooltip', 'Model')}</TooltipContent>
+              </Tooltip>
             <StyledDropdownMenuContent side="top" align="end" sideOffset={8} className="min-w-[240px]">
               {/* Model options - dynamically based on API base URL */}
               {getModelsForBaseUrl(apiBaseUrl).map((model) => {
@@ -1360,6 +1362,7 @@ export function FreeFormInput({
               )}
             </StyledDropdownMenuContent>
           </DropdownMenu>
+          </div>
 
           {/* 5.5 Context Usage Warning Badge - shows when approaching auto-compaction threshold */}
           {(() => {

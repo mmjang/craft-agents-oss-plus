@@ -1,7 +1,10 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import { IPC_CHANNELS, type SessionEvent, type ElectronAPI, type FileAttachment, type AuthType } from '../shared/types'
 
 const api: ElectronAPI = {
+  // Utility to get file path from dropped File object
+  getPathForFile: (file: File) => webUtils.getPathForFile(file),
+
   // Session management
   getSessions: () => ipcRenderer.invoke(IPC_CHANNELS.GET_SESSIONS),
   getSessionMessages: (sessionId: string) => ipcRenderer.invoke(IPC_CHANNELS.GET_SESSION_MESSAGES, sessionId),
@@ -230,6 +233,8 @@ const api: ElectronAPI = {
     ipcRenderer.on(IPC_CHANNELS.WORKSPACE_FILES_CHANGED, handler)
     return () => ipcRenderer.removeListener(IPC_CHANNELS.WORKSPACE_FILES_CHANGED, handler)
   },
+  importFilesToWorkspace: (workspaceId: string, filePaths: string[]) =>
+    ipcRenderer.invoke(IPC_CHANNELS.IMPORT_FILES_TO_WORKSPACE, workspaceId, filePaths),
 
   // Sources
   getSources: (workspaceId: string) => ipcRenderer.invoke(IPC_CHANNELS.SOURCES_GET, workspaceId),

@@ -1391,6 +1391,63 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     }
   })
 
+  // Import files to workspace directory
+  ipcMain.handle(IPC_CHANNELS.IMPORT_FILES_TO_WORKSPACE, async (_event, workspaceId: string, filePaths: string[]) => {
+    const workspace = getWorkspaceByNameOrId(workspaceId)
+    if (!workspace) {
+      ipcLog.error(`IMPORT_FILES_TO_WORKSPACE: Workspace not found: ${workspaceId}`)
+      return { success: false, error: 'Workspace not found' }
+    }
+
+    try {
+      const { copyFile, stat, mkdir } = await import('fs/promises')
+      const { join, basename, dirname } = await import('path')
+
+      const results: { path: string; success: boolean; error?: string }[] = []
+      let hasSuccessfulImport = false
+
+      for (const filePath of filePaths) {
+        try {
+          const fileName = basename(filePath)
+          const destPath = join(workspace.rootPath, fileName)
+
+          // Check if source exists
+          const srcStat = await stat(filePath)
+          if (!srcStat.isFile()) {
+            results.push({ path: filePath, success: false, error: 'Not a file' })
+            continue
+          }
+
+          // Ensure destination directory exists
+          await mkdir(dirname(destPath), { recursive: true })
+
+          // Copy file
+          await copyFile(filePath, destPath)
+          results.push({ path: filePath, success: true })
+          hasSuccessfulImport = true
+          ipcLog.info(`Imported file to workspace: ${fileName} -> ${destPath}`)
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          results.push({ path: filePath, success: false, error: errorMessage })
+          ipcLog.error(`Failed to import file ${filePath}:`, error)
+        }
+      }
+
+      // Manually trigger file change notification if any files were imported
+      if (hasSuccessfulImport) {
+        const { BrowserWindow } = require('electron')
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send(IPC_CHANNELS.WORKSPACE_FILES_CHANGED, workspaceId)
+        }
+      }
+
+      return { success: true, results }
+    } catch (error) {
+      ipcLog.error('Failed to import files to workspace:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    }
+  })
+
   // Preview windows removed - now using in-app overlays (see ChatDisplay.tsx)
 
   // ============================================================

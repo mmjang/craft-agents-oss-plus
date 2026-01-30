@@ -72,7 +72,8 @@ export function ActiveOptionBadges({
     <div className={cn("flex items-start gap-2 mb-2 px-px pt-px pb-0.5 overflow-x-auto overflow-y-hidden", className)}>
       {/* Permission Mode Badge */}
       {permissionMode && (
-        <div className="shrink-0">
+        <div className="shrink-0 flex items-center gap-1.5">
+          <span className="text-xs text-muted-foreground select-none">{t('permissions.mode.label', 'Mode')}</span>
           <PermissionModeDropdown
             permissionMode={permissionMode}
             ultrathinkEnabled={ultrathinkEnabled}

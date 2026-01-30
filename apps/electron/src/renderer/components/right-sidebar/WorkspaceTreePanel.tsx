@@ -6,6 +6,8 @@
  * - File watcher for auto-refresh when files change
  * - Click to reveal in Finder, double-click to open
  * - Persisted expanded folder state per workspace
+ * - Open workspace folder in Finder
+ * - Import files via file dialog or drag-and-drop
  *
  * Styling matches LeftSidebar patterns:
  * - Chevron hidden by default, shown on hover
@@ -16,12 +18,14 @@
 import * as React from 'react'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { AnimatePresence, motion, type Variants } from 'motion/react'
-import { File, Folder, FolderOpen, FileText, Image, FileCode, ChevronRight } from 'lucide-react'
+import { File, Folder, FolderOpen, FileText, Image, FileCode, ChevronRight, FolderOpenDot, Import } from 'lucide-react'
 import type { SessionFile } from '../../../shared/types'
 import { cn } from '@/lib/utils'
 import * as storage from '@/lib/local-storage'
 import { useI18n } from '@/i18n/I18nContext'
 import { PanelHeader } from '../app-shell/PanelHeader'
+import { useActiveWorkspace } from '@/context/AppShellContext'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 /**
  * Stagger animation variants for child items - matches LeftSidebar pattern
@@ -266,7 +270,10 @@ export function WorkspaceTreePanel({ workspaceId, closeButton, className }: Work
   const [files, setFiles] = useState<SessionFile[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set())
+  const [isDragOver, setIsDragOver] = useState(false)
   const mountedRef = useRef(true)
+  const dragCounterRef = useRef(0)
+  const activeWorkspace = useActiveWorkspace()
 
   // Load expanded paths from storage when workspace changes
   useEffect(() => {
@@ -366,13 +373,144 @@ export function WorkspaceTreePanel({ workspaceId, closeButton, className }: Work
     })
   }, [saveExpandedPaths])
 
+  // Open workspace folder in Finder
+  const handleOpenFolder = useCallback(() => {
+    console.log('[WorkspaceTreePanel] Opening folder:', activeWorkspace?.rootPath)
+    if (activeWorkspace?.rootPath) {
+      window.electronAPI.openFile(activeWorkspace.rootPath)
+    }
+  }, [activeWorkspace?.rootPath])
+
+  // Import files via file dialog
+  const handleImportFiles = useCallback(async () => {
+    console.log('[WorkspaceTreePanel] Import files clicked, workspaceId:', workspaceId)
+    console.log('[WorkspaceTreePanel] activeWorkspace:', activeWorkspace)
+    if (!workspaceId) {
+      console.log('[WorkspaceTreePanel] No workspaceId, aborting')
+      return
+    }
+    const paths = await window.electronAPI.openFileDialog()
+    console.log('[WorkspaceTreePanel] Selected files:', paths)
+    if (paths.length > 0) {
+      console.log('[WorkspaceTreePanel] Calling importFilesToWorkspace with workspaceId:', workspaceId, 'paths:', paths)
+      const result = await window.electronAPI.importFilesToWorkspace(workspaceId, paths)
+      console.log('[WorkspaceTreePanel] Import result:', result)
+    }
+  }, [workspaceId, activeWorkspace])
+
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current++
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsDragOver(true)
+    }
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current--
+    if (dragCounterRef.current === 0) {
+      setIsDragOver(false)
+    }
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current = 0
+    setIsDragOver(false)
+
+    console.log('[WorkspaceTreePanel] Drop event, workspaceId:', workspaceId)
+    if (!workspaceId) {
+      console.log('[WorkspaceTreePanel] No workspaceId, aborting drop')
+      return
+    }
+
+    const files = e.dataTransfer.files
+    console.log('[WorkspaceTreePanel] Dropped files count:', files.length)
+    if (files.length > 0) {
+      const paths: string[] = []
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        // Use Electron's webUtils.getPathForFile to get the file path
+        const filePath = window.electronAPI.getPathForFile(file)
+        console.log('[WorkspaceTreePanel] File:', file.name, 'path:', filePath)
+        if (filePath) {
+          paths.push(filePath)
+        }
+      }
+      console.log('[WorkspaceTreePanel] Collected paths:', paths)
+      if (paths.length > 0) {
+        console.log('[WorkspaceTreePanel] Calling importFilesToWorkspace with workspaceId:', workspaceId, 'paths:', paths)
+        const result = await window.electronAPI.importFilesToWorkspace(workspaceId, paths)
+        console.log('[WorkspaceTreePanel] Import result:', result)
+      } else {
+        console.log('[WorkspaceTreePanel] No valid paths collected from dropped files')
+      }
+    }
+  }, [workspaceId])
+
+  // Action buttons for header
+  const headerActions = (
+    <div className="flex items-center gap-1">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={handleOpenFolder}
+            disabled={!activeWorkspace?.rootPath}
+            className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-foreground/5 transition-colors disabled:opacity-50"
+          >
+            <FolderOpenDot className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t('workspaceTree.openFolder', 'Open in Finder')}</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={handleImportFiles}
+            disabled={!workspaceId}
+            className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-foreground/5 transition-colors disabled:opacity-50"
+          >
+            <Import className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t('workspaceTree.importFiles', 'Import Files')}</TooltipContent>
+      </Tooltip>
+      {closeButton}
+    </div>
+  )
+
   return (
-    <div className={cn('flex flex-col h-full min-h-0', className)}>
-      {/* Header with title and close button */}
+    <div
+      className={cn('flex flex-col h-full min-h-0 relative', className)}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Header with title and action buttons */}
       <PanelHeader
         title={t('workspaceTree.title', 'Workspace Files')}
-        actions={closeButton}
+        actions={headerActions}
       />
+
+      {/* Drag overlay */}
+      {isDragOver && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-accent/10 border-2 border-dashed border-accent rounded-lg m-2 mt-12 pointer-events-none">
+          <p className="text-sm text-accent font-medium">{t('workspaceTree.dropHint', 'Drop files here to import')}</p>
+        </div>
+      )}
 
       {/* File tree - px-2 is on nav to match LeftSidebar exactly (constrains grid width) */}
       {/* overflow-x-hidden prevents horizontal scroll, forcing truncation */}
