@@ -584,11 +584,6 @@ export class SessionManager {
     // Set up authentication environment variables (critical for SDK to work)
     await this.reinitializeAuth()
 
-    // Set AGENT_BROWSER_PROFILE for persistent browser profile (used by agent-browser)
-    const agentBrowserProfile = join(homedir(), '.craft-agent-profile')
-    process.env.AGENT_BROWSER_PROFILE = agentBrowserProfile
-    sessionLog.info('Setting AGENT_BROWSER_PROFILE:', agentBrowserProfile)
-
     // Load existing sessions from disk
     this.loadSessionsFromDisk()
   }

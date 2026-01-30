@@ -15,7 +15,7 @@ allowed-tools: Bash(agent-browser:*)
 ```
 
 This script automatically:
-- Checks if CDP port 9222 is already available
+- Checks if CDP port 9444 is already available
 - Installs agent-browser if not found
 - Finds local Chrome or installs Chromium via agent-browser
 - Launches Chrome with CDP enabled and persistent profile
@@ -56,7 +56,7 @@ agent-browser fill @e2 "text"
 - Browser stays open between agent sessions (no repeated logins)
 
 **Do NOT:**
-- Start a new Chrome instance if CDP port 9222 is already in use
+- Start a new Chrome instance if CDP port  is already in use
 - Close Chrome unless user explicitly requests
 - Use `agent-browser close` (this disconnects from Chrome, not closes it)
 - Clear cookies or profile unless user explicitly requests
@@ -77,10 +77,6 @@ agent-browser fill @e2 "text"
 **Connect agent-browser:**
 
 `browser-init.sh` will handle the connect process automatically.
-
-```bash
-agent-browser connect 9222
-```
 
 **Login persistence:**
 - The profile directory (`~/.craft-agent-profile`) automatically saves all login states
@@ -107,7 +103,7 @@ agent-browser back            # Go back
 agent-browser forward         # Go forward
 agent-browser reload          # Reload page
 agent-browser close           # Close browser (aliases: quit, exit)
-agent-browser connect 9222    # Connect to browser via CDP port
+agent-browser connect     # Connect to browser via CDP port
 ```
 
 ### Snapshot (page analysis)
@@ -386,8 +382,8 @@ agent-browser get text @e1 --json
 
 ```bash
 agent-browser --headed open example.com   # Show browser window
-agent-browser --cdp 9222 snapshot         # Connect via CDP port
-agent-browser connect 9222                # Alternative: connect command
+agent-browser --cdp  snapshot         # Connect via CDP port
+agent-browser connect                 # Alternative: connect command
 agent-browser console                     # View console messages
 agent-browser console --clear             # Clear console
 agent-browser errors                      # View page errors

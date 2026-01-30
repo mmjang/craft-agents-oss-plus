@@ -16,12 +16,12 @@
 set -e
 
 # Configuration
-CDP_PORT="${CDP_PORT:-9222}"
+AGENT_BROWSER_CDP_PORT="${AGENT_BROWSER_CDP_PORT:-9444}"
 CHROME_PROFILE="${CHROME_PROFILE:-$HOME/.craft-agent-profile}"
 
 # Check if CDP port is available
 check_cdp() {
-    curl -s "http://localhost:${CDP_PORT}/json/version" > /dev/null 2>&1
+    curl -s "http://localhost:${AGENT_BROWSER_CDP_PORT}/json/version" > /dev/null 2>&1
 }
 
 # Find Chrome executable (macOS)
@@ -48,9 +48,9 @@ fi
 
 # Step 2: Check if CDP is already available
 if check_cdp; then
-    echo "CDP port ${CDP_PORT} is already available."
+    echo "CDP port ${AGENT_BROWSER_CDP_PORT} is already available."
     echo "Connecting agent-browser..."
-    agent-browser connect "${CDP_PORT}"
+    agent-browser connect "${AGENT_BROWSER_CDP_PORT}"
     echo ""
     echo "Ready to use:"
     echo "  agent-browser open <url>"
@@ -81,14 +81,14 @@ echo "Using browser: $CHROME_PATH"
 echo "Profile: $CHROME_PROFILE"
 
 # Step 4: Launch Chrome with CDP
-echo "Starting Chrome with CDP on port ${CDP_PORT}..."
+echo "Starting Chrome with CDP on port ${AGENT_BROWSER_CDP_PORT}..."
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOME_PAGE="file://${SCRIPT_DIR}/agent-browser-home.html"
 
 "$CHROME_PATH" \
-    --remote-debugging-port="${CDP_PORT}" \
+    --remote-debugging-port="${AGENT_BROWSER_CDP_PORT}" \
     --user-data-dir="${CHROME_PROFILE}" \
     --no-first-run \
     --no-default-browser-check \
@@ -97,11 +97,12 @@ HOME_PAGE="file://${SCRIPT_DIR}/agent-browser-home.html"
 
 # Wait for CDP to become available
 echo "Waiting for Chrome to start..."
+agent-browser close
 for i in {1..30}; do
     if check_cdp; then
         echo "Chrome started successfully."
         echo "Connecting agent-browser..."
-        agent-browser connect "${CDP_PORT}"
+        agent-browser connect "${AGENT_BROWSER_CDP_PORT}"
         echo ""
         echo "Ready to use:"
         echo "  agent-browser open <url>"
@@ -111,5 +112,5 @@ for i in {1..30}; do
     sleep 0.5
 done
 
-echo "ERROR: Chrome failed to start with CDP on port ${CDP_PORT}."
+echo "ERROR: Chrome failed to start with CDP on port ${AGENT_BROWSER_CDP_PORT}."
 exit 1

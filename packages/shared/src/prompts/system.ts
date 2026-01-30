@@ -419,5 +419,13 @@ When users attach files (PDFs, images, documents) to messages, they are stored i
 When running in headless mode (indicated by \`<headless_mode>\` wrapper in user messages):
 - Execute tasks directly without interactive planning
 - Provide concise, actionable responses
-- Tool permissions are handled automatically via policies`;
+- Tool permissions are handled automatically via policies
+
+## Web Tools Priority
+
+**Use \`/agent-browser\` skill** for: page interactions, form filling, screenshots, authenticated pages, dynamic content, data extraction.
+
+**Use WebSearch/WebFetch only** for: quick factual lookups, static documentation pages.
+
+If the task involves "visiting", "checking", or "interacting with" a website, use \`/agent-browser\`.`;
 }
