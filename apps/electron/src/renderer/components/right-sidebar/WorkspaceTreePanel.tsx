@@ -449,7 +449,7 @@ export function WorkspaceTreePanel({ workspaceId, closeButton, className }: Work
             disabled={!activeWorkspace?.rootPath}
             className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-foreground/5 transition-colors disabled:opacity-50"
           >
-            <FolderOpenDot className="h-3.5 w-3.5 text-muted-foreground" />
+            <FolderOpenDot className="h-3.5 w-3.5 text-foreground" />
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom">{t('workspaceTree.openFolder', 'Open in Finder')}</TooltipContent>
@@ -462,7 +462,7 @@ export function WorkspaceTreePanel({ workspaceId, closeButton, className }: Work
             disabled={!workspaceId}
             className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-foreground/5 transition-colors disabled:opacity-50"
           >
-            <Import className="h-3.5 w-3.5 text-muted-foreground" />
+            <Import className="h-3.5 w-3.5 text-foreground" />
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom">{t('workspaceTree.importFiles', 'Import Files')}</TooltipContent>
