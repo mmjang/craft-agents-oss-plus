@@ -62,8 +62,8 @@ mac:
         - x64
   hardenedRuntime: true
   gatekeeperAssess: false
-  entitlements: build/entitlements.mac.plist
-  entitlementsInherit: build/entitlements.mac.plist
+  entitlements: apps/electron/build/entitlements.mac.plist
+  entitlementsInherit: apps/electron/build/entitlements.mac.plist
   # Exclude ripgrep binaries for other platforms
   files:
     - "!node_modules/@anthropic-ai/claude-agent-sdk/vendor/ripgrep/arm64-linux"
