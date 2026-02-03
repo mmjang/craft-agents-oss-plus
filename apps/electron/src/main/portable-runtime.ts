@@ -12,7 +12,7 @@ import { app } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'
 import { homedir } from 'os'
-import { execSync } from 'child_process'
+import { execFileSync, execSync } from 'child_process'
 import { mainLog } from './logger'
 
 interface MirrorConfig {
@@ -170,6 +170,9 @@ export function setupPortableRuntime(mirrorPreset: string = 'china'): void {
   // ========== Configure Mirrors ==========
   configureMirrors(mirror)
 
+  // ========== Self-check (best-effort, logs only) ==========
+  runPortableRuntimeSelfCheck(portablePath, isWindows)
+
   mainLog.info(`[portable-runtime] Setup complete (mirror: ${mirrorPreset})`)
 }
 
@@ -234,4 +237,108 @@ export function getPortableRuntimeStatus(): {
     python: existsSync(pythonBin),
     node: existsSync(nodeBin),
   }
+}
+
+const SELF_CHECK_TIMEOUT_MS = 8000
+
+function runPortableRuntimeSelfCheck(portablePath: string, isWindows: boolean): void {
+  if (!existsSync(portablePath)) return
+
+  const results: Record<string, string> = {}
+
+  const check = (label: string, fn: () => string) => {
+    try {
+      results[label] = fn()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      results[label] = `error: ${message}`
+    }
+  }
+
+  // Git Bash (Windows only)
+  if (isWindows) {
+    const bashExe = join(portablePath, 'git', 'bin', 'bash.exe')
+    if (existsSync(bashExe)) {
+      check('git_bash', () =>
+        execFileSync(bashExe, ['--version'], { stdio: 'pipe', timeout: SELF_CHECK_TIMEOUT_MS })
+          .toString()
+          .trim()
+      )
+    } else {
+      results.git_bash = 'missing'
+    }
+  }
+
+  // Python + pip
+  const pythonBin = isWindows
+    ? join(portablePath, 'python', 'python.exe')
+    : join(portablePath, 'python', 'bin', 'python3')
+  if (existsSync(pythonBin)) {
+    check('python', () =>
+      execFileSync(pythonBin, ['-V'], { stdio: 'pipe', timeout: SELF_CHECK_TIMEOUT_MS })
+        .toString()
+        .trim()
+    )
+    check('pip', () =>
+      execFileSync(pythonBin, ['-m', 'pip', '-V'], { stdio: 'pipe', timeout: SELF_CHECK_TIMEOUT_MS })
+        .toString()
+        .trim()
+    )
+  } else {
+    results.python = 'missing'
+    results.pip = 'missing'
+  }
+
+  // Node + npm
+  const nodePath = join(portablePath, 'node')
+  const nodeBin = isWindows ? join(nodePath, 'node.exe') : join(nodePath, 'bin', 'node')
+  if (existsSync(nodeBin)) {
+    check('node', () =>
+      execFileSync(nodeBin, ['-v'], { stdio: 'pipe', timeout: SELF_CHECK_TIMEOUT_MS })
+        .toString()
+        .trim()
+    )
+    const npmCliPath = isWindows
+      ? join(nodePath, 'node_modules', 'npm', 'bin', 'npm-cli.js')
+      : join(nodePath, 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js')
+    if (existsSync(npmCliPath)) {
+      check('npm', () =>
+        execFileSync(nodeBin, [npmCliPath, '-v'], { stdio: 'pipe', timeout: SELF_CHECK_TIMEOUT_MS })
+          .toString()
+          .trim()
+      )
+    } else {
+      results.npm = 'missing'
+    }
+  } else {
+    results.node = 'missing'
+    results.npm = 'missing'
+  }
+
+  // Claude Code (optional)
+  const claudeBin = isWindows
+    ? join(homedir(), '.craft-agent', 'npm-global', 'claude.cmd')
+    : join(homedir(), '.craft-agent', 'npm-global', 'bin', 'claude')
+  if (existsSync(claudeBin)) {
+    if (isWindows) {
+      check('claude', () =>
+        execFileSync('cmd.exe', ['/c', claudeBin, '--version'], {
+          stdio: 'pipe',
+          timeout: SELF_CHECK_TIMEOUT_MS,
+        })
+          .toString()
+          .trim()
+      )
+    } else {
+      check('claude', () =>
+        execFileSync(claudeBin, ['--version'], { stdio: 'pipe', timeout: SELF_CHECK_TIMEOUT_MS })
+          .toString()
+          .trim()
+      )
+    }
+  } else {
+    results.claude = 'not_installed'
+  }
+
+  mainLog.info('[portable-runtime] Self-check results:', results)
 }

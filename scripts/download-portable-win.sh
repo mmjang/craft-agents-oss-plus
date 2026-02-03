@@ -22,6 +22,53 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+PORTABLE_RUNTIME_SOURCE="${PORTABLE_RUNTIME_SOURCE:-mirror}" # mirror | official
+
+find_7z() {
+  if command -v 7z &> /dev/null; then
+    echo "7z"
+    return 0
+  fi
+  if command -v 7zz &> /dev/null; then
+    echo "7zz"
+    return 0
+  fi
+  return 1
+}
+
+download_with_fallback() {
+  local primary_url="$1"
+  local fallback_url="$2"
+  local output_path="$3"
+
+  if curl -fL -o "$output_path" "$primary_url"; then
+    return 0
+  fi
+
+  echo -e "${YELLOW}Primary download failed, retrying with fallback...${NC}"
+  curl -fL -o "$output_path" "$fallback_url"
+}
+
+extract_zip() {
+  local zip_path="$1"
+  local dest_dir="$2"
+  local sevenzip
+
+  sevenzip="$(find_7z || true)"
+  if [ -n "$sevenzip" ]; then
+    "$sevenzip" x "$zip_path" -o"$dest_dir" -y
+    return 0
+  fi
+
+  if command -v unzip &> /dev/null; then
+    unzip -q "$zip_path" -d "$dest_dir"
+    return 0
+  fi
+
+  echo -e "${RED}Error: Neither 7z nor unzip is available to extract $zip_path${NC}"
+  exit 1
+}
+
 echo -e "${GREEN}=== Downloading Portable Runtime for Windows (x64) ===${NC}"
 echo "Target directory: $PORTABLE_DIR"
 echo ""
@@ -33,24 +80,31 @@ mkdir -p "$PORTABLE_DIR"
 echo -e "${YELLOW}[1/3] Downloading Git for Windows Portable ${GIT_VERSION}...${NC}"
 
 # Git for Windows uses a different version format in the URL
-GIT_URL="https://npmmirror.com/mirrors/git-for-windows/v${GIT_VERSION}.windows.1/PortableGit-${GIT_VERSION}-64-bit.7z.exe"
+GIT_URL_MIRROR="https://npmmirror.com/mirrors/git-for-windows/v${GIT_VERSION}.windows.1/PortableGit-${GIT_VERSION}-64-bit.7z.exe"
+GIT_URL_OFFICIAL="https://github.com/git-for-windows/git/releases/download/v${GIT_VERSION}.windows.1/PortableGit-${GIT_VERSION}-64-bit.7z.exe"
 GIT_ARCHIVE="/tmp/git-portable.7z.exe"
 
-echo "URL: $GIT_URL"
+if [ "$PORTABLE_RUNTIME_SOURCE" = "official" ]; then
+  GIT_PRIMARY="$GIT_URL_OFFICIAL"
+  GIT_FALLBACK="$GIT_URL_MIRROR"
+else
+  GIT_PRIMARY="$GIT_URL_MIRROR"
+  GIT_FALLBACK="$GIT_URL_OFFICIAL"
+fi
+
+echo "Primary URL: $GIT_PRIMARY"
 
 if [ -d "$PORTABLE_DIR/git" ]; then
   echo "Git directory already exists, removing..."
   rm -rf "$PORTABLE_DIR/git"
 fi
 
-curl -L -o "$GIT_ARCHIVE" "$GIT_URL"
+download_with_fallback "$GIT_PRIMARY" "$GIT_FALLBACK" "$GIT_ARCHIVE"
 
 # Extract using 7z (works on macOS with `brew install p7zip`)
 # The .7z.exe is a self-extracting archive that 7z can handle
-if command -v 7z &> /dev/null; then
-  7z x "$GIT_ARCHIVE" -o"$PORTABLE_DIR/git" -y
-elif command -v 7zz &> /dev/null; then
-  7zz x "$GIT_ARCHIVE" -o"$PORTABLE_DIR/git" -y
+if sevenzip="$(find_7z)"; then
+  "$sevenzip" x "$GIT_ARCHIVE" -o"$PORTABLE_DIR/git" -y
 else
   echo -e "${RED}Error: 7z not found. Please install p7zip:${NC}"
   echo "  macOS: brew install p7zip"
@@ -77,13 +131,13 @@ if [ -d "$PORTABLE_DIR/python" ]; then
   rm -rf "$PORTABLE_DIR/python"
 fi
 
-curl -L -o "$PYTHON_ZIP" "$PYTHON_URL"
+curl -fL -o "$PYTHON_ZIP" "$PYTHON_URL"
 mkdir -p "$PORTABLE_DIR/python"
-unzip -q "$PYTHON_ZIP" -d "$PORTABLE_DIR/python"
+extract_zip "$PYTHON_ZIP" "$PORTABLE_DIR/python"
 
 # Download get-pip.py
 echo "Downloading get-pip.py..."
-curl -L -o "$PORTABLE_DIR/python/get-pip.py" "https://bootstrap.pypa.io/get-pip.py"
+curl -fL -o "$PORTABLE_DIR/python/get-pip.py" "https://bootstrap.pypa.io/get-pip.py"
 
 # Modify python311._pth to enable site-packages
 # This is required for pip to work properly
@@ -119,19 +173,28 @@ echo ""
 # ========== Download Node.js ==========
 echo -e "${YELLOW}[3/3] Downloading Node.js ${NODE_VERSION}...${NC}"
 
-NODE_URL="https://npmmirror.com/mirrors/node/v${NODE_VERSION}/node-v${NODE_VERSION}-win-x64.zip"
+NODE_URL_MIRROR="https://npmmirror.com/mirrors/node/v${NODE_VERSION}/node-v${NODE_VERSION}-win-x64.zip"
+NODE_URL_OFFICIAL="https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-win-x64.zip"
 NODE_ZIP="/tmp/node-win.zip"
 
-echo "URL: $NODE_URL"
+if [ "$PORTABLE_RUNTIME_SOURCE" = "official" ]; then
+  NODE_PRIMARY="$NODE_URL_OFFICIAL"
+  NODE_FALLBACK="$NODE_URL_MIRROR"
+else
+  NODE_PRIMARY="$NODE_URL_MIRROR"
+  NODE_FALLBACK="$NODE_URL_OFFICIAL"
+fi
+
+echo "Primary URL: $NODE_PRIMARY"
 
 if [ -d "$PORTABLE_DIR/node" ]; then
   echo "Node directory already exists, removing..."
   rm -rf "$PORTABLE_DIR/node"
 fi
 
-curl -L -o "$NODE_ZIP" "$NODE_URL"
+download_with_fallback "$NODE_PRIMARY" "$NODE_FALLBACK" "$NODE_ZIP"
 mkdir -p "/tmp/node-extract"
-unzip -q "$NODE_ZIP" -d "/tmp/node-extract"
+extract_zip "$NODE_ZIP" "/tmp/node-extract"
 mv "/tmp/node-extract/node-v${NODE_VERSION}-win-x64" "$PORTABLE_DIR/node"
 
 # Create .npmrc for Chinese mirror
