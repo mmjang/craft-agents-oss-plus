@@ -14,6 +14,9 @@ const createOnboardingState = (overrides: Partial<OnboardingState> = {}): Onboar
   completionStatus: 'complete',
   billingMethod: null,
   isExistingUser: false,
+  runtimeInstallStatus: 'success',
+  runtimeInstallProgress: 100,
+  runtimeInstallMessage: '',
   ...overrides,
 })
 
@@ -205,6 +208,12 @@ export const onboardingComponents: ComponentEntry[] = [
         },
       },
       {
+        name: 'Runtime Install',
+        props: {
+          state: createOnboardingState({ step: 'runtime-install', runtimeInstallStatus: 'installing', runtimeInstallProgress: 45 }),
+        },
+      },
+      {
         name: 'Billing Method',
         props: {
           state: createOnboardingState({ step: 'billing-method' }),
@@ -253,6 +262,7 @@ export const onboardingComponents: ComponentEntry[] = [
       onSubmitCredential: (cred: ApiCredentialPayload) => console.log('[Playground] Submitted:', cred),
       onStartOAuth: noopHandler,
       onFinish: noopHandler,
+      onRetryRuntimeInstall: noopHandler,
     }),
   },
 ]

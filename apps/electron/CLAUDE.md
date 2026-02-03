@@ -11,6 +11,7 @@ The Electron app is the desktop application for Craft Agent. It provides a nativ
 - Renderer process with React UI
 - Main process for system operations
 - Chat header action to open an agent-controlled automation browser (agent-browser)
+- First-run portable runtime download (Git Bash/Python/Node) into `~/.craft-agent/runtime/` with onboarding progress
 
 ## Directory Structure
 

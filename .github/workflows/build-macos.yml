@@ -47,9 +47,6 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Download portable runtime (Python, Node.js)
-        run: bash scripts/download-portable-darwin.sh
-
       - name: Build macOS DMG (arm64)
         run: bash apps/electron/scripts/build-dmg.sh arm64
         env:
@@ -87,9 +84,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install
-
-      - name: Download portable runtime (Python, Node.js)
-        run: bash scripts/download-portable-darwin.sh
 
       - name: Build macOS DMG (x64)
         run: bash apps/electron/scripts/build-dmg.sh x64

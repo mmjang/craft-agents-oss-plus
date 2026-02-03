@@ -1249,6 +1249,7 @@ export default function App() {
           onSubmitCredential={onboarding.handleSubmitCredential}
           onStartOAuth={onboarding.handleStartOAuth}
           onFinish={onboarding.handleFinish}
+          onRetryRuntimeInstall={onboarding.handleRetryRuntimeInstall}
           existingClaudeToken={onboarding.existingClaudeToken}
           isClaudeCliInstalled={onboarding.isClaudeCliInstalled}
           onUseExistingClaudeToken={onboarding.handleUseExistingClaudeToken}

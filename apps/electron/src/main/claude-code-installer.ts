@@ -7,9 +7,9 @@
 import { spawn, type ChildProcess } from 'child_process'
 import { existsSync } from 'fs'
 import { join } from 'path'
-import { app } from 'electron'
 import { homedir } from 'os'
 import { mainLog } from './logger'
+import { getPortablePath } from './portable-runtime'
 
 export interface InstallProgress {
   status: 'checking' | 'installing' | 'success' | 'error' | 'already_installed'
@@ -23,12 +23,7 @@ export type InstallProgressCallback = (progress: InstallProgress) => void
  * Get the path to the portable Node.js installation
  */
 function getPortableNodePath(): string {
-  const platform = process.platform === 'darwin' ? 'portable-darwin' : 'portable-win'
-  const resourcesPath = app.isPackaged
-    ? process.resourcesPath
-    : join(__dirname, '..', 'resources')
-
-  return join(resourcesPath, platform, 'node')
+  return join(getPortablePath(), 'node')
 }
 
 /**

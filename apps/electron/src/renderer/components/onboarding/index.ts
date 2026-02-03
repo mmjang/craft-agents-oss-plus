@@ -11,6 +11,7 @@ export {
 
 // Individual steps
 export { WelcomeStep } from './WelcomeStep'
+export { PortableRuntimeInstallStep, type PortableRuntimeInstallStatus } from './PortableRuntimeInstallStep'
 export { BillingMethodStep, type BillingMethod } from './BillingMethodStep'
 export { CredentialsStep, type CredentialStatus, type ApiCredentialPayload } from './CredentialsStep'
 export { CompletionStep } from './CompletionStep'

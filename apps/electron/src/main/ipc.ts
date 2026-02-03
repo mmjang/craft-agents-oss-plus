@@ -18,6 +18,8 @@ import { loadWorkspaceSources, getSourcesBySlugs, type LoadedSource } from '@cra
 import { isValidThinkingLevel } from '@craft-agent/shared/agent/thinking-levels'
 import { getCredentialManager } from '@craft-agent/shared/credentials'
 import { MarkItDown } from 'markitdown-js'
+import { getPortableRuntimeStatus } from './portable-runtime'
+import { installPortableRuntime } from './portable-runtime-installer'
 
 /**
  * Sanitizes a filename to prevent path traversal and filesystem issues.
@@ -868,6 +870,31 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
         resolve({ status: 'starting', port })
       }, 200)
     })
+  })
+
+  ipcMain.handle(IPC_CHANNELS.PORTABLE_RUNTIME_GET_STATUS, async () => {
+    return getPortableRuntimeStatus()
+  })
+
+  let portableRuntimeInstallInFlight: Promise<void> | null = null
+
+  ipcMain.handle(IPC_CHANNELS.PORTABLE_RUNTIME_INSTALL, async (event) => {
+    if (portableRuntimeInstallInFlight) {
+      return portableRuntimeInstallInFlight
+    }
+
+    const webContents = event.sender
+    portableRuntimeInstallInFlight = (async () => {
+      try {
+        await installPortableRuntime((progress) => {
+          webContents.send(IPC_CHANNELS.PORTABLE_RUNTIME_INSTALL_PROGRESS, progress)
+        })
+      } finally {
+        portableRuntimeInstallInFlight = null
+      }
+    })()
+
+    return portableRuntimeInstallInFlight
   })
 
   // Show logout confirmation dialog

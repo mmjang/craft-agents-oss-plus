@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils"
 import { WelcomeStep } from "./WelcomeStep"
+import { PortableRuntimeInstallStep, type PortableRuntimeInstallStatus } from "./PortableRuntimeInstallStep"
 import { ClaudeCodeInstallStep } from "./ClaudeCodeInstallStep"
 import { BillingMethodStep, type BillingMethod } from "./BillingMethodStep"
 import { CredentialsStep, type ApiCredentialPayload, type CredentialStatus } from "./CredentialsStep"
@@ -7,6 +8,7 @@ import { CompletionStep } from "./CompletionStep"
 
 export type OnboardingStep =
   | 'welcome'
+  | 'runtime-install'
   | 'claude-code-install'
   | 'billing-method'
   | 'credentials'
@@ -22,6 +24,10 @@ export interface OnboardingState {
   billingMethod: BillingMethod | null
   isExistingUser: boolean
   errorMessage?: string
+  runtimeInstallStatus: PortableRuntimeInstallStatus
+  runtimeInstallProgress: number
+  runtimeInstallMessage: string
+  runtimeInstallError?: string
 }
 
 interface OnboardingWizardProps {
@@ -35,6 +41,7 @@ interface OnboardingWizardProps {
   onSubmitCredential: (credential: ApiCredentialPayload) => void
   onStartOAuth?: () => void
   onFinish: () => void
+  onRetryRuntimeInstall: () => void
 
   // Claude OAuth
   existingClaudeToken?: string | null
@@ -66,6 +73,7 @@ export function OnboardingWizard({
   onSubmitCredential,
   onStartOAuth,
   onFinish,
+  onRetryRuntimeInstall,
   existingClaudeToken,
   isClaudeCliInstalled,
   onUseExistingClaudeToken,
@@ -82,6 +90,19 @@ export function OnboardingWizard({
           <WelcomeStep
             isExistingUser={state.isExistingUser}
             onContinue={onContinue}
+          />
+        )
+
+      case 'runtime-install':
+        return (
+          <PortableRuntimeInstallStep
+            status={state.runtimeInstallStatus}
+            progress={state.runtimeInstallProgress}
+            message={state.runtimeInstallMessage}
+            errorMessage={state.runtimeInstallError}
+            onContinue={onContinue}
+            onBack={onBack}
+            onRetry={onRetryRuntimeInstall}
           />
         )
 

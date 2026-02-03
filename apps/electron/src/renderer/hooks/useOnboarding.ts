@@ -17,6 +17,7 @@ import type {
   CredentialStatus,
   BillingMethod,
   ApiCredentialPayload,
+  PortableRuntimeInstallStatus,
 } from '@/components/onboarding'
 import type { AuthType, SetupNeeds } from '../../shared/types'
 
@@ -34,6 +35,7 @@ interface UseOnboardingReturn {
   // Wizard actions
   handleContinue: () => void
   handleBack: () => void
+  handleRetryRuntimeInstall: () => void
 
   // Billing
   handleSelectBillingMethod: (method: BillingMethod) => void
@@ -79,7 +81,80 @@ export function useOnboarding({
     completionStatus: 'saving',
     billingMethod: null,
     isExistingUser: initialSetupNeeds?.needsBillingConfig ?? false,
+    runtimeInstallStatus: 'checking',
+    runtimeInstallProgress: 0,
+    runtimeInstallMessage: '',
   })
+
+  const [runtimeStepRequired, setRuntimeStepRequired] = useState(true)
+
+  // Check portable runtime availability on mount
+  useEffect(() => {
+    const checkRuntime = async () => {
+      try {
+        const status = await window.electronAPI.getPortableRuntimeStatus()
+        const ready = status.python && status.node && status.gitBash
+        setRuntimeStepRequired(!ready)
+        setState(s => ({
+          ...s,
+          runtimeInstallStatus: ready ? 'success' : 'not_installed',
+          runtimeInstallProgress: ready ? 100 : 0,
+          runtimeInstallMessage: ready ? 'Portable runtime ready' : '',
+          runtimeInstallError: undefined,
+        }))
+      } catch (error) {
+        setRuntimeStepRequired(true)
+        setState(s => ({
+          ...s,
+          runtimeInstallStatus: 'error',
+          runtimeInstallError: error instanceof Error ? error.message : 'Failed to check runtime',
+        }))
+      }
+    }
+    checkRuntime()
+  }, [])
+
+  // Listen for portable runtime install progress
+  useEffect(() => {
+    const cleanup = window.electronAPI.onPortableRuntimeInstallProgress((progress) => {
+      setState(s => ({
+        ...s,
+        runtimeInstallStatus: progress.status === 'success'
+          ? 'success'
+          : progress.status === 'error'
+            ? 'error'
+            : 'installing',
+        runtimeInstallProgress: progress.progress ?? s.runtimeInstallProgress,
+        runtimeInstallMessage: progress.message,
+        runtimeInstallError: progress.status === 'error' ? progress.message : undefined,
+      }))
+
+      if (progress.status === 'success') {
+        setRuntimeStepRequired(false)
+      }
+    })
+
+    return cleanup
+  }, [])
+
+  const handleRetryRuntimeInstall = useCallback(async () => {
+    setState(s => ({
+      ...s,
+      runtimeInstallStatus: 'installing',
+      runtimeInstallProgress: 0,
+      runtimeInstallMessage: '',
+      runtimeInstallError: undefined,
+    }))
+    try {
+      await window.electronAPI.installPortableRuntime()
+    } catch (error) {
+      setState(s => ({
+        ...s,
+        runtimeInstallStatus: 'error',
+        runtimeInstallError: error instanceof Error ? error.message : 'Runtime installation failed',
+      }))
+    }
+  }, [])
 
   // Save configuration
   const handleSaveConfig = useCallback(async (params?: { credential?: string; baseUrl?: string | null }) => {
@@ -127,7 +202,13 @@ export function useOnboarding({
   const handleContinue = useCallback(async () => {
     switch (state.step) {
       case 'welcome':
-        setState(s => ({ ...s, step: 'claude-code-install' }))
+        setState(s => ({ ...s, step: runtimeStepRequired ? 'runtime-install' : 'claude-code-install' }))
+        break
+
+      case 'runtime-install':
+        if (state.runtimeInstallStatus === 'success') {
+          setState(s => ({ ...s, step: 'claude-code-install' }))
+        }
         break
 
       case 'claude-code-install':
@@ -147,12 +228,15 @@ export function useOnboarding({
         onComplete()
         break
     }
-  }, [state.step, state.billingMethod, onComplete])
+  }, [state.step, state.runtimeInstallStatus, runtimeStepRequired, onComplete])
 
   // Go back to previous step
   const handleBack = useCallback(() => {
     switch (state.step) {
       case 'claude-code-install':
+        setState(s => ({ ...s, step: runtimeStepRequired ? 'runtime-install' : 'welcome' }))
+        break
+      case 'runtime-install':
         setState(s => ({ ...s, step: 'welcome' }))
         break
       case 'billing-method':
@@ -162,7 +246,7 @@ export function useOnboarding({
         setState(s => ({ ...s, step: 'billing-method', credentialStatus: 'idle', errorMessage: undefined }))
         break
     }
-  }, [state.step])
+  }, [state.step, runtimeStepRequired])
 
   // Select billing method
   const handleSelectBillingMethod = useCallback((method: BillingMethod) => {
@@ -383,6 +467,10 @@ export function useOnboarding({
       billingMethod: null,
       isExistingUser: false,
       errorMessage: undefined,
+      runtimeInstallStatus: 'checking',
+      runtimeInstallProgress: 0,
+      runtimeInstallMessage: '',
+      runtimeInstallError: undefined,
     })
     setExistingClaudeToken(null)
     setIsClaudeCliInstalled(false)
@@ -394,6 +482,7 @@ export function useOnboarding({
     state,
     handleContinue,
     handleBack,
+    handleRetryRuntimeInstall,
     handleSelectBillingMethod,
     handleSubmitCredential,
     handleStartOAuth,

@@ -119,6 +119,15 @@ const api: ElectronAPI = {
   openFile: (path: string) => ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE, path),
   showInFolder: (path: string) => ipcRenderer.invoke(IPC_CHANNELS.SHOW_IN_FOLDER, path),
   openAgentBrowser: () => ipcRenderer.invoke(IPC_CHANNELS.AGENT_BROWSER_OPEN),
+  getPortableRuntimeStatus: () => ipcRenderer.invoke(IPC_CHANNELS.PORTABLE_RUNTIME_GET_STATUS),
+  installPortableRuntime: () => ipcRenderer.invoke(IPC_CHANNELS.PORTABLE_RUNTIME_INSTALL),
+  onPortableRuntimeInstallProgress: (callback: (progress: import('../shared/types').PortableRuntimeInstallProgress) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, progress: import('../shared/types').PortableRuntimeInstallProgress) => {
+      callback(progress)
+    }
+    ipcRenderer.on(IPC_CHANNELS.PORTABLE_RUNTIME_INSTALL_PROGRESS, handler)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.PORTABLE_RUNTIME_INSTALL_PROGRESS, handler)
+  },
 
   // Menu event listeners
   onMenuNewChat: (callback: () => void) => {

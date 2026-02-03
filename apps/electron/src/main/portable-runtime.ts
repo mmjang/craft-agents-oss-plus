@@ -14,6 +14,7 @@ import { existsSync } from 'fs'
 import { homedir } from 'os'
 import { execFileSync, execSync } from 'child_process'
 import { mainLog } from './logger'
+import { CONFIG_DIR } from '@craft-agent/shared/config/paths'
 
 interface MirrorConfig {
   npm: string
@@ -39,22 +40,35 @@ const MIRROR_PRESETS: Record<string, MirrorConfig> = {
   },
 }
 
+export const PORTABLE_RUNTIME_DIR_NAME = 'runtime'
+
+export function getPortablePlatformDir(): string {
+  const isWindows = process.platform === 'win32'
+  const isMac = process.platform === 'darwin'
+  return isWindows ? 'portable-win' : isMac ? 'portable-darwin' : 'portable-linux'
+}
+
+export function getUserPortableRuntimePath(): string {
+  return join(CONFIG_DIR, PORTABLE_RUNTIME_DIR_NAME, getPortablePlatformDir())
+}
+
 /**
- * Get the path to the portable runtime directory based on platform
+ * Resolve portable runtime path with user runtime taking priority,
+ * falling back to bundled resources if present.
  */
-function getPortablePath(): string {
+export function getPortablePath(): string {
+  const userPath = getUserPortableRuntimePath()
+  if (existsSync(userPath)) {
+    return userPath
+  }
+
   // In packaged app, resources are in app.getPath('exe')/../Resources
   // In dev mode, they're in the resources folder relative to __dirname
   const resourcesPath = app.isPackaged
     ? join(process.resourcesPath || '', '')
     : join(__dirname, '../resources')
 
-  const isWindows = process.platform === 'win32'
-  const isMac = process.platform === 'darwin'
-
-  const platformDir = isWindows ? 'portable-win' : isMac ? 'portable-darwin' : 'portable-linux'
-
-  return join(resourcesPath, platformDir)
+  return join(resourcesPath, getPortablePlatformDir())
 }
 
 /**
@@ -121,10 +135,10 @@ export function setupPortableRuntime(mirrorPreset: string = 'china'): void {
       const getPipPath = join(pythonPath, 'get-pip.py')
 
       if (!pipInstalled && existsSync(getPipPath)) {
-        mainLog.info('[portable-runtime] pip not found, installing using Tsinghua mirror...')
+        mainLog.info('[portable-runtime] pip not found, installing using configured mirror...')
         try {
           execSync(
-            `"${pythonBin}" "${getPipPath}" -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn`,
+            `"${pythonBin}" "${getPipPath}" -i ${mirror.pip} --trusted-host ${mirror.pipTrustedHost}`,
             { stdio: 'pipe', timeout: 120000 }
           )
           mainLog.info('[portable-runtime] pip installed successfully')
@@ -201,6 +215,8 @@ function configureMirrors(mirror: MirrorConfig): void {
  */
 export function getPortableRuntimeStatus(): {
   available: boolean
+  basePath: string
+  platformDir: string
   gitBash: boolean
   python: boolean
   node: boolean
@@ -208,11 +224,14 @@ export function getPortableRuntimeStatus(): {
   nodeVersion?: string
 } {
   const portablePath = getPortablePath()
+  const platformDir = getPortablePlatformDir()
   const isWindows = process.platform === 'win32'
 
   if (!existsSync(portablePath)) {
     return {
       available: false,
+      basePath: portablePath,
+      platformDir,
       gitBash: !isWindows, // macOS/Linux have bash built-in
       python: false,
       node: false,
@@ -233,6 +252,8 @@ export function getPortableRuntimeStatus(): {
 
   return {
     available: true,
+    basePath: portablePath,
+    platformDir,
     gitBash: gitBashExists,
     python: existsSync(pythonBin),
     node: existsSync(nodeBin),

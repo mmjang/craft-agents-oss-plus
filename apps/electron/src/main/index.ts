@@ -6,7 +6,7 @@ loadShellEnv()
 // Setup portable runtime (Python, Node.js) for users without dev tools
 // Also configures Chinese mirror sources for npm and pip
 import { setupPortableRuntime } from './portable-runtime'
-setupPortableRuntime('china')
+setupPortableRuntime(process.env.PORTABLE_RUNTIME_MIRROR_PRESET || 'china')
 
 // CDP debugging support (must be before app.whenReady)
 import { setupCdp } from './cdp'

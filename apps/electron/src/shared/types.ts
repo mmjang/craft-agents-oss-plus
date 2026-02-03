@@ -133,6 +133,27 @@ export interface RefreshTitleResult {
 }
 
 /**
+ * Portable runtime status (Git Bash/Python/Node)
+ */
+export interface PortableRuntimeStatus {
+  available: boolean
+  basePath: string
+  platformDir: string
+  gitBash: boolean
+  python: boolean
+  node: boolean
+}
+
+/**
+ * Portable runtime install progress updates
+ */
+export interface PortableRuntimeInstallProgress {
+  status: 'checking' | 'downloading' | 'extracting' | 'installing' | 'configuring' | 'success' | 'error'
+  stage?: 'git' | 'python' | 'node' | 'pip' | 'finalize'
+  progress?: number
+  message: string
+}
+/**
  * Result of opening the agent-controlled browser
  */
 export interface AgentBrowserOpenResult {
@@ -530,6 +551,9 @@ export const IPC_CHANNELS = {
   OPEN_FILE: 'shell:openFile',
   SHOW_IN_FOLDER: 'shell:showInFolder',
   AGENT_BROWSER_OPEN: 'agentBrowser:open',
+  PORTABLE_RUNTIME_GET_STATUS: 'runtime:getStatus',
+  PORTABLE_RUNTIME_INSTALL: 'runtime:install',
+  PORTABLE_RUNTIME_INSTALL_PROGRESS: 'runtime:installProgress',
 
   // Menu actions (main → renderer)
   MENU_NEW_CHAT: 'menu:newChat',
@@ -733,6 +757,9 @@ export interface ElectronAPI {
   openFile(path: string): Promise<void>
   showInFolder(path: string): Promise<void>
   openAgentBrowser(): Promise<AgentBrowserOpenResult>
+  getPortableRuntimeStatus(): Promise<PortableRuntimeStatus>
+  installPortableRuntime(): Promise<void>
+  onPortableRuntimeInstallProgress(callback: (progress: PortableRuntimeInstallProgress) => void): () => void
 
   // Menu event listeners
   onMenuNewChat(callback: () => void): () => void
