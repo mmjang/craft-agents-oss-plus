@@ -13,22 +13,21 @@ on:
           - arm64
           - x64
           - both
-  # Push 到 main 分支时触发
-  push:
-    branches: [main]
-    paths:
-      - 'apps/electron/**'
-      - 'packages/**'
-      - 'package.json'
-      - 'bun.lock'
-  # PR 到 main 分支时触发
-  pull_request:
-    branches: [main]
-    paths:
-      - 'apps/electron/**'
-      - 'packages/**'
-      - 'package.json'
-      - 'bun.lock'
+  # 自动构建已禁用 - 取消注释以下内容可重新启用
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'apps/electron/**'
+  #     - 'packages/**'
+  #     - 'package.json'
+  #     - 'bun.lock'
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - 'apps/electron/**'
+  #     - 'packages/**'
+  #     - 'package.json'
+  #     - 'bun.lock'
 
 jobs:
   build-macos-arm64:
