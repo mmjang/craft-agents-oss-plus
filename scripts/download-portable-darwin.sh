@@ -11,7 +11,7 @@ PORTABLE_DIR="$PROJECT_ROOT/apps/electron/resources/portable-darwin"
 # Versions
 PYTHON_VERSION="3.11.11"
 PYTHON_RELEASE="20250115"
-NODE_VERSION="20.18.2"
+NODE_VERSION="22.22.0"
 
 # Colors for output
 RED='\033[0;31m'

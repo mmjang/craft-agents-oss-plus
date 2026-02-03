@@ -131,7 +131,14 @@ echo "Starting Chrome with CDP on port ${AGENT_BROWSER_CDP_PORT}..."
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOME_PAGE="file://${SCRIPT_DIR}/agent-browser-home.html"
+if [ "$OS_TYPE" = "windows" ] && command -v cygpath >/dev/null 2>&1; then
+    # Convert to Windows path and encode spaces for a valid file URI.
+    SCRIPT_DIR_WIN="$(cygpath -m "$SCRIPT_DIR")"
+    SCRIPT_DIR_WIN="${SCRIPT_DIR_WIN// /%20}"
+    HOME_PAGE="file:///${SCRIPT_DIR_WIN}/agent-browser-home.html"
+else
+    HOME_PAGE="file://${SCRIPT_DIR}/agent-browser-home.html"
+fi
 
 "$CHROME_PATH" \
     --remote-debugging-port="${AGENT_BROWSER_CDP_PORT}" \

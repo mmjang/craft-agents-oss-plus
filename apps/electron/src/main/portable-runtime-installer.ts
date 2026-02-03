@@ -25,11 +25,11 @@ export type PortableRuntimeInstallCallback = (progress: PortableRuntimeInstallPr
 
 const WINDOWS_GIT_VERSION = '2.47.1'
 const WINDOWS_PYTHON_VERSION = '3.11.9'
-const WINDOWS_NODE_VERSION = '20.18.2'
+const WINDOWS_NODE_VERSION = '22.22.0'
 
 const MAC_PYTHON_VERSION = '3.11.11'
 const MAC_PYTHON_RELEASE = '20250115'
-const MAC_NODE_VERSION = '20.18.2'
+const MAC_NODE_VERSION = '22.22.0'
 
 const DEFAULT_MIRROR_PRESET = process.env.PORTABLE_RUNTIME_MIRROR_PRESET || 'china'
 

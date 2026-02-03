@@ -14,7 +14,7 @@ PORTABLE_DIR="$PROJECT_ROOT/apps/electron/resources/portable-win"
 # Versions
 GIT_VERSION="2.47.1"
 PYTHON_VERSION="3.11.9"
-NODE_VERSION="20.18.2"
+NODE_VERSION="22.22.0"
 
 # Colors for output
 RED='\033[0;31m'

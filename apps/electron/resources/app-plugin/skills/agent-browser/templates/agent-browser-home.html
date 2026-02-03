@@ -87,8 +87,18 @@
             <span>Ready for automation</span>
         </div>
         <p class="info">
-            CDP Port: <code>9444</code> · Profile: <code>~/.craft-agent-profile</code>
+            CDP Port: <code id="cdp-port">9444</code> · Profile: <code id="profile-path">~/.craft-agent-profile</code>
         </p>
     </div>
+    <script>
+        (function () {
+            var isWindows = /Windows/i.test(navigator.userAgent || '');
+            var profile = isWindows ? '%USERPROFILE%\\\\.craft-agent-profile' : '~/.craft-agent-profile';
+            var profileEl = document.getElementById('profile-path');
+            if (profileEl) {
+                profileEl.textContent = profile;
+            }
+        })();
+    </script>
 </body>
 </html>
