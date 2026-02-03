@@ -889,6 +889,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
         await installPortableRuntime((progress) => {
           webContents.send(IPC_CHANNELS.PORTABLE_RUNTIME_INSTALL_PROGRESS, progress)
         })
+        sessionManager.refreshAgentsForRuntimeChange()
       } finally {
         portableRuntimeInstallInFlight = null
       }

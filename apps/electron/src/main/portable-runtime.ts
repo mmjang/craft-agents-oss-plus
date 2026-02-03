@@ -109,7 +109,7 @@ export function setupPortableRuntime(mirrorPreset: string = 'china'): void {
       // Add Git tools to PATH
       const gitBinPath = join(gitPath, 'bin')
       const gitUsrBinPath = join(gitPath, 'usr', 'bin')
-      process.env.PATH = [gitBinPath, gitUsrBinPath, process.env.PATH].join(pathSeparator)
+      updateProcessPath([gitBinPath, gitUsrBinPath], pathSeparator, isWindows)
 
       mainLog.info(`[portable-runtime] Git Bash configured: ${bashExe}`)
     } else {
@@ -125,9 +125,7 @@ export function setupPortableRuntime(mirrorPreset: string = 'china'): void {
 
   if (existsSync(pythonBin)) {
     if (isWindows) {
-      process.env.PATH = [pythonPath, join(pythonPath, 'Scripts'), process.env.PATH].join(
-        pathSeparator
-      )
+      updateProcessPath([pythonPath, join(pythonPath, 'Scripts')], pathSeparator, isWindows)
 
       // Check if pip is installed, if not, install it using Chinese mirror
       const pipInstalled = existsSync(join(pythonPath, 'Scripts', 'pip.exe')) ||
@@ -147,7 +145,7 @@ export function setupPortableRuntime(mirrorPreset: string = 'china'): void {
         }
       }
     } else {
-      process.env.PATH = [join(pythonPath, 'bin'), process.env.PATH].join(pathSeparator)
+      updateProcessPath([join(pythonPath, 'bin')], pathSeparator, isWindows)
     }
     mainLog.info(`[portable-runtime] Python configured: ${pythonBin}`)
   } else {
@@ -160,9 +158,9 @@ export function setupPortableRuntime(mirrorPreset: string = 'china'): void {
 
   if (existsSync(nodeBin)) {
     if (isWindows) {
-      process.env.PATH = [nodePath, process.env.PATH].join(pathSeparator)
+      updateProcessPath([nodePath], pathSeparator, isWindows)
     } else {
-      process.env.PATH = [join(nodePath, 'bin'), process.env.PATH].join(pathSeparator)
+      updateProcessPath([join(nodePath, 'bin')], pathSeparator, isWindows)
     }
     mainLog.info(`[portable-runtime] Node.js configured: ${nodeBin}`)
   } else {
@@ -175,7 +173,7 @@ export function setupPortableRuntime(mirrorPreset: string = 'china'): void {
     : join(homedir(), '.craft-agent', 'npm-global', 'bin')
 
   if (existsSync(npmGlobalBin)) {
-    process.env.PATH = [npmGlobalBin, process.env.PATH].join(pathSeparator)
+    updateProcessPath([npmGlobalBin], pathSeparator, isWindows)
     mainLog.info(`[portable-runtime] npm-global bin added to PATH: ${npmGlobalBin}`)
   } else {
     mainLog.info(`[portable-runtime] npm-global bin not found (will be created on first Claude Code install): ${npmGlobalBin}`)
@@ -208,6 +206,15 @@ function configureMirrors(mirror: MirrorConfig): void {
   process.env.PUPPETEER_DOWNLOAD_HOST = 'https://npmmirror.com/mirrors'
 
   mainLog.info(`[portable-runtime] Mirrors configured: npm=${mirror.npm}, pip=${mirror.pip}`)
+}
+
+function updateProcessPath(entries: string[], separator: string, isWindows: boolean) {
+  const currentPath = process.env.PATH || process.env.Path || ''
+  const nextPath = [...entries, currentPath].filter(Boolean).join(separator)
+  process.env.PATH = nextPath
+  if (isWindows) {
+    process.env.Path = nextPath
+  }
 }
 
 /**

@@ -1483,6 +1483,27 @@ export class SessionManager {
     return managed.agent
   }
 
+  /**
+   * Refresh agents after runtime environment changes (e.g., portable runtime install).
+   * Disposes existing agents so they are recreated with updated PATH/env.
+   */
+  refreshAgentsForRuntimeChange(): void {
+    for (const managed of this.sessions.values()) {
+      if (!managed.agent) continue
+      if (managed.isProcessing) {
+        sessionLog.warn(`Skipping agent refresh for ${managed.id} (processing)`)
+        continue
+      }
+      try {
+        managed.agent.dispose()
+      } catch (error) {
+        sessionLog.warn(`Failed to dispose agent for ${managed.id}:`, error)
+      } finally {
+        managed.agent = null
+      }
+    }
+  }
+
   async flagSession(sessionId: string): Promise<void> {
     const managed = this.sessions.get(sessionId)
     if (managed) {
