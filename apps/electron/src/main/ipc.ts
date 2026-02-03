@@ -832,6 +832,8 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     const portFromEnv = Number(process.env.AGENT_BROWSER_CDP_PORT ?? 9444)
     const port = Number.isFinite(portFromEnv) && portFromEnv > 0 ? portFromEnv : 9444
     const scriptPath = join(__dirname, 'resources/app-plugin/skills/agent-browser/templates/browser-init.sh')
+    const bundledBashPath = process.platform === 'win32' ? process.env.CLAUDE_CODE_GIT_BASH_PATH : undefined
+    const bashCommand = bundledBashPath && existsSync(bundledBashPath) ? bundledBashPath : 'bash'
 
     if (!existsSync(scriptPath)) {
       const message = `browser-init.sh not found at ${scriptPath}`
@@ -845,7 +847,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
 
     return await new Promise((resolve) => {
       let settled = false
-      const child = spawn('bash', [scriptPath], {
+      const child = spawn(bashCommand, [scriptPath], {
         detached: true,
         stdio: 'ignore',
         env: { ...process.env },
