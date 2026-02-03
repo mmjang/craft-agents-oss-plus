@@ -111,6 +111,26 @@ async function ensureDir(path: string) {
   await mkdir(path, { recursive: true })
 }
 
+async function safeRemove(path: string, label: string) {
+  const retryDelayMs = 300
+  const maxAttempts = 5
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await rm(path, { force: true })
+      return
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException)?.code
+      const retryable = code === 'EPERM' || code === 'EBUSY'
+      if (!retryable || attempt === maxAttempts) {
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        mainLog.warn(`[portable-runtime] Failed to remove ${label}: ${message}`)
+        return
+      }
+      await new Promise(resolve => setTimeout(resolve, retryDelayMs))
+    }
+  }
+}
+
 function escapePowerShellPath(path: string): string {
   return path.replace(/'/g, "''")
 }
@@ -179,7 +199,7 @@ async function downloadWithFallback(urls: string[], dest: string, onProgress?: (
   let lastError: Error | null = null
   for (const url of urls) {
     try {
-      await rm(dest, { force: true })
+      await safeRemove(dest, `temp file ${dest}`)
       await downloadToFile(url, dest, onProgress)
       return
     } catch (error) {
@@ -281,7 +301,7 @@ export async function installPortableRuntime(onProgress: PortableRuntimeInstallC
       })
       onProgress({ status: 'extracting', stage: 'git', message: 'Extracting Git Bash...', progress: 0 })
       await extractPortableGit(gitArchive, gitDir)
-      await rm(gitArchive, { force: true })
+      await safeRemove(gitArchive, 'Git Bash archive')
     }
 
     if (!existsSync(join(pythonDir, 'python.exe'))) {
@@ -292,7 +312,7 @@ export async function installPortableRuntime(onProgress: PortableRuntimeInstallC
       })
       onProgress({ status: 'extracting', stage: 'python', message: 'Extracting Python...', progress: 0 })
       await extractZipWindows(pythonZip, pythonDir)
-      await rm(pythonZip, { force: true })
+      await safeRemove(pythonZip, 'Python archive')
     }
 
     await writeWindowsPythonConfig(pythonDir, mirror.pipIndex)
@@ -327,7 +347,7 @@ export async function installPortableRuntime(onProgress: PortableRuntimeInstallC
         await rm(nodeDir, { recursive: true, force: true })
         await rename(extractedDir, nodeDir)
       }
-      await rm(nodeZip, { force: true })
+      await safeRemove(nodeZip, 'Node.js archive')
     }
 
     await writeNodeConfig(nodeDir, mirror.npmRegistry)
@@ -349,7 +369,7 @@ export async function installPortableRuntime(onProgress: PortableRuntimeInstallC
       })
       onProgress({ status: 'extracting', stage: 'python', message: 'Extracting Python...', progress: 0 })
       await extractTarGz(pythonTar, pythonDir)
-      await rm(pythonTar, { force: true })
+      await safeRemove(pythonTar, 'Python archive')
     }
 
     await writeMacPythonConfig(pythonDir, mirror.pipIndex)
@@ -374,7 +394,7 @@ export async function installPortableRuntime(onProgress: PortableRuntimeInstallC
       })
       onProgress({ status: 'extracting', stage: 'node', message: 'Extracting Node.js...', progress: 0 })
       await extractTarGz(nodeTar, nodeDir)
-      await rm(nodeTar, { force: true })
+      await safeRemove(nodeTar, 'Node.js archive')
     }
 
     await writeNodeConfig(nodeDir, mirror.npmRegistry)
