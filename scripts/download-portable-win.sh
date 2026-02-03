@@ -112,8 +112,8 @@ rm -f "$PYTHON_ZIP"
 
 echo -e "${GREEN}Python ${PYTHON_VERSION} downloaded successfully!${NC}"
 echo ""
-echo -e "${YELLOW}Note: pip needs to be installed on first run on Windows:${NC}"
-echo "  python.exe get-pip.py"
+echo -e "${YELLOW}Note: pip will be pre-installed during CI build.${NC}"
+echo -e "${YELLOW}For local builds, run: python.exe get-pip.py -i https://pypi.tuna.tsinghua.edu.cn/simple${NC}"
 echo ""
 
 # ========== Download Node.js ==========

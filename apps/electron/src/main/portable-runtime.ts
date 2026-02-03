@@ -12,6 +12,7 @@ import { app } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'
 import { homedir } from 'os'
+import { execSync } from 'child_process'
 import { mainLog } from './logger'
 
 interface MirrorConfig {
@@ -113,6 +114,24 @@ export function setupPortableRuntime(mirrorPreset: string = 'china'): void {
       process.env.PATH = [pythonPath, join(pythonPath, 'Scripts'), process.env.PATH].join(
         pathSeparator
       )
+
+      // Check if pip is installed, if not, install it using Chinese mirror
+      const pipInstalled = existsSync(join(pythonPath, 'Scripts', 'pip.exe')) ||
+                          existsSync(join(pythonPath, 'Lib', 'site-packages', 'pip'))
+      const getPipPath = join(pythonPath, 'get-pip.py')
+
+      if (!pipInstalled && existsSync(getPipPath)) {
+        mainLog.info('[portable-runtime] pip not found, installing using Tsinghua mirror...')
+        try {
+          execSync(
+            `"${pythonBin}" "${getPipPath}" -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn`,
+            { stdio: 'pipe', timeout: 120000 }
+          )
+          mainLog.info('[portable-runtime] pip installed successfully')
+        } catch (err) {
+          mainLog.warn('[portable-runtime] Failed to install pip:', err)
+        }
+      }
     } else {
       process.env.PATH = [join(pythonPath, 'bin'), process.env.PATH].join(pathSeparator)
     }

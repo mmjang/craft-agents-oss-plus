@@ -43,6 +43,30 @@ jobs:
           export PATH="/c/Program Files/7-Zip:$PATH"
           bash scripts/download-portable-win.sh
 
+      - name: Pre-install pip in portable Python
+        shell: pwsh
+        run: |
+          # 在 CI 环境预装 pip（GitHub Actions 服务器网络正常，无需镜像）
+          $pythonDir = "apps/electron/resources/portable-win/python"
+          $pythonExe = "$pythonDir/python.exe"
+          $getPip = "$pythonDir/get-pip.py"
+
+          if (Test-Path $pythonExe) {
+            Write-Host "Installing pip..."
+            & $pythonExe $getPip
+
+            # 验证安装
+            Write-Host "Verifying pip installation..."
+            & $pythonExe -m pip --version
+
+            # 删除 get-pip.py（已不需要）
+            Remove-Item $getPip -ErrorAction SilentlyContinue
+
+            Write-Host "pip installed successfully!"
+          } else {
+            Write-Host "WARNING: Python not found at $pythonExe"
+          }
+
       - name: Build Windows installer
         shell: pwsh
         run: |
