@@ -1,0 +1,65 @@
+name: Build Windows
+
+on:
+  # 手动触发
+  workflow_dispatch:
+  # Push 到 main 分支时触发
+  push:
+    branches: [main]
+    paths:
+      - 'apps/electron/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'bun.lock'
+  # PR 到 main 分支时触发
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/electron/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'bun.lock'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Download portable runtime (Git Bash, Python, Node.js)
+        shell: bash
+        run: |
+          # Windows runner 已预装 7z，路径为 "C:\Program Files\7-Zip\7z.exe"
+          # 添加到 PATH 以便脚本可以找到
+          export PATH="/c/Program Files/7-Zip:$PATH"
+          bash scripts/download-portable-win.sh
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File apps/electron/scripts/build-win.ps1
+        env:
+          # OAuth credentials (optional, set in repository secrets)
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          SLACK_OAUTH_CLIENT_ID: ${{ secrets.SLACK_OAUTH_CLIENT_ID }}
+          SLACK_OAUTH_CLIENT_SECRET: ${{ secrets.SLACK_OAUTH_CLIENT_SECRET }}
+          MICROSOFT_OAUTH_CLIENT_ID: ${{ secrets.MICROSOFT_OAUTH_CLIENT_ID }}
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: apps/electron/release/*.exe
+          if-no-files-found: error
+          retention-days: 30
