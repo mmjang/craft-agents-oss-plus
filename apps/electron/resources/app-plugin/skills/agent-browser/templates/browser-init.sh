@@ -73,8 +73,11 @@ find_chrome() {
     esac
 
     for chrome in "${candidates[@]}"; do
-        # Expand environment variables for Windows paths
-        local expanded_chrome=$(eval echo "$chrome")
+        # Expand environment variables for Windows paths (safely preserve spaces/parentheses)
+        local expanded_chrome="$chrome"
+        if [[ "$chrome" == *'$'* ]]; then
+            expanded_chrome=$(eval "echo \"$chrome\"")
+        fi
         if [ -x "$expanded_chrome" ] || [ -f "$expanded_chrome" ]; then
             echo "$expanded_chrome"
             return 0

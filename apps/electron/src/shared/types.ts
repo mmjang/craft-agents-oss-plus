@@ -132,6 +132,15 @@ export interface RefreshTitleResult {
   error?: string
 }
 
+/**
+ * Result of opening the agent-controlled browser
+ */
+export interface AgentBrowserOpenResult {
+  status: 'starting' | 'already_running' | 'error'
+  port: number
+  error?: string
+}
+
 
 // Re-export permission types from core, extended with sessionId for multi-session context
 export type { PermissionRequest as BasePermissionRequest } from '@craft-agent/core/types';
@@ -520,6 +529,7 @@ export const IPC_CHANNELS = {
   OPEN_URL: 'shell:openUrl',
   OPEN_FILE: 'shell:openFile',
   SHOW_IN_FOLDER: 'shell:showInFolder',
+  AGENT_BROWSER_OPEN: 'agentBrowser:open',
 
   // Menu actions (main → renderer)
   MENU_NEW_CHAT: 'menu:newChat',
@@ -722,6 +732,7 @@ export interface ElectronAPI {
   openUrl(url: string): Promise<void>
   openFile(path: string): Promise<void>
   showInFolder(path: string): Promise<void>
+  openAgentBrowser(): Promise<AgentBrowserOpenResult>
 
   // Menu event listeners
   onMenuNewChat(callback: () => void): () => void

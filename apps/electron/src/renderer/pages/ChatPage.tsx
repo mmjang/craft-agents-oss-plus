@@ -7,11 +7,13 @@
 
 import * as React from 'react'
 import { useAtomValue, useSetAtom } from 'jotai'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, Monitor } from 'lucide-react'
+import { toast } from 'sonner'
 import { ChatDisplay } from '@/components/app-shell/ChatDisplay'
 import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { SessionMenu } from '@/components/app-shell/SessionMenu'
 import { RenameDialog } from '@/components/ui/rename-dialog'
+import { HeaderIconButton } from '@/components/ui/HeaderIconButton'
 import { useAppShellContext, usePendingPermission, usePendingCredential, useSessionOptionsFor, useSession as useSessionData } from '@/context/AppShellContext'
 import { rendererPerf } from '@/lib/perf'
 import { routes } from '@/lib/navigate'
@@ -56,6 +58,51 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     rightSidebarButton,
   } = useAppShellContext()
   const { t } = useI18n()
+
+  const [agentBrowserOpening, setAgentBrowserOpening] = React.useState(false)
+
+  const handleOpenAgentBrowser = React.useCallback(async () => {
+    if (agentBrowserOpening) return
+    if (!window.electronAPI?.openAgentBrowser) {
+      toast.error(t('appShell.agentBrowser.unavailable', 'Agent browser is not available in this build.'))
+      return
+    }
+
+    setAgentBrowserOpening(true)
+    try {
+      const result = await window.electronAPI.openAgentBrowser()
+      if (result.status === 'already_running') {
+        toast.info(
+          t('appShell.agentBrowser.alreadyOpen', 'Agent-controlled browser already running'),
+          { description: t('appShell.agentBrowser.alreadyOpenDesc', 'Reusing the existing controlled browser session.') }
+        )
+      } else if (result.status === 'starting') {
+        toast(
+          t('appShell.agentBrowser.starting', 'Starting agent-controlled browser'),
+          { description: t('appShell.agentBrowser.startingDesc', 'This browser window can be controlled by the agent.') }
+        )
+      } else {
+        toast.error(
+          t('appShell.agentBrowser.failed', 'Failed to open agent-controlled browser'),
+          { description: result.error || t('appShell.agentBrowser.failedDesc', 'Please try again or check your system setup.') }
+        )
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('appShell.agentBrowser.failedDesc', 'Please try again or check your system setup.')
+      toast.error(t('appShell.agentBrowser.failed', 'Failed to open agent-controlled browser'), { description: message })
+    } finally {
+      setAgentBrowserOpening(false)
+    }
+  }, [agentBrowserOpening, t])
+
+  const agentBrowserButton = React.useMemo(() => (
+    <HeaderIconButton
+      icon={<Monitor className="h-4 w-4" />}
+      onClick={handleOpenAgentBrowser}
+      tooltip={t('appShell.agentBrowser.tooltip', 'Open agent-controlled browser')}
+      disabled={agentBrowserOpening}
+    />
+  ), [agentBrowserOpening, handleOpenAgentBrowser, t])
 
   // Use the unified session options hook for clean access
   const {
@@ -324,7 +371,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
       return (
         <>
           <div className="h-full flex flex-col">
-            <PanelHeader  title={displayTitle} titleMenu={titleMenu} rightSidebarButton={rightSidebarButton} isRegeneratingTitle={isAsyncOperationOngoing} />
+            <PanelHeader  title={displayTitle} titleMenu={titleMenu} actions={agentBrowserButton} rightSidebarButton={rightSidebarButton} isRegeneratingTitle={isAsyncOperationOngoing} />
             <div className="flex-1 flex flex-col min-h-0">
               <ChatDisplay
                 session={skeletonSession}
@@ -374,7 +421,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     // Session truly doesn't exist
     return (
       <div className="h-full flex flex-col">
-        <PanelHeader  title="Chat" rightSidebarButton={rightSidebarButton} />
+        <PanelHeader  title="Chat" actions={agentBrowserButton} rightSidebarButton={rightSidebarButton} />
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-muted-foreground">
           <AlertCircle className="h-10 w-10" />
           <p className="text-sm">This session no longer exists</p>
@@ -386,7 +433,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
   return (
     <>
       <div className="h-full flex flex-col">
-        <PanelHeader  title={displayTitle} titleMenu={titleMenu} rightSidebarButton={rightSidebarButton} isRegeneratingTitle={isAsyncOperationOngoing} />
+        <PanelHeader  title={displayTitle} titleMenu={titleMenu} actions={agentBrowserButton} rightSidebarButton={rightSidebarButton} isRegeneratingTitle={isAsyncOperationOngoing} />
         <div className="flex-1 flex flex-col min-h-0">
           <ChatDisplay
             session={session}

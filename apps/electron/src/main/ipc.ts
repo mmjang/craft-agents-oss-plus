@@ -4,7 +4,8 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { normalize, isAbsolute, join, basename, dirname, resolve, sep } from 'path'
 import { homedir, tmpdir, platform } from 'os'
 import { randomUUID } from 'crypto'
-import { execSync } from 'child_process'
+import { execSync, spawn } from 'child_process'
+import { request } from 'node:http'
 import { SessionManager } from './sessions'
 import { ipcLog, windowLog } from './logger'
 import { WindowManager } from './window-manager'
@@ -38,6 +39,30 @@ function sanitizeFilename(name: string): string {
     .slice(0, 200)
     // Fallback if name is empty after sanitization
     || 'unnamed'
+}
+
+async function isCdpPortActive(port: number, timeoutMs = 800): Promise<boolean> {
+  return new Promise((resolve) => {
+    const req = request(
+      {
+        host: '127.0.0.1',
+        port,
+        path: '/json/version',
+        method: 'GET',
+        timeout: timeoutMs,
+      },
+      (res) => {
+        res.resume()
+        resolve(res.statusCode === 200)
+      }
+    )
+    req.on('error', () => resolve(false))
+    req.on('timeout', () => {
+      req.destroy()
+      resolve(false)
+    })
+    req.end()
+  })
 }
 
 /**
@@ -801,6 +826,46 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
       ipcLog.error('showInFolder error:', message)
       throw new Error(`Failed to show in folder: ${message}`)
     }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.AGENT_BROWSER_OPEN, async () => {
+    const portFromEnv = Number(process.env.AGENT_BROWSER_CDP_PORT ?? 9444)
+    const port = Number.isFinite(portFromEnv) && portFromEnv > 0 ? portFromEnv : 9444
+    const scriptPath = join(__dirname, 'resources/app-plugin/skills/agent-browser/templates/browser-init.sh')
+
+    if (!existsSync(scriptPath)) {
+      const message = `browser-init.sh not found at ${scriptPath}`
+      ipcLog.error(`[AGENT_BROWSER_OPEN] ${message}`)
+      return { status: 'error', port, error: message }
+    }
+
+    if (await isCdpPortActive(port)) {
+      return { status: 'already_running', port }
+    }
+
+    return await new Promise((resolve) => {
+      let settled = false
+      const child = spawn('bash', [scriptPath], {
+        detached: true,
+        stdio: 'ignore',
+        env: { ...process.env },
+      })
+
+      child.once('error', (error) => {
+        if (settled) return
+        settled = true
+        const message = error instanceof Error ? error.message : 'Failed to start agent browser'
+        ipcLog.error('[AGENT_BROWSER_OPEN] Failed to spawn browser-init.sh:', message)
+        resolve({ status: 'error', port, error: message })
+      })
+
+      child.unref()
+      setTimeout(() => {
+        if (settled) return
+        settled = true
+        resolve({ status: 'starting', port })
+      }, 200)
+    })
   })
 
   // Show logout confirmation dialog

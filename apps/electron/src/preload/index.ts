@@ -118,6 +118,7 @@ const api: ElectronAPI = {
   openUrl: (url: string) => ipcRenderer.invoke(IPC_CHANNELS.OPEN_URL, url),
   openFile: (path: string) => ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE, path),
   showInFolder: (path: string) => ipcRenderer.invoke(IPC_CHANNELS.SHOW_IN_FOLDER, path),
+  openAgentBrowser: () => ipcRenderer.invoke(IPC_CHANNELS.AGENT_BROWSER_OPEN),
 
   // Menu event listeners
   onMenuNewChat: (callback: () => void) => {
