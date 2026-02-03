@@ -19,21 +19,60 @@ set -e
 AGENT_BROWSER_CDP_PORT="${AGENT_BROWSER_CDP_PORT:-9444}"
 CHROME_PROFILE="${CHROME_PROFILE:-$HOME/.craft-agent-profile}"
 
+# Detect OS
+detect_os() {
+    case "$(uname -s)" in
+        Darwin)  echo "macos" ;;
+        MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
+        Linux)   echo "linux" ;;
+        *)       echo "unknown" ;;
+    esac
+}
+
+OS_TYPE=$(detect_os)
+
 # Check if CDP port is available
 check_cdp() {
     curl -s "http://localhost:${AGENT_BROWSER_CDP_PORT}/json/version" > /dev/null 2>&1
 }
 
-# Find Chrome executable (macOS)
+# Find Chrome executable based on OS
 find_chrome() {
-    local candidates=(
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-        "/Applications/Chromium.app/Contents/MacOS/Chromium"
-        "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary"
-    )
+    case "$OS_TYPE" in
+        macos)
+            local candidates=(
+                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+                "/Applications/Chromium.app/Contents/MacOS/Chromium"
+                "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary"
+            )
+            ;;
+        windows)
+            local candidates=(
+                "/c/Program Files/Google/Chrome/Application/chrome.exe"
+                "/c/Program Files (x86)/Google/Chrome/Application/chrome.exe"
+                "$LOCALAPPDATA/Google/Chrome/Application/chrome.exe"
+                "$PROGRAMFILES/Google/Chrome/Application/chrome.exe"
+            )
+            ;;
+        linux)
+            local candidates=(
+                "/usr/bin/google-chrome"
+                "/usr/bin/google-chrome-stable"
+                "/usr/bin/chromium"
+                "/usr/bin/chromium-browser"
+                "/snap/bin/chromium"
+            )
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+
     for chrome in "${candidates[@]}"; do
-        if [ -x "$chrome" ]; then
-            echo "$chrome"
+        # Expand environment variables for Windows paths
+        local expanded_chrome=$(eval echo "$chrome")
+        if [ -x "$expanded_chrome" ] || [ -f "$expanded_chrome" ]; then
+            echo "$expanded_chrome"
             return 0
         fi
     done
@@ -68,7 +107,7 @@ if [ -z "$CHROME_PATH" ]; then
 
     # Find the installed Chromium path
     CHROMIUM_PATH=$(agent-browser eval "require('playwright').chromium.executablePath()" 2>/dev/null || true)
-    if [ -n "$CHROMIUM_PATH" ] && [ -x "$CHROMIUM_PATH" ]; then
+    if [ -n "$CHROMIUM_PATH" ] && [ -f "$CHROMIUM_PATH" ]; then
         CHROME_PATH="$CHROMIUM_PATH"
     else
         echo "ERROR: Failed to find Chromium after installation."
@@ -97,8 +136,8 @@ HOME_PAGE="file://${SCRIPT_DIR}/agent-browser-home.html"
 
 # Wait for CDP to become available
 echo "Waiting for Chrome to start..."
-agent-browser close
-for i in {1..30}; do
+agent-browser close 2>/dev/null || true
+for i in $(seq 1 30); do
     if check_cdp; then
         echo "Chrome started successfully."
         echo "Connecting agent-browser..."
@@ -109,7 +148,7 @@ for i in {1..30}; do
         echo "  agent-browser snapshot -i"
         exit 0
     fi
-    sleep 0.5
+    sleep 1
 done
 
 echo "ERROR: Chrome failed to start with CDP on port ${AGENT_BROWSER_CDP_PORT}."
