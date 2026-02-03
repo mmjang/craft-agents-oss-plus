@@ -32,14 +32,15 @@ function getPortableNodePath(): string {
 }
 
 /**
- * Get the npm executable path
+ * Get the npm CLI script path (for running via node)
  */
-function getNpmPath(): string {
+function getNpmCliPath(): string {
   const nodePath = getPortableNodePath()
   if (process.platform === 'win32') {
-    return join(nodePath, 'npm.cmd')
+    // On Windows, use the npm-cli.js directly with node.exe
+    return join(nodePath, 'node_modules', 'npm', 'bin', 'npm-cli.js')
   }
-  return join(nodePath, 'bin', 'npm')
+  return join(nodePath, 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js')
 }
 
 /**
@@ -103,7 +104,7 @@ export function installClaudeCode(
     }
 
     const nodePath = getNodePath()
-    const npmPath = getNpmPath()
+    const npmCliPath = getNpmCliPath()
     const prefix = getGlobalNpmPrefix()
 
     // Verify portable node exists
@@ -119,7 +120,7 @@ export function installClaudeCode(
 
     mainLog.info('[ClaudeCodeInstaller] Starting installation...')
     mainLog.info('[ClaudeCodeInstaller] Node path:', nodePath)
-    mainLog.info('[ClaudeCodeInstaller] NPM path:', npmPath)
+    mainLog.info('[ClaudeCodeInstaller] NPM CLI path:', npmCliPath)
     mainLog.info('[ClaudeCodeInstaller] Prefix:', prefix)
 
     onProgress({
@@ -129,8 +130,9 @@ export function installClaudeCode(
     })
 
     // Run npm install -g @anthropic-ai/claude-code
+    // Use npm-cli.js directly with node.exe to avoid Windows .cmd file issues
     const args = [
-      npmPath,
+      npmCliPath,
       'install',
       '-g',
       '@anthropic-ai/claude-code',
@@ -140,12 +142,18 @@ export function installClaudeCode(
 
     mainLog.info('[ClaudeCodeInstaller] Running:', nodePath, args.join(' '))
 
+    // Set up PATH for Windows - use semicolon separator
+    const pathSeparator = process.platform === 'win32' ? ';' : ':'
+    const portableNodeBin = process.platform === 'win32'
+      ? getPortableNodePath()
+      : join(getPortableNodePath(), 'bin')
+
     childProcess = spawn(nodePath, args, {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: {
         ...process.env,
         // Ensure npm uses the portable node
-        PATH: `${join(getPortableNodePath(), 'bin')}:${process.env.PATH}`,
+        PATH: `${portableNodeBin}${pathSeparator}${process.env.PATH}`,
       },
     })
 
