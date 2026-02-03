@@ -23,6 +23,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 PORTABLE_RUNTIME_SOURCE="${PORTABLE_RUNTIME_SOURCE:-mirror}" # mirror | official
+PORTABLE_RUNTIME_SKIP_IF_PRESENT="${PORTABLE_RUNTIME_SKIP_IF_PRESENT:-0}"
 
 find_7z() {
   if command -v 7z &> /dev/null; then
@@ -95,27 +96,35 @@ fi
 echo "Primary URL: $GIT_PRIMARY"
 
 if [ -d "$PORTABLE_DIR/git" ]; then
-  echo "Git directory already exists, removing..."
-  rm -rf "$PORTABLE_DIR/git"
+  if [ "$PORTABLE_RUNTIME_SKIP_IF_PRESENT" = "1" ] && [ -f "$PORTABLE_DIR/git/bin/bash.exe" ]; then
+    echo "Git directory already exists, skipping download."
+  else
+    echo "Git directory already exists, removing..."
+    rm -rf "$PORTABLE_DIR/git"
+  fi
 fi
 
-download_with_fallback "$GIT_PRIMARY" "$GIT_FALLBACK" "$GIT_ARCHIVE"
-
-# Extract using 7z (works on macOS with `brew install p7zip`)
-# The .7z.exe is a self-extracting archive that 7z can handle
-if sevenzip="$(find_7z)"; then
-  "$sevenzip" x "$GIT_ARCHIVE" -o"$PORTABLE_DIR/git" -y
+if [ "$PORTABLE_RUNTIME_SKIP_IF_PRESENT" = "1" ] && [ -f "$PORTABLE_DIR/git/bin/bash.exe" ]; then
+  echo -e "${GREEN}Git for Windows already present, skipped.${NC}"
 else
-  echo -e "${RED}Error: 7z not found. Please install p7zip:${NC}"
-  echo "  macOS: brew install p7zip"
-  echo "  Ubuntu: sudo apt install p7zip-full"
-  exit 1
+  download_with_fallback "$GIT_PRIMARY" "$GIT_FALLBACK" "$GIT_ARCHIVE"
+
+  # Extract using 7z (works on macOS with `brew install p7zip`)
+  # The .7z.exe is a self-extracting archive that 7z can handle
+  if sevenzip="$(find_7z)"; then
+    "$sevenzip" x "$GIT_ARCHIVE" -o"$PORTABLE_DIR/git" -y
+  else
+    echo -e "${RED}Error: 7z not found. Please install p7zip:${NC}"
+    echo "  macOS: brew install p7zip"
+    echo "  Ubuntu: sudo apt install p7zip-full"
+    exit 1
+  fi
+
+  # Clean up
+  rm -f "$GIT_ARCHIVE"
+
+  echo -e "${GREEN}Git for Windows ${GIT_VERSION} downloaded successfully!${NC}"
 fi
-
-# Clean up
-rm -f "$GIT_ARCHIVE"
-
-echo -e "${GREEN}Git for Windows ${GIT_VERSION} downloaded successfully!${NC}"
 echo ""
 
 # ========== Download Python Embeddable ==========
@@ -127,32 +136,39 @@ PYTHON_ZIP="/tmp/python-embed.zip"
 echo "URL: $PYTHON_URL"
 
 if [ -d "$PORTABLE_DIR/python" ]; then
-  echo "Python directory already exists, removing..."
-  rm -rf "$PORTABLE_DIR/python"
+  if [ "$PORTABLE_RUNTIME_SKIP_IF_PRESENT" = "1" ] && [ -f "$PORTABLE_DIR/python/python.exe" ]; then
+    echo "Python directory already exists, skipping download."
+  else
+    echo "Python directory already exists, removing..."
+    rm -rf "$PORTABLE_DIR/python"
+  fi
 fi
 
-curl -fL -o "$PYTHON_ZIP" "$PYTHON_URL"
-mkdir -p "$PORTABLE_DIR/python"
-extract_zip "$PYTHON_ZIP" "$PORTABLE_DIR/python"
+if [ "$PORTABLE_RUNTIME_SKIP_IF_PRESENT" = "1" ] && [ -f "$PORTABLE_DIR/python/python.exe" ]; then
+  echo -e "${GREEN}Python ${PYTHON_VERSION} already present, skipped.${NC}"
+else
+  curl -fL -o "$PYTHON_ZIP" "$PYTHON_URL"
+  mkdir -p "$PORTABLE_DIR/python"
+  extract_zip "$PYTHON_ZIP" "$PORTABLE_DIR/python"
 
-# Download get-pip.py
-echo "Downloading get-pip.py..."
-curl -fL -o "$PORTABLE_DIR/python/get-pip.py" "https://bootstrap.pypa.io/get-pip.py"
+  # Download get-pip.py
+  echo "Downloading get-pip.py..."
+  curl -fL -o "$PORTABLE_DIR/python/get-pip.py" "https://bootstrap.pypa.io/get-pip.py"
 
-# Modify python311._pth to enable site-packages
-# This is required for pip to work properly
-echo "Configuring Python path..."
-cat > "$PORTABLE_DIR/python/python311._pth" << 'EOF'
+  # Modify python311._pth to enable site-packages
+  # This is required for pip to work properly
+  echo "Configuring Python path..."
+  cat > "$PORTABLE_DIR/python/python311._pth" << 'EOF'
 python311.zip
 .
 Lib/site-packages
 import site
 EOF
 
-# Create pip.ini for Chinese mirror
-echo "Configuring pip mirror..."
-mkdir -p "$PORTABLE_DIR/python/pip"
-cat > "$PORTABLE_DIR/python/pip/pip.ini" << 'EOF'
+  # Create pip.ini for Chinese mirror
+  echo "Configuring pip mirror..."
+  mkdir -p "$PORTABLE_DIR/python/pip"
+  cat > "$PORTABLE_DIR/python/pip/pip.ini" << 'EOF'
 [global]
 index-url = https://pypi.tuna.tsinghua.edu.cn/simple
 trusted-host = pypi.tuna.tsinghua.edu.cn
@@ -161,10 +177,11 @@ trusted-host = pypi.tuna.tsinghua.edu.cn
 trusted-host = pypi.tuna.tsinghua.edu.cn
 EOF
 
-# Clean up
-rm -f "$PYTHON_ZIP"
+  # Clean up
+  rm -f "$PYTHON_ZIP"
 
-echo -e "${GREEN}Python ${PYTHON_VERSION} downloaded successfully!${NC}"
+  echo -e "${GREEN}Python ${PYTHON_VERSION} downloaded successfully!${NC}"
+fi
 echo ""
 echo -e "${YELLOW}Note: pip will be pre-installed during CI build.${NC}"
 echo -e "${YELLOW}For local builds, run: python.exe get-pip.py -i https://pypi.tuna.tsinghua.edu.cn/simple${NC}"
@@ -188,18 +205,25 @@ fi
 echo "Primary URL: $NODE_PRIMARY"
 
 if [ -d "$PORTABLE_DIR/node" ]; then
-  echo "Node directory already exists, removing..."
-  rm -rf "$PORTABLE_DIR/node"
+  if [ "$PORTABLE_RUNTIME_SKIP_IF_PRESENT" = "1" ] && [ -f "$PORTABLE_DIR/node/node.exe" ]; then
+    echo "Node directory already exists, skipping download."
+  else
+    echo "Node directory already exists, removing..."
+    rm -rf "$PORTABLE_DIR/node"
+  fi
 fi
 
-download_with_fallback "$NODE_PRIMARY" "$NODE_FALLBACK" "$NODE_ZIP"
-mkdir -p "/tmp/node-extract"
-extract_zip "$NODE_ZIP" "/tmp/node-extract"
-mv "/tmp/node-extract/node-v${NODE_VERSION}-win-x64" "$PORTABLE_DIR/node"
+if [ "$PORTABLE_RUNTIME_SKIP_IF_PRESENT" = "1" ] && [ -f "$PORTABLE_DIR/node/node.exe" ]; then
+  echo -e "${GREEN}Node.js ${NODE_VERSION} already present, skipped.${NC}"
+else
+  download_with_fallback "$NODE_PRIMARY" "$NODE_FALLBACK" "$NODE_ZIP"
+  mkdir -p "/tmp/node-extract"
+  extract_zip "$NODE_ZIP" "/tmp/node-extract"
+  mv "/tmp/node-extract/node-v${NODE_VERSION}-win-x64" "$PORTABLE_DIR/node"
 
-# Create .npmrc for Chinese mirror
-echo "Configuring npm mirror..."
-cat > "$PORTABLE_DIR/node/.npmrc" << 'EOF'
+  # Create .npmrc for Chinese mirror
+  echo "Configuring npm mirror..."
+  cat > "$PORTABLE_DIR/node/.npmrc" << 'EOF'
 registry=https://registry.npmmirror.com
 disturl=https://npmmirror.com/dist
 electron_mirror=https://npmmirror.com/mirrors/electron/
@@ -207,11 +231,12 @@ sass_binary_site=https://npmmirror.com/mirrors/node-sass/
 phantomjs_cdnurl=https://npmmirror.com/mirrors/phantomjs/
 EOF
 
-# Clean up
-rm -f "$NODE_ZIP"
-rm -rf "/tmp/node-extract"
+  # Clean up
+  rm -f "$NODE_ZIP"
+  rm -rf "/tmp/node-extract"
 
-echo -e "${GREEN}Node.js ${NODE_VERSION} downloaded successfully!${NC}"
+  echo -e "${GREEN}Node.js ${NODE_VERSION} downloaded successfully!${NC}"
+fi
 echo ""
 
 # ========== Summary ==========

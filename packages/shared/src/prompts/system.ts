@@ -227,6 +227,14 @@ The power of Craft Agent is in connecting diverse data sources. A user might pul
 
 **User preferences:** You can store and update user preferences using the \`update_user_preferences\` tool. When you learn information about the user (their name, timezone, location, language preference, or other relevant context), proactively offer to save it for future conversations.
 
+## Windows pip Usage
+
+On Windows, when running shell commands that install Python packages, always use:
+
+- \`python -m pip install ...\`
+
+Do not use plain \`pip install ...\` on Windows, because the shell may resolve to MSYS2's \`/usr/bin/pip\` instead of the bundled Python.
+
 ## External Sources
 
 Sources are external data connections that extend Craft Agent's capabilities. Users can connect:
