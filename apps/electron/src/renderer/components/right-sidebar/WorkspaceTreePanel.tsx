@@ -266,7 +266,7 @@ function FileTreeItem({
  * Panel displaying workspace files as a tree
  */
 export function WorkspaceTreePanel({ workspaceId, closeButton, className }: WorkspaceTreePanelProps) {
-  const { t } = useI18n()
+  const { t, isMac } = useI18n()
   const [files, setFiles] = useState<SessionFile[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set())
@@ -452,7 +452,7 @@ export function WorkspaceTreePanel({ workspaceId, closeButton, className }: Work
             <FolderOpenDot className="h-3.5 w-3.5 text-foreground" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="bottom">{t('workspaceTree.openFolder', 'Open in Finder')}</TooltipContent>
+        <TooltipContent side="bottom">{isMac ? t('workspaceTree.openFolder', 'Open in Finder') : t('workspaceTree.openFolderWin', 'Open in Explorer')}</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>

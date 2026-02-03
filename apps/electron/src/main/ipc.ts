@@ -1,8 +1,8 @@
 import { app, ipcMain, nativeTheme, nativeImage, dialog, shell, BrowserWindow } from 'electron'
 import { readFile, realpath, mkdir, writeFile, unlink, rm } from 'fs/promises'
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { normalize, isAbsolute, join, basename, dirname, resolve } from 'path'
-import { homedir, tmpdir } from 'os'
+import { normalize, isAbsolute, join, basename, dirname, resolve, sep } from 'path'
+import { homedir, tmpdir, platform } from 'os'
 import { randomUUID } from 'crypto'
 import { execSync } from 'child_process'
 import { SessionManager } from './sessions'
@@ -54,13 +54,14 @@ function getWorkspaceOrThrow(workspaceId: string): Workspace {
 
 /**
  * Validates that a file path is within allowed directories to prevent path traversal attacks.
- * Allowed directories: user's home directory and /tmp
+ * Allowed directories: user's home directory and temp directories
+ * Works on both Windows and Unix-like systems.
  */
 async function validateFilePath(filePath: string): Promise<string> {
   // Normalize the path to resolve . and .. components
   let normalizedPath = normalize(filePath)
 
-  // Expand ~ to home directory
+  // Expand ~ to home directory (Unix convention, also works on Windows with some shells)
   if (normalizedPath.startsWith('~')) {
     normalizedPath = normalizedPath.replace(/^~/, homedir())
   }
@@ -79,25 +80,45 @@ async function validateFilePath(filePath: string): Promise<string> {
     realPath = normalizedPath
   }
 
-  // Define allowed base directories
+  // Define allowed base directories (cross-platform)
+  const isWindows = platform() === 'win32'
   const allowedDirs = [
     homedir(),      // User's home directory
-    '/tmp',         // Temporary files
-    '/var/folders', // macOS temp folders
+    tmpdir(),       // System temp directory (cross-platform)
   ]
 
-  // Check if the real path is within an allowed directory
-  const isAllowed = allowedDirs.some(dir => realPath.startsWith(dir + '/') || realPath === dir)
+  // Add platform-specific temp directories
+  if (isWindows) {
+    // Windows temp directories
+    const localAppData = process.env.LOCALAPPDATA
+    const appData = process.env.APPDATA
+    if (localAppData) allowedDirs.push(localAppData)
+    if (appData) allowedDirs.push(appData)
+  } else {
+    // Unix temp directories
+    allowedDirs.push('/tmp')
+    allowedDirs.push('/var/folders') // macOS temp folders
+  }
+
+  // Check if the real path is within an allowed directory (cross-platform)
+  const isAllowed = allowedDirs.some(dir => {
+    // Normalize both paths for comparison
+    const normalizedDir = normalize(dir)
+    const normalizedReal = normalize(realPath)
+    // Check if path starts with directory + separator, or equals directory
+    return normalizedReal.startsWith(normalizedDir + sep) || normalizedReal === normalizedDir
+  })
 
   if (!isAllowed) {
     throw new Error('Access denied: file path is outside allowed directories')
   }
 
   // Block sensitive files even within home directory
+  // Use patterns that work on both Windows (backslash) and Unix (forward slash)
   const sensitivePatterns = [
-    /\.ssh\//,
-    /\.gnupg\//,
-    /\.aws\/credentials/,
+    /[/\\]\.ssh[/\\]/,
+    /[/\\]\.gnupg[/\\]/,
+    /[/\\]\.aws[/\\]credentials/,
     /\.env$/,
     /\.env\./,
     /credentials\.json$/,

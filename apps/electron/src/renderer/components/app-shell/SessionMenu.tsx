@@ -89,7 +89,7 @@ export function SessionMenu({
   onOpenInNewWindow,
   onDelete,
 }: SessionMenuProps) {
-  const { t } = useI18n()
+  const { t, isMac } = useI18n()
   // Share handlers
   const handleShare = async () => {
     const result = await window.electronAPI.sessionCommand(sessionId, { type: 'shareToViewer' }) as { success: boolean; url?: string; error?: string } | undefined
@@ -289,10 +289,10 @@ export function SessionMenu({
         <span className="flex-1">{t('session.openInNewWindow', 'Open in New Window')}</span>
       </MenuItem>
 
-      {/* View in Finder */}
+      {/* View in Finder/Explorer */}
       <MenuItem onClick={handleShowInFinder}>
         <FolderOpen className="h-3.5 w-3.5" />
-        <span className="flex-1">{t('session.viewInFinder', 'View in Finder')}</span>
+        <span className="flex-1">{isMac ? t('session.viewInFinder', 'View in Finder') : t('session.viewInExplorer', 'View in Explorer')}</span>
       </MenuItem>
 
       {/* Copy Path */}

@@ -39,8 +39,10 @@ export default {
   'taskMenu.viewOutput': '查看输出',
   'taskMenu.stop': '停止任务',
   'sourceMenu.showInFinder': '在访达中显示',
+  'sourceMenu.showInExplorer': '在资源管理器中显示',
   'sourceMenu.delete': '删除来源',
   'skillMenu.showInFinder': '在访达中显示',
+  'skillMenu.showInExplorer': '在资源管理器中显示',
   'skillMenu.delete': '删除技能',
   'skill.badge.builtin': '内置',
   'skill.cannotDelete.appLevel': '内置技能无法删除',
@@ -91,6 +93,7 @@ export default {
   'session.regenerateTitle': '重新生成标题',
   'session.openInNewWindow': '在新窗口中打开',
   'session.viewInFinder': '在访达中显示',
+  'session.viewInExplorer': '在资源管理器中显示',
   'session.copyPath': '复制路径',
   'session.delete': '删除',
 
@@ -387,6 +390,7 @@ export default {
   'workspaceTree.empty': '工作区中没有文件。',
   'workspaceTree.loading': '加载中...',
   'workspaceTree.openFolder': '在访达中打开',
+  'workspaceTree.openFolderWin': '在资源管理器中打开',
   'workspaceTree.importFiles': '导入文件',
   'workspaceTree.dropHint': '拖放文件到此处导入',
 

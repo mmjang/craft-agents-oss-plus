@@ -47,7 +47,7 @@ export function SourceMenu({
 }: SourceMenuProps) {
   // Get menu components from context (works with both DropdownMenu and ContextMenu)
   const { MenuItem, Separator } = useMenuComponents()
-  const { t } = useI18n()
+  const { t, isMac } = useI18n()
 
   return (
     <>
@@ -57,10 +57,10 @@ export function SourceMenu({
         <span className="flex-1">{t('sidebar.openInNewWindow', 'Open in New Window')}</span>
       </MenuItem>
 
-      {/* Show in Finder */}
+      {/* Show in Finder/Explorer */}
       <MenuItem onClick={onShowInFinder}>
         <FolderOpen className="h-3.5 w-3.5" />
-        <span className="flex-1">{t('sourceMenu.showInFinder', 'Show in Finder')}</span>
+        <span className="flex-1">{isMac ? t('sourceMenu.showInFinder', 'Show in Finder') : t('sourceMenu.showInExplorer', 'Show in Explorer')}</span>
       </MenuItem>
 
       <Separator />

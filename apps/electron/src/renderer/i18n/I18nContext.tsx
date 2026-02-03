@@ -7,6 +7,8 @@ interface I18nContextType {
   setLocale: (locale: Locale) => void
   t: (key: TranslationKey, fallback?: string, values?: Record<string, string | number>) => string
   availableLocales: Locale[]
+  isMac: boolean
+  isWindows: boolean
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined)
@@ -31,6 +33,10 @@ function formatTemplate(template: string, values?: Record<string, string | numbe
     return value === undefined ? '' : String(value)
   })
 }
+
+// Platform detection
+const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
+const isWindows = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('WIN') >= 0
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(detectInitialLocale)
@@ -58,6 +64,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     setLocale,
     t,
     availableLocales: supportedLocales,
+    isMac,
+    isWindows,
   }), [locale, setLocale, t])
 
   return (

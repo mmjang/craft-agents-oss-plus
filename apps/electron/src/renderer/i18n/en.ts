@@ -39,8 +39,10 @@ export default {
   'taskMenu.viewOutput': 'View Output',
   'taskMenu.stop': 'Stop Task',
   'sourceMenu.showInFinder': 'Show in Finder',
+  'sourceMenu.showInExplorer': 'Show in Explorer',
   'sourceMenu.delete': 'Delete Source',
   'skillMenu.showInFinder': 'Show in Finder',
+  'skillMenu.showInExplorer': 'Show in Explorer',
   'skillMenu.delete': 'Delete Skill',
   'skill.badge.builtin': 'Built-in',
   'skill.cannotDelete.appLevel': 'Built-in skills cannot be deleted',
@@ -91,6 +93,7 @@ export default {
   'session.regenerateTitle': 'Regenerate Title',
   'session.openInNewWindow': 'Open in New Window',
   'session.viewInFinder': 'View in Finder',
+  'session.viewInExplorer': 'View in Explorer',
   'session.copyPath': 'Copy Path',
   'session.delete': 'Delete',
 
@@ -387,6 +390,7 @@ export default {
   'workspaceTree.empty': 'No files in workspace.',
   'workspaceTree.loading': 'Loading...',
   'workspaceTree.openFolder': 'Open in Finder',
+  'workspaceTree.openFolderWin': 'Open in Explorer',
   'workspaceTree.importFiles': 'Import Files',
   'workspaceTree.dropHint': 'Drop files here to import',
 

@@ -48,6 +48,10 @@ find_chrome() {
             ;;
         windows)
             local candidates=(
+                "/c/Program Files/Microsoft/Edge/Application/msedge.exe"
+                "/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
+                "$LOCALAPPDATA/Microsoft/Edge/Application/msedge.exe"
+                "$PROGRAMFILES/Microsoft/Edge/Application/msedge.exe"
                 "/c/Program Files/Google/Chrome/Application/chrome.exe"
                 "/c/Program Files (x86)/Google/Chrome/Application/chrome.exe"
                 "$LOCALAPPDATA/Google/Chrome/Application/chrome.exe"

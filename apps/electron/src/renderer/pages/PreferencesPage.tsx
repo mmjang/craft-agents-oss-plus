@@ -115,7 +115,7 @@ function FormField({
 }
 
 export default function PreferencesPage() {
-  const { t } = useI18n()
+  const { t, isMac } = useI18n()
   const [formState, setFormState] = useState<PreferencesFormState>(emptyFormState)
   const [originalState, setOriginalState] = useState<PreferencesFormState>(emptyFormState)
   const [isLoading, setIsLoading] = useState(true)
@@ -188,7 +188,7 @@ export default function PreferencesPage() {
       <button
         onClick={() => window.electronAPI.showInFolder('~/.craft-agent/preferences.json')}
         className="flex items-center gap-1 text-xs h-7 px-2 rounded-md bg-foreground/5 hover:bg-foreground/10 text-muted-foreground"
-        title={t('session.viewInFinder', 'View in Finder')}
+        title={isMac ? t('session.viewInFinder', 'View in Finder') : t('session.viewInExplorer', 'View in Explorer')}
       >
         <ExternalLink className="h-3 w-3" />
       </button>
