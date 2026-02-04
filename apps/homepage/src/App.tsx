@@ -37,7 +37,7 @@ function Header() {
             <span>{lang === 'en' ? '中文' : 'EN'}</span>
           </button>
           <Link to="/download"
-             className="inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-4 py-2 font-medium text-white shadow-[0_10px_24px_-14px_var(--shadow-accent)] transition-colors hover:bg-[var(--color-accent-strong)]">
+             className="download-primary-button inline-flex items-center gap-2 rounded-full px-4 py-2 font-medium transition-colors">
             <Download className="w-4 h-4" />
             {t.nav.download}
           </Link>

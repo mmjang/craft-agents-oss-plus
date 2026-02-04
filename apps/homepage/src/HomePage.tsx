@@ -93,7 +93,7 @@ export function HomePage() {
           <div className="animate-enter mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row" style={{ animationDelay: '220ms' }}>
             <Link
               to="/download"
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-8 py-3 text-lg font-semibold text-white shadow-[0_12px_28px_-15px_var(--shadow-accent)] transition-colors hover:bg-[var(--color-accent-strong)]"
+              className="download-primary-button inline-flex items-center gap-2 rounded-full px-8 py-3 text-lg font-semibold transition-colors"
             >
               <Download className="h-5 w-5" />
               {t.hero.downloadFree}
@@ -153,7 +153,7 @@ export function HomePage() {
           </p>
           <Link
             to="/download"
-            className="download-now-button mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3 text-lg font-semibold transition-colors"
+            className="download-primary-button mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3 text-lg font-semibold transition-colors"
           >
             <Download className="h-5 w-5" />
             {t.cta.downloadNow}

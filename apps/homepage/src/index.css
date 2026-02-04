@@ -70,12 +70,13 @@ a {
   text-decoration: none;
 }
 
-.download-now-button {
+.download-primary-button {
   background-color: var(--color-accent);
   color: #fff;
+  box-shadow: 0 12px 28px -15px var(--shadow-accent);
 }
 
-.download-now-button:hover {
+.download-primary-button:hover {
   background-color: var(--color-accent-strong);
   color: #fff;
 }
