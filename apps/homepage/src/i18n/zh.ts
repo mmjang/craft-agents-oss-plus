@@ -24,6 +24,7 @@ export const zh: Translations = {
   },
   showcase: {
     title: '它能做什么？',
+    subtitle: '从简单的任务到构建完整的工作系统',
     browserControl: {
       title: '控制浏览器',
       description: '完成任意网页操作',

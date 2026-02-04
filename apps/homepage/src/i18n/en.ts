@@ -22,6 +22,7 @@ export const en = {
   },
   showcase: {
     title: 'What Can It Do?',
+    subtitle: 'From simple tasks to building complete work systems',
     browserControl: {
       title: 'Browser Automation',
       description: 'Control any webpage with AI agents',

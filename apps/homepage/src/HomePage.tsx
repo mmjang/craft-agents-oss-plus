@@ -143,6 +143,7 @@ export function HomePage() {
 
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-center text-3xl text-[var(--color-ink)] sm:text-4xl">{t.showcase.title}</h2>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-lg text-[var(--color-muted)]">{t.showcase.subtitle}</p>
         <div className="mt-12 grid gap-8 md:grid-cols-2">
           <ShowcaseCard
             title={t.showcase.browserControl.title}
