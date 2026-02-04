@@ -179,9 +179,9 @@ npx electron-builder $BUILDER_ARGS
 # Read version from package.json for artifact name
 ELECTRON_VERSION=$(cat "$ELECTRON_DIR/package.json" | grep '"version"' | head -1 | sed 's/.*"version": *"\([^"]*\)".*/\1/')
 
-# Check both architectures
-DMG_ARM64="$ELECTRON_DIR/release/Craft-Agent-${ELECTRON_VERSION}-arm64.dmg"
-DMG_X64="$ELECTRON_DIR/release/Craft-Agent-${ELECTRON_VERSION}-x64.dmg"
+# Check both architectures (matches electron-builder.yml artifactName)
+DMG_ARM64="$ELECTRON_DIR/release/CraftPlus-${ELECTRON_VERSION}-arm64.dmg"
+DMG_X64="$ELECTRON_DIR/release/CraftPlus-${ELECTRON_VERSION}-x64.dmg"
 
 if [ ! -f "$DMG_ARM64" ] || [ ! -f "$DMG_X64" ]; then
     echo "ERROR: Expected DMGs not found"
