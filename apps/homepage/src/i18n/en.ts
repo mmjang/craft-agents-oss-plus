@@ -65,6 +65,10 @@ export const en = {
       disk: '500MB available disk space',
     },
     backToHome: 'Back to Home',
+    wechatGroup: {
+      title: 'Join Our Community',
+      description: 'Scan the QR code to join our WeChat group for discussions and support.',
+    },
   },
 }
 

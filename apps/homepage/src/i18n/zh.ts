@@ -67,5 +67,9 @@ export const zh: Translations = {
       disk: '500MB 可用磁盘空间',
     },
     backToHome: '返回首页',
+    wechatGroup: {
+      title: '加入社区',
+      description: '扫描二维码加入微信交流群，获取帮助和交流。',
+    },
   },
 }

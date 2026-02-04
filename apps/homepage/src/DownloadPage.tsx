@@ -110,25 +110,15 @@ export function DownloadPage() {
         </div>
 
         <div className="animate-enter mt-12 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface-muted)] p-6" style={{ animationDelay: '300ms' }}>
-          <h2 className="mb-4 text-xl font-semibold text-[var(--color-ink)]">{t.download.requirements}</h2>
-          <ul className="space-y-2 text-[var(--color-muted)]">
-            <li className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-highlight)]" />
-              {t.download.requirementsList.mac}
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-highlight)]" />
-              {t.download.requirementsList.windows}
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-highlight)]" />
-              {t.download.requirementsList.memory}
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-highlight)]" />
-              {t.download.requirementsList.disk}
-            </li>
-          </ul>
+          <div className="flex flex-col items-center text-center">
+            <h2 className="mb-2 text-xl font-semibold text-[var(--color-ink)]">{t.download.wechatGroup.title}</h2>
+            <p className="mb-6 text-[var(--color-muted)]">{t.download.wechatGroup.description}</p>
+            <img
+              src="/wechat-qr.png"
+              alt="WeChat Group QR Code"
+              className="max-w-64 rounded-xl"
+            />
+          </div>
         </div>
       </div>
     </div>
