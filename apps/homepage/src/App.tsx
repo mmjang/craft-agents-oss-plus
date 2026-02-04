@@ -58,10 +58,10 @@ function Footer() {
           <BrandMark className="h-6 w-6 rounded-md" />
           <span className="text-[var(--color-muted)]">{appName}</span>
         </Link>
-        <p className="text-sm text-[var(--color-muted)]">
+        {/* <p className="text-sm text-[var(--color-muted)]">
           {t.footer.builtBy}{' '}
           <a href="https://craft.do" target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--color-ink)] hover:text-[var(--color-accent)]">Craft.do</a>
-        </p>
+        </p> */}
       </div>
     </footer>
   )
