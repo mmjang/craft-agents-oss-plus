@@ -92,6 +92,6 @@ jobs:
           Get-ChildItem -Path "apps/electron/release/*.exe" | ForEach-Object {
             $filename = $_.Name
             aws s3 cp $_.FullName `
-              "s3://craft-agents-releases/releases/v${{ inputs.version }}/$filename" `
+              "s3://craft-plus-releases/releases/v${{ inputs.version }}/$filename" `
               --endpoint-url "https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com"
           }

@@ -76,6 +76,6 @@ jobs:
           for file in apps/electron/release/*.dmg; do
             filename=$(basename "$file")
             aws s3 cp "$file" \
-              "s3://craft-agents-releases/releases/v${{ inputs.version }}/$filename" \
+              "s3://craft-plus-releases/releases/v${{ inputs.version }}/$filename" \
               --endpoint-url "https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com"
           done
