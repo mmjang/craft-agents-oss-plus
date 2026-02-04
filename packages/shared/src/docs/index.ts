@@ -4,7 +4,7 @@
  * Provides access to built-in documentation that Claude can reference
  * when performing configuration tasks (sources, agents, permissions, etc.).
  *
- * Docs are stored at ~/.craft-agent/docs/ and copied on first run.
+ * Docs are stored at ~/.craft-plus/docs/ and copied on first run.
  */
 
 import { join } from 'path';
@@ -13,7 +13,7 @@ import { existsSync, mkdirSync, writeFileSync, readdirSync, readFileSync } from 
 import { isDebugEnabled } from '../utils/debug.ts';
 import { getAppVersion } from '../version/app-version.ts';
 
-const CONFIG_DIR = join(homedir(), '.craft-agent');
+const CONFIG_DIR = join(homedir(), '.craft-plus');
 const DOCS_DIR = join(CONFIG_DIR, 'docs');
 
 // Track if docs have been initialized this session (prevents re-init on hot reload)
@@ -38,12 +38,12 @@ export function getDocPath(filename: string): string {
  * Use these constants instead of hardcoding paths to keep references in sync.
  */
 export const DOC_REFS = {
-  sources: '~/.craft-agent/docs/sources.md',
-  permissions: '~/.craft-agent/docs/permissions.md',
-  skills: '~/.craft-agent/docs/skills.md',
-  themes: '~/.craft-agent/docs/themes.md',
-  statuses: '~/.craft-agent/docs/statuses.md',
-  docsDir: '~/.craft-agent/docs/',
+  sources: '~/.craft-plus/docs/sources.md',
+  permissions: '~/.craft-plus/docs/permissions.md',
+  skills: '~/.craft-plus/docs/skills.md',
+  themes: '~/.craft-plus/docs/themes.md',
+  statuses: '~/.craft-plus/docs/statuses.md',
+  docsDir: '~/.craft-plus/docs/',
 } as const;
 
 /**
@@ -150,7 +150,7 @@ export function initializeDocs(): void {
 
 const SOURCES_MD = `# Sources Configuration Guide
 
-This guide explains how to configure sources (MCP servers, APIs, local filesystems) in Craft Agent.
+This guide explains how to configure sources (MCP servers, APIs, local filesystems) in CraftPlus.
 
 ## Source Setup Process
 
@@ -361,7 +361,7 @@ Would you like me to show you what issues are currently open?
 ## Overview
 
 Sources are stored as folders under:
-- \`~/.craft-agent/workspaces/{workspaceId}/sources/{sourceSlug}/\`
+- \`~/.craft-plus/workspaces/{workspaceId}/sources/{sourceSlug}/\`
 
 Each source folder contains:
 - \`config.json\` - Source configuration (required)
@@ -718,7 +718,7 @@ When using URLs or domains, \`source_test\` will download and cache the icon loc
 ## Provider Domain Cache
 
 For favicon resolution, a cache maps provider names to their canonical domains at:
-\`~/.craft-agent/provider-domains.json\`
+\`~/.craft-plus/provider-domains.json\`
 
 **Format:**
 \`\`\`json
@@ -781,7 +781,7 @@ Technical steps:
 
 1. Create the source folder:
    \`\`\`bash
-   mkdir -p ~/.craft-agent/workspaces/{ws}/sources/my-source
+   mkdir -p ~/.craft-plus/workspaces/{ws}/sources/my-source
    \`\`\`
 
 2. Write \`config.json\` with appropriate settings (see schemas above)
@@ -826,7 +826,7 @@ Use \`source_test\` with the source slug:
 
 const SKILLS_MD = `# Skills Configuration Guide
 
-This guide explains how to create and configure skills in Craft Agent.
+This guide explains how to create and configure skills in CraftPlus.
 
 ## What Are Skills?
 
@@ -840,13 +840,13 @@ Skills are specialized instructions that extend Claude's capabilities for specif
 
 ## Same Format as Claude Code SDK
 
-Craft Agent uses **the identical SKILL.md format** as the Claude Code SDK. This means:
+CraftPlus uses **the identical SKILL.md format** as the Claude Code SDK. This means:
 
-1. **Format compatibility**: Any skill written for Claude Code works in Craft Agent
+1. **Format compatibility**: Any skill written for Claude Code works in CraftPlus
 2. **Same frontmatter fields**: \`name\`, \`description\`, \`globs\`, \`alwaysAllow\`
 3. **Same content structure**: Markdown body with instructions for Claude
 
-**What Craft Agent adds:**
+**What CraftPlus adds:**
 - **Visual icons**: Display custom icons in the UI for each skill
 - **Workspace organization**: Skills are scoped to workspaces
 - **UI management**: Browse, edit, and validate skills through the interface
@@ -855,7 +855,7 @@ Craft Agent uses **the identical SKILL.md format** as the Claude Code SDK. This 
 
 When a skill is invoked (e.g., \`/commit\`):
 
-1. **Workspace skill checked first** - If \`~/.craft-agent/workspaces/{id}/skills/commit/SKILL.md\` exists, it's used
+1. **Workspace skill checked first** - If \`~/.craft-plus/workspaces/{id}/skills/commit/SKILL.md\` exists, it's used
 2. **SDK skill as fallback** - If no workspace skill exists, the built-in SDK skill is used
 
 This allows you to:
@@ -867,7 +867,7 @@ This allows you to:
 
 Skills are stored as folders:
 \`\`\`
-~/.craft-agent/workspaces/{workspaceId}/skills/{slug}/
+~/.craft-plus/workspaces/{workspaceId}/skills/{slug}/
 ├── SKILL.md          # Required: Skill definition (same format as Claude Code SDK)
 ├── icon.svg          # Recommended: Skill icon for UI display
 ├── icon.png          # Alternative: PNG icon
@@ -936,7 +936,7 @@ alwaysAllow:
 ### 1. Create the skill directory
 
 \`\`\`bash
-mkdir -p ~/.craft-agent/workspaces/{ws}/skills/my-skill
+mkdir -p ~/.craft-plus/workspaces/{ws}/skills/my-skill
 \`\`\`
 
 ### 2. Write SKILL.md
@@ -1078,7 +1078,7 @@ globs: ["src/**/*.ts", "src/**/*.tsx"]
 
 To customize a built-in SDK skill like \`/commit\`:
 
-1. Create \`~/.craft-agent/workspaces/{ws}/skills/commit/SKILL.md\`
+1. Create \`~/.craft-plus/workspaces/{ws}/skills/commit/SKILL.md\`
 2. Write your custom instructions
 3. Add an icon
 4. Run \`skill_validate({ skillSlug: "commit" })\`
@@ -1127,8 +1127,8 @@ Explore mode is a read-only mode that blocks potentially destructive operations.
 Custom permission rules let you allow specific operations that would otherwise be blocked.
 
 Permission files are located at:
-- Workspace: \`~/.craft-agent/workspaces/{slug}/permissions.json\`
-- Source: \`~/.craft-agent/workspaces/{slug}/sources/{source}/permissions.json\`
+- Workspace: \`~/.craft-plus/workspaces/{slug}/permissions.json\`
+- Source: \`~/.craft-plus/workspaces/{slug}/sources/{source}/permissions.json\`
 
 ## Auto-Scoping for Source Permissions
 
@@ -1165,7 +1165,7 @@ The system converts it to \`mcp__<sourceSlug>__.*list\` internally. This means:
   ],
   "allowedWritePaths": [
     "/tmp/**",
-    "~/.craft-agent/**"
+    "~/.craft-plus/**"
   ]
 }
 \`\`\`
@@ -1242,7 +1242,7 @@ Glob patterns for directories where writes are allowed.
 {
   "allowedWritePaths": [
     "/tmp/**",
-    "~/.craft-agent/**",
+    "~/.craft-plus/**",
     "/path/to/project/output/**"
   ]
 }
@@ -1311,14 +1311,14 @@ Rules are additive - they can only allow more operations, not restrict further.
 
 const THEMES_MD = `# Theme Configuration Guide
 
-This guide explains how to customize the visual theme of Craft Agent.
+This guide explains how to customize the visual theme of CraftPlus.
 
 ## Overview
 
-Craft Agent uses a 6-color theme system. You can override specific colors or install preset themes with complete visual styles.
+CraftPlus uses a 6-color theme system. You can override specific colors or install preset themes with complete visual styles.
 
-- **Theme overrides**: \`~/.craft-agent/theme.json\` - Override specific colors
-- **Preset themes**: \`~/.craft-agent/themes/{name}.json\` - Complete theme packages
+- **Theme overrides**: \`~/.craft-plus/theme.json\` - Override specific colors
+- **Preset themes**: \`~/.craft-plus/themes/{name}.json\` - Complete theme packages
 
 Both are optional - the app has sensible built-in defaults.
 
@@ -1346,7 +1346,7 @@ Any valid CSS color format is supported:
 
 ## Theme Override File
 
-Create \`~/.craft-agent/theme.json\` to override specific colors:
+Create \`~/.craft-plus/theme.json\` to override specific colors:
 
 \`\`\`json
 {
@@ -1369,7 +1369,7 @@ This allows partial dark mode customization - only override what needs to differ
 
 ## Preset Themes
 
-Preset themes are complete theme packages stored at \`~/.craft-agent/themes/\`. Each preset is a JSON file with theme colors and metadata.
+Preset themes are complete theme packages stored at \`~/.craft-plus/themes/\`. Each preset is a JSON file with theme colors and metadata.
 
 ### Preset Theme Schema
 
@@ -1411,7 +1411,7 @@ Preset themes are complete theme packages stored at \`~/.craft-agent/themes/\`. 
 ### Installing Preset Themes
 
 1. Download or create a theme JSON file
-2. Save it to \`~/.craft-agent/themes/{name}.json\`
+2. Save it to \`~/.craft-plus/themes/{name}.json\`
 3. Select the theme in Settings → Appearance
 
 ## Scenic Mode
@@ -1509,7 +1509,7 @@ Theme changes are applied immediately - no restart needed. Edit theme.json and t
 
 ## Creating a Theme
 
-1. Create \`~/.craft-agent/theme.json\` for overrides or \`~/.craft-agent/themes/{name}.json\` for a preset
+1. Create \`~/.craft-plus/theme.json\` for overrides or \`~/.craft-plus/themes/{name}.json\` for a preset
 2. Add only the colors you want to customize
 3. Optionally add \`dark\` overrides for dark mode
 
@@ -1523,7 +1523,7 @@ Theme changes are applied immediately - no restart needed. Edit theme.json and t
 
 **Theme not applying:**
 - Verify JSON syntax is valid
-- Check file is in correct location (\`~/.craft-agent/theme.json\` for overrides, \`~/.craft-agent/themes/\` for presets)
+- Check file is in correct location (\`~/.craft-plus/theme.json\` for overrides, \`~/.craft-plus/themes/\` for presets)
 - Ensure color values are valid CSS colors
 
 **Colors look wrong in dark mode:**
@@ -1560,8 +1560,8 @@ Session statuses represent workflow states. Each workspace has its own status co
 
 ## Storage Locations
 
-- Config: \`~/.craft-agent/workspaces/{id}/statuses/config.json\`
-- Icons: \`~/.craft-agent/workspaces/{id}/statuses/icons/\`
+- Config: \`~/.craft-plus/workspaces/{id}/statuses/config.json\`
+- Icons: \`~/.craft-plus/workspaces/{id}/statuses/icons/\`
 
 ## Default Statuses
 

@@ -1,5 +1,5 @@
-appId: com.lukilabs.craft-agent
-productName: Craft Agents
+appId: com.lukilabs.craft-plus
+productName: CraftPlus
 copyright: Copyright © 2025 Craft Docs Ltd.
 
 electronVersion: "39.2.7"
@@ -78,7 +78,7 @@ mac:
 
 dmg:
   # Use predictable naming with version: Craft-Agent-0.2.25-arm64.dmg
-  artifactName: "Craft-Agent-${version}-${arch}.dmg"
+  artifactName: "CraftPlus-${version}-${arch}.dmg"
   contents:
     - x: 130
       y: 220
@@ -96,8 +96,8 @@ win:
     - target: nsis
       arch:
         - x64
-  # Use predictable naming with version: Craft-Agent-0.2.25-x64.exe
-  artifactName: "Craft-Agent-${version}-${arch}.${ext}"
+  # Use predictable naming with version: CraftPlus-0.2.25-x64.exe
+  artifactName: "CraftPlus-${version}-${arch}.${ext}"
   files:
     # Exclude ripgrep binaries for other platforms
     - "!node_modules/@anthropic-ai/claude-agent-sdk/vendor/ripgrep/arm64-linux"
@@ -133,7 +133,7 @@ linux:
     - target: AppImage
       arch:
         - x64
-  artifactName: "Craft-Agent-${version}-${arch}.${ext}"
+  artifactName: "CraftPlus-${version}-${arch}.${ext}"
   # Exclude ripgrep binaries for other platforms
   files:
     - "!node_modules/@anthropic-ai/claude-agent-sdk/vendor/ripgrep/arm64-darwin"

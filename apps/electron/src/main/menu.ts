@@ -50,9 +50,9 @@ export async function rebuildMenu(): Promise<void> {
   const template: Electron.MenuItemConstructorOptions[] = [
     // App menu (macOS only)
     ...(isMac ? [{
-      label: 'Craft Agents',
+      label: 'CraftPlus',
       submenu: [
-        { role: 'about' as const, label: 'About Craft Agents' },
+        { role: 'about' as const, label: 'About CraftPlus' },
         updateMenuItem,
         { type: 'separator' as const },
         {
@@ -61,11 +61,11 @@ export async function rebuildMenu(): Promise<void> {
           click: () => sendToRenderer(IPC_CHANNELS.MENU_OPEN_SETTINGS)
         },
         { type: 'separator' as const },
-        { role: 'hide' as const, label: 'Hide Craft Agents' },
+        { role: 'hide' as const, label: 'Hide CraftPlus' },
         { role: 'hideOthers' as const },
         { role: 'unhide' as const },
         { type: 'separator' as const },
-        { role: 'quit' as const, label: 'Quit Craft Agents' }
+        { role: 'quit' as const, label: 'Quit CraftPlus' }
       ]
     }] : []),
 
@@ -184,7 +184,7 @@ export async function rebuildMenu(): Promise<void> {
             await dialog.showMessageBox({
               type: 'info',
               message: 'Reset to Defaults',
-              detail: 'To reset Craft Agent to defaults, quit the app and run:\n\nbun run fresh-start\n\nThis will delete all configuration, credentials, workspaces, and sessions.',
+              detail: 'To reset CraftPlus to defaults, quit the app and run:\n\nbun run fresh-start\n\nThis will delete all configuration, credentials, workspaces, and sessions.',
               buttons: ['OK']
             })
           }

@@ -139,15 +139,15 @@ export default {
 
   'preferences.title': 'Preferences',
   'preferences.basicInfo.title': 'Basic Info',
-  'preferences.basicInfo.desc': 'Help Craft Agent personalize responses to you.',
+  'preferences.basicInfo.desc': 'Help CraftPlus personalize responses to you.',
   'preferences.name.label': 'Name',
-  'preferences.name.desc': 'How Craft Agent should address you.',
+  'preferences.name.desc': 'How CraftPlus should address you.',
   'preferences.name.placeholder': 'Your name',
   'preferences.timezone.label': 'Timezone',
   'preferences.timezone.desc': "Used for relative dates like 'tomorrow' or 'next week'.",
   'preferences.timezone.placeholder': 'e.g., America/New_York',
   'preferences.language.label': 'Language',
-  'preferences.language.desc': "Preferred language for Craft Agent's responses.",
+  'preferences.language.desc': "Preferred language for CraftPlus's responses.",
   'preferences.language.placeholder': 'e.g., English',
   'preferences.location.title': 'Location',
   'preferences.location.desc': 'Enables location-aware responses like weather, local time, and regional context.',
@@ -158,9 +158,9 @@ export default {
   'preferences.country.desc': 'Your country for regional formatting and context.',
   'preferences.country.placeholder': 'e.g., USA',
   'preferences.notes.title': 'Notes',
-  'preferences.notes.desc': 'Free-form context that helps Craft Agent understand your preferences.',
+  'preferences.notes.desc': 'Free-form context that helps CraftPlus understand your preferences.',
   'preferences.editFile': 'Edit File',
-  'preferences.notes.placeholder': "Any additional context you'd like Craft Agent to know...",
+  'preferences.notes.placeholder': "Any additional context you'd like CraftPlus to know...",
 
   'appSettings.title': 'App Settings',
   'appSettings.appearance.title': 'Appearance',
@@ -433,7 +433,7 @@ export default {
   'onboarding.runtime.desc': 'Portable runtime is required for this application.',
 
   // Welcome Step
-  'onboarding.welcome.title': 'Welcome to Craft Agents',
+  'onboarding.welcome.title': 'Welcome to CraftPlus',
   'onboarding.welcome.titleUpdate': 'Update Settings',
   'onboarding.welcome.desc': 'Agents with the UX they deserve. Connect anything. Organize your sessions. Everything you need to do the work of your life!',
   'onboarding.welcome.descUpdate': 'Update billing or change your setup.',
@@ -488,7 +488,7 @@ export default {
   // Reauth Screen
   'onboarding.reauth.title': 'Session Expired',
   'onboarding.reauth.desc1': 'Your Craft session has expired or is no longer valid.',
-  'onboarding.reauth.desc2': 'Please log in again to continue using Craft Agents.',
+  'onboarding.reauth.desc2': 'Please log in again to continue using CraftPlus.',
   'onboarding.reauth.preserved': 'Your conversations and settings are preserved.',
   'onboarding.reauth.loggingIn': 'Logging in...',
   'onboarding.reauth.logIn': 'Log In with Craft',

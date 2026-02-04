@@ -54,7 +54,7 @@ function getNodePath(): string {
  * Get the global npm prefix path (where packages are installed)
  */
 function getGlobalNpmPrefix(): string {
-  return join(homedir(), '.craft-agent', 'npm-global')
+  return join(homedir(), '.craft-plus', 'npm-global')
 }
 
 /**

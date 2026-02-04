@@ -57,18 +57,7 @@ export function getUserPortableRuntimePath(): string {
  * falling back to bundled resources if present.
  */
 export function getPortablePath(): string {
-  const userPath = getUserPortableRuntimePath()
-  if (existsSync(userPath)) {
-    return userPath
-  }
-
-  // In packaged app, resources are in app.getPath('exe')/../Resources
-  // In dev mode, they're in the resources folder relative to __dirname
-  const resourcesPath = app.isPackaged
-    ? join(process.resourcesPath || '', '')
-    : join(__dirname, '../resources')
-
-  return join(resourcesPath, getPortablePlatformDir())
+  return getUserPortableRuntimePath()
 }
 
 /**
@@ -167,10 +156,10 @@ export function setupPortableRuntime(mirrorPreset: string = 'china'): void {
     mainLog.info('[portable-runtime] Portable Node.js not found')
   }
 
-  // ========== Craft Agent npm-global bin (for Claude Code installed via portable npm) ==========
+  // ========== CraftPlus npm-global bin (for Claude Code installed via portable npm) ==========
   const npmGlobalBin = isWindows
-    ? join(homedir(), '.craft-agent', 'npm-global')
-    : join(homedir(), '.craft-agent', 'npm-global', 'bin')
+    ? join(homedir(), '.craft-plus', 'npm-global')
+    : join(homedir(), '.craft-plus', 'npm-global', 'bin')
 
   if (existsSync(npmGlobalBin)) {
     updateProcessPath([npmGlobalBin], pathSeparator, isWindows)
@@ -345,8 +334,8 @@ function runPortableRuntimeSelfCheck(portablePath: string, isWindows: boolean): 
 
   // Claude Code (optional)
   const claudeBin = isWindows
-    ? join(homedir(), '.craft-agent', 'npm-global', 'claude.cmd')
-    : join(homedir(), '.craft-agent', 'npm-global', 'bin', 'claude')
+    ? join(homedir(), '.craft-plus', 'npm-global', 'claude.cmd')
+    : join(homedir(), '.craft-plus', 'npm-global', 'bin', 'claude')
   if (existsSync(claudeBin)) {
     if (isWindows) {
       check('claude', () =>
