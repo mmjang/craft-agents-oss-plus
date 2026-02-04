@@ -29,11 +29,11 @@ export const en = {
     },
     multiProvider: {
       title: 'Multiple AI Providers',
-      description: 'Support for Kimi, Zhipu, DeepSeek, and other Chinese AI API providers.',
+      description: 'Support for Kimi, Zhipu and other Chinese AI API providers.',
     },
     crossPlatform: {
       title: 'Cross Platform',
-      description: 'Available for macOS, Windows, and Linux. Download and start coding.',
+      description: 'Available for macOS and Windows. Download and start coding.',
     },
   },
   cta: {

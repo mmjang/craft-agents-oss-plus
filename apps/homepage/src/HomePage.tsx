@@ -153,7 +153,7 @@ export function HomePage() {
           </p>
           <Link
             to="/download"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-ink)] px-8 py-3 text-lg font-semibold text-white transition-colors hover:bg-[var(--color-accent)]"
+            className="download-now-button mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3 text-lg font-semibold transition-colors"
           >
             <Download className="h-5 w-5" />
             {t.cta.downloadNow}

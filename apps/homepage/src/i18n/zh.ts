@@ -31,11 +31,11 @@ export const zh: Translations = {
     },
     multiProvider: {
       title: '多 AI 服务商',
-      description: '支持 Kimi、智谱、DeepSeek 等国内 AI API 服务商。',
+      description: '支持 Kimi、智谱等国内 AI API 服务商。',
     },
     crossPlatform: {
       title: '跨平台',
-      description: '支持 macOS、Windows 和 Linux，下载即可开始使用。',
+      description: '支持 macOS、Windows 下载即可开始使用。',
     },
   },
   cta: {

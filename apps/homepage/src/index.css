@@ -70,6 +70,16 @@ a {
   text-decoration: none;
 }
 
+.download-now-button {
+  background-color: var(--color-accent);
+  color: #fff;
+}
+
+.download-now-button:hover {
+  background-color: var(--color-accent-strong);
+  color: #fff;
+}
+
 .animate-enter {
   opacity: 0;
   transform: translateY(18px);
