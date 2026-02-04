@@ -22,6 +22,7 @@ Craft Agents is an open-source desktop application for working with AI agents, b
 craft-agents-oss/
 ├── apps/
 │   ├── electron/          # Desktop app (main interface)
+│   ├── homepage/          # Landing page website (Vite + React)
 │   └── viewer/            # Web viewer for session sharing
 └── packages/
     ├── core/              # Shared types (Workspace, Session, Message)
@@ -121,6 +122,14 @@ bun run electron:dist:win   # Windows installer
 bun run electron:dist:linux # Linux AppImage
 ```
 
+**Homepage (Landing Page):**
+```bash
+bun run homepage:dev        # Development server
+bun run homepage:build      # Build for production
+bun run homepage:preview    # Preview production build
+bun run homepage:deploy     # Deploy to Cloudflare Pages
+```
+
 ## Common Workflows
 
 ### Adding a New Feature
@@ -146,6 +155,11 @@ bun run electron:dist:linux # Linux AppImage
 - Core agent: `packages/shared/src/agent/craft-agent.ts`
 - Permission logic: `packages/shared/src/agent/permissions-config.ts`
 - Session-scoped tools: `packages/shared/src/agent/session-scoped-tools.ts`
+
+### Working with Homepage
+- Source: `apps/homepage/src/`
+- i18n files: `apps/homepage/src/i18n/{en,zh}.ts`
+- Deployment: Cloudflare Pages (project: `craft-plus-homepage`)
 
 ## Project Conventions
 

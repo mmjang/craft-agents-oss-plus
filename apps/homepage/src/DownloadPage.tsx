@@ -1,42 +1,73 @@
+import { useEffect, useState } from 'react'
 import { useI18n } from './i18n'
 import { Link } from './router'
-import { Apple, Windows, Linux, ArrowLeft } from './icons'
+import { Apple, Windows, ArrowLeft } from './icons'
 
-const DOWNLOAD_BASE = 'https://github.com/nicepkg/craft-agents/releases/latest/download'
+interface DownloadsConfig {
+  version: string
+  releaseDate: string
+  baseUrl: string
+  downloads: {
+    'mac-arm': string
+    'mac-intel': string
+    windows: string
+  }
+}
 
-const downloads = [
+const defaultConfig: DownloadsConfig = {
+  version: '0.0.0',
+  releaseDate: '',
+  baseUrl: '',
+  downloads: {
+    'mac-arm': '',
+    'mac-intel': '',
+    windows: '',
+  },
+}
+
+type DownloadId = keyof DownloadsConfig['downloads']
+
+const downloadItems: Array<{
+  id: DownloadId
+  icon: typeof Apple
+  titleKey: 'macAppleSilicon' | 'macIntel' | 'windows'
+  descKey: 'macAppleSiliconDesc' | 'macIntelDesc' | 'windowsDesc'
+}> = [
   {
     id: 'mac-arm',
     icon: Apple,
-    titleKey: 'macAppleSilicon' as const,
-    descKey: 'macAppleSiliconDesc' as const,
-    url: `${DOWNLOAD_BASE}/Craft.Agents-mac-arm64.dmg`,
+    titleKey: 'macAppleSilicon',
+    descKey: 'macAppleSiliconDesc',
   },
   {
     id: 'mac-intel',
     icon: Apple,
-    titleKey: 'macIntel' as const,
-    descKey: 'macIntelDesc' as const,
-    url: `${DOWNLOAD_BASE}/Craft.Agents-mac-x64.dmg`,
+    titleKey: 'macIntel',
+    descKey: 'macIntelDesc',
   },
   {
     id: 'windows',
     icon: Windows,
-    titleKey: 'windows' as const,
-    descKey: 'windowsDesc' as const,
-    url: `${DOWNLOAD_BASE}/Craft.Agents-win-x64.exe`,
-  },
-  {
-    id: 'linux',
-    icon: Linux,
-    titleKey: 'linux' as const,
-    descKey: 'linuxDesc' as const,
-    url: `${DOWNLOAD_BASE}/Craft.Agents-linux-x64.AppImage`,
+    titleKey: 'windows',
+    descKey: 'windowsDesc',
   },
 ]
 
 export function DownloadPage() {
   const { t } = useI18n()
+  const [config, setConfig] = useState<DownloadsConfig>(defaultConfig)
+
+  useEffect(() => {
+    fetch('/downloads.json')
+      .then((res) => res.json())
+      .then((data: DownloadsConfig) => setConfig(data))
+      .catch(() => {})
+  }, [])
+
+  const getDownloadUrl = (id: DownloadId): string => {
+    if (!config.baseUrl || !config.downloads[id]) return '#'
+    return config.baseUrl + config.downloads[id]
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-zinc-900 pt-24">
@@ -55,10 +86,10 @@ export function DownloadPage() {
 
         {/* Download cards */}
         <div className="grid sm:grid-cols-2 gap-4 mb-12">
-          {downloads.map((item) => (
+          {downloadItems.map((item) => (
             <a
               key={item.id}
-              href={item.url}
+              href={getDownloadUrl(item.id)}
               className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 hover:border-violet-600 hover:bg-zinc-900 transition-all group"
             >
               <div className="flex items-start gap-4">
@@ -91,10 +122,6 @@ export function DownloadPage() {
             <li className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-violet-500 rounded-full" />
               {t.download.requirementsList.windows}
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-violet-500 rounded-full" />
-              {t.download.requirementsList.linux}
             </li>
             <li className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-violet-500 rounded-full" />

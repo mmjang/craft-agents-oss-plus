@@ -1,23 +1,28 @@
 name: Build Windows
 
 on:
-  # 手动触发
   workflow_dispatch:
-  # 自动构建已禁用 - 取消注释以下内容可重新启用
-  # push:
-  #   branches: [main]
-  #   paths:
-  #     - 'apps/electron/**'
-  #     - 'packages/**'
-  #     - 'package.json'
-  #     - 'bun.lock'
-  # pull_request:
-  #   branches: [main]
-  #   paths:
-  #     - 'apps/electron/**'
-  #     - 'packages/**'
-  #     - 'package.json'
-  #     - 'bun.lock'
+    inputs:
+      version:
+        description: 'Version number (e.g., 0.2.26)'
+        required: false
+        type: string
+      upload-to-r2:
+        description: 'Upload to R2'
+        required: false
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version number (e.g., 0.2.26)'
+        required: true
+        type: string
+      upload-to-r2:
+        description: 'Upload to R2'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-windows:
@@ -56,7 +61,6 @@ jobs:
         run: |
           ./apps/electron/scripts/build-win.ps1
         env:
-          # OAuth credentials (optional, set in repository secrets)
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
           SLACK_OAUTH_CLIENT_ID: ${{ secrets.SLACK_OAUTH_CLIENT_ID }}
@@ -70,3 +74,24 @@ jobs:
           path: apps/electron/release/*.exe
           if-no-files-found: error
           retention-days: 30
+
+      - name: Upload to R2
+        if: inputs.upload-to-r2 == true && inputs.version != ''
+        shell: pwsh
+        run: |
+          # Install AWS CLI
+          choco install awscli -y
+          refreshenv
+
+          # Configure AWS CLI for R2
+          aws configure set aws_access_key_id ${{ secrets.R2_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          aws configure set default.region auto
+
+          # Upload EXE files to R2
+          Get-ChildItem -Path "apps/electron/release/*.exe" | ForEach-Object {
+            $filename = $_.Name
+            aws s3 cp $_.FullName `
+              "s3://craft-agents-releases/releases/v${{ inputs.version }}/$filename" `
+              --endpoint-url "https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com"
+          }

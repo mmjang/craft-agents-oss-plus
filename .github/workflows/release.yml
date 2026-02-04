@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 0.2.26)'
+        required: true
+        type: string
+
+jobs:
+  build-macos:
+    uses: ./.github/workflows/build-macos.yml
+    secrets: inherit
+    with:
+      version: ${{ inputs.version }}
+      upload-to-r2: true
+
+  build-windows:
+    uses: ./.github/workflows/build-windows.yml
+    secrets: inherit
+    with:
+      version: ${{ inputs.version }}
+      upload-to-r2: true
+
+  update-downloads:
+    needs: [build-macos, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update downloads.json
+        run: |
+          cat > apps/homepage/public/downloads.json << EOF
+          {
+            "version": "${{ inputs.version }}",
+            "releaseDate": "$(date +%Y-%m-%d)",
+            "baseUrl": "https://pub-fb8517ffb9ba41819d8b1b504a51b121.r2.dev",
+            "downloads": {
+              "mac-arm": "/releases/v${{ inputs.version }}/Craft.Agents-mac-arm64.dmg",
+              "mac-intel": "/releases/v${{ inputs.version }}/Craft.Agents-mac-x64.dmg",
+              "windows": "/releases/v${{ inputs.version }}/Craft.Agents-win-x64.exe"
+            }
+          }
+          EOF
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add apps/homepage/public/downloads.json
+          git commit -m "chore: update download links for v${{ inputs.version }}"
+          git push
+
+  deploy-homepage:
+    needs: update-downloads
+    uses: ./.github/workflows/deploy-homepage.yml
+    secrets: inherit
