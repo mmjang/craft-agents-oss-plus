@@ -9,6 +9,10 @@ export const en = {
     description: 'A powerful AI agent desktop application with beautiful GUI, full Chinese support, auto environment setup, and seamless browser automation.',
     downloadFree: 'Download for Free',
   },
+  story: {
+    content: 'As a programmer, I witnessed the power of AI Agents firsthand. But I realized these tools were out of reach for most people—black terminals, complex setup, technical jargon. So I built CraftPlus: an AI Agent app anyone can use. No coding required. Just download and go.',
+    signature: '— A programmer who wants AI to work for everyone',
+  },
   features: {
     title: 'Why CraftPlus?',
     claudeSdk: {

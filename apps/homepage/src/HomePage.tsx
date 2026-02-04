@@ -130,6 +130,17 @@ export function HomePage() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-3xl px-6 py-10">
+        <blockquote className="animate-enter text-center">
+          <p className="text-lg italic leading-relaxed text-[var(--color-muted)] sm:text-xl">
+            "{t.story.content}"
+          </p>
+          <footer className="mt-4 text-sm font-medium text-[var(--color-accent)]">
+            {t.story.signature}
+          </footer>
+        </blockquote>
+      </section>
+
       <section id="features" className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-center text-3xl text-[var(--color-ink)] sm:text-4xl">{t.features.title}</h2>
         <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">

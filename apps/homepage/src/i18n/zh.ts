@@ -11,6 +11,10 @@ export const zh: Translations = {
     description: '强大的 AI 智能体桌面应用，精美图形界面，全面支持中文，自动配置环境，开箱即用的浏览器自动化。',
     downloadFree: '免费下载',
   },
+  story: {
+    content: '作为程序员，我亲眼见证了 AI Agent 的强大。但我发现，这些工具对普通人来说门槛太高了——黑色终端、复杂配置、英文界面。于是我做了「巧作」：一个任何人都能用的 AI Agent 桌面应用。不需要技术背景，下载即用。',
+    signature: '— 一个想让 AI 走进每个人工作的程序员',
+  },
   features: {
     title: '为什么选择「巧作」？',
     claudeSdk: {
