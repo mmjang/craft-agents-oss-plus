@@ -6,14 +6,18 @@ import { Download, Globe } from './icons'
 
 function BrandMark({ className }: { className?: string }) {
   return (
-    <div
-      className={className}
-      aria-hidden="true"
-      style={{
-        background:
-          'linear-gradient(145deg, #0b7a72 0%, #33a097 58%, #d9b471 100%)',
-      }}
-    />
+    <svg className={className} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="brand-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#0b9a8f"/>
+          <stop offset="100%" stopColor="#0a6059"/>
+        </linearGradient>
+      </defs>
+      <rect width="32" height="32" rx="7" fill="url(#brand-bg)"/>
+      <g transform="translate(6, 7)" fill="#ffffff">
+        <path d="M3.18,3.6 L3.18,0 L16,0 L16,3.6 L3.18,3.6 Z M9.64,7.2 L9.64,10.8 L0,10.8 L0,3.6 L16,3.6 L16,7.2 L9.64,7.2 Z M3.18,18 L3.18,14.4 L0,14.4 L0,10.8 L16,10.8 L16,18 L3.18,18 Z" fillRule="nonzero"/>
+      </g>
+    </svg>
   )
 }
 
