@@ -141,6 +141,36 @@ export function HomePage() {
         </blockquote>
       </section>
 
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-center text-3xl text-[var(--color-ink)] sm:text-4xl">{t.showcase.title}</h2>
+        <div className="mt-12 grid gap-8 md:grid-cols-2">
+          <ShowcaseCard
+            title={t.showcase.browserControl.title}
+            description={t.showcase.browserControl.description}
+            image="/showcase/browser-control.png"
+            delayMs={0}
+          />
+          <ShowcaseCard
+            title={t.showcase.fileOrganize.title}
+            description={t.showcase.fileOrganize.description}
+            image="/showcase/file-organize.png"
+            delayMs={100}
+          />
+          <ShowcaseCard
+            title={t.showcase.docGen.title}
+            description={t.showcase.docGen.description}
+            image="/showcase/doc-gen-1.png"
+            delayMs={200}
+          />
+          <ShowcaseCard
+            title={t.showcase.dataViz.title}
+            description={t.showcase.dataViz.description}
+            image="/showcase/data-viz.png"
+            delayMs={300}
+          />
+        </div>
+      </section>
+
       <section className="mx-auto max-w-4xl px-6 py-10">
         <div className="animate-enter rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-8 text-center">
           <h2 className="text-2xl font-semibold text-[var(--color-ink)] sm:text-3xl">{t.openSource.title}</h2>
@@ -223,6 +253,33 @@ function FeatureCard({
       </div>
       <h3 className="text-lg font-semibold text-[var(--color-ink)]">{title}</h3>
       <p className="mt-2 text-[var(--color-muted)]">{description}</p>
+    </div>
+  )
+}
+
+function ShowcaseCard({
+  title,
+  description,
+  image,
+  delayMs,
+}: {
+  title: string
+  description: string
+  image: string
+  delayMs: number
+}) {
+  return (
+    <div
+      className="animate-enter overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-[var(--color-accent)] hover:shadow-[0_20px_34px_-24px_var(--shadow-accent)]"
+      style={{ animationDelay: `${delayMs}ms` }}
+    >
+      <div className="overflow-hidden border-b border-[var(--color-line)] bg-[var(--color-surface-muted)]">
+        <img src={image} alt={title} className="w-full" />
+      </div>
+      <div className="p-5">
+        <h3 className="text-lg font-semibold text-[var(--color-ink)]">{title}</h3>
+        <p className="mt-1 text-[var(--color-muted)]">{description}</p>
+      </div>
     </div>
   )
 }

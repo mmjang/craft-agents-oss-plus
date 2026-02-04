@@ -22,6 +22,25 @@ export const zh: Translations = {
     descriptionAfter: ' 二次开发。感谢开源社区的力量！',
     cta: '查看源码',
   },
+  showcase: {
+    title: '它能做什么？',
+    browserControl: {
+      title: '控制浏览器',
+      description: '完成任意网页操作',
+    },
+    fileOrganize: {
+      title: '整理文件',
+      description: '让 AI 替您整理文件',
+    },
+    docGen: {
+      title: '生成文档',
+      description: '自动生成各类文档',
+    },
+    dataViz: {
+      title: '数据可视化',
+      description: '创建图表和可视化',
+    },
+  },
   features: {
     title: '为什么选择「巧作」？',
     claudeSdk: {

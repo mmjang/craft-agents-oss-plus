@@ -20,6 +20,25 @@ export const en = {
     descriptionAfter: '. Thanks to the amazing open-source community!',
     cta: 'View Source',
   },
+  showcase: {
+    title: 'What Can It Do?',
+    browserControl: {
+      title: 'Browser Automation',
+      description: 'Control any webpage with AI agents',
+    },
+    fileOrganize: {
+      title: 'File Organization',
+      description: 'Let AI organize your files',
+    },
+    docGen: {
+      title: 'Document Generation',
+      description: 'Generate documents automatically',
+    },
+    dataViz: {
+      title: 'Data Visualization',
+      description: 'Create charts and visualizations',
+    },
+  },
   features: {
     title: 'Why CraftPlus?',
     claudeSdk: {
