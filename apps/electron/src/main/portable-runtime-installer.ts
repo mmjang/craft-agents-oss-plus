@@ -48,7 +48,7 @@ const MIRRORS = {
       fallback: `https://nodejs.org/dist/v${WINDOWS_NODE_VERSION}/node-v${WINDOWS_NODE_VERSION}-win-x64.zip`,
     },
     pythonMac: {
-      primary: `https://ghproxy.com/https://github.com/indygreg/python-build-standalone/releases/download/${MAC_PYTHON_RELEASE}/cpython-${MAC_PYTHON_VERSION}+${MAC_PYTHON_RELEASE}-__ARCH__-apple-darwin-install_only.tar.gz`,
+      primary: `https://registry.npmmirror.com/-/binary/python-build-standalone/${MAC_PYTHON_RELEASE}/cpython-${MAC_PYTHON_VERSION}+${MAC_PYTHON_RELEASE}-__ARCH__-apple-darwin-install_only.tar.gz`,
       fallback: `https://github.com/indygreg/python-build-standalone/releases/download/${MAC_PYTHON_RELEASE}/cpython-${MAC_PYTHON_VERSION}+${MAC_PYTHON_RELEASE}-__ARCH__-apple-darwin-install_only.tar.gz`,
     },
     nodeMac: {
@@ -80,7 +80,7 @@ const MIRRORS = {
     },
     pythonMac: {
       primary: `https://github.com/indygreg/python-build-standalone/releases/download/${MAC_PYTHON_RELEASE}/cpython-${MAC_PYTHON_VERSION}+${MAC_PYTHON_RELEASE}-__ARCH__-apple-darwin-install_only.tar.gz`,
-      fallback: `https://ghproxy.com/https://github.com/indygreg/python-build-standalone/releases/download/${MAC_PYTHON_RELEASE}/cpython-${MAC_PYTHON_VERSION}+${MAC_PYTHON_RELEASE}-__ARCH__-apple-darwin-install_only.tar.gz`,
+      fallback: `https://registry.npmmirror.com/-/binary/python-build-standalone/${MAC_PYTHON_RELEASE}/cpython-${MAC_PYTHON_VERSION}+${MAC_PYTHON_RELEASE}-__ARCH__-apple-darwin-install_only.tar.gz`,
     },
     nodeMac: {
       primary: `https://nodejs.org/dist/v${MAC_NODE_VERSION}/node-v${MAC_NODE_VERSION}-darwin-__ARCH__.tar.gz`,
