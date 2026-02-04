@@ -13,6 +13,13 @@ export const en = {
     content: 'As a programmer, I witnessed the power of AI Agents firsthand. But I realized these tools were out of reach for most people—black terminals, complex setup, technical jargon. So I built CraftPlus: an AI Agent app anyone can use. No coding required. Just download and go.',
     signature: '— A programmer who wants AI to work for everyone',
   },
+  openSource: {
+    title: 'Built with ❤️',
+    description: 'This app is proudly built upon',
+    linkText: 'Craft Agent',
+    descriptionAfter: '. Thanks to the amazing open-source community!',
+    cta: 'View Source',
+  },
   features: {
     title: 'Why CraftPlus?',
     claudeSdk: {

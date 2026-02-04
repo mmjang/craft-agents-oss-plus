@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useI18n } from './i18n'
 import { Link } from './router'
-import { Download, Globe, Layers, Terminal } from './icons'
+import { Download, Github, Globe, Layers, Terminal } from './icons'
 
 function BrowserIcon({ className }: { className?: string }) {
   return (
@@ -139,6 +139,33 @@ export function HomePage() {
             {t.story.signature}
           </footer>
         </blockquote>
+      </section>
+
+      <section className="mx-auto max-w-4xl px-6 py-10">
+        <div className="animate-enter rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-8 text-center">
+          <h2 className="text-2xl font-semibold text-[var(--color-ink)] sm:text-3xl">{t.openSource.title}</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--color-muted)]">
+            {t.openSource.description}
+            <a
+              href="https://agents.craft.do/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-[var(--color-accent)] hover:underline"
+            >
+              {t.openSource.linkText}
+            </a>
+            {t.openSource.descriptionAfter}
+          </p>
+          <a
+            href="https://github.com/lukilabs/craft-agents-oss"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-6 py-2.5 font-semibold text-[var(--color-ink)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+          >
+            <Github className="h-5 w-5" />
+            {t.openSource.cta}
+          </a>
+        </div>
       </section>
 
       <section id="features" className="mx-auto max-w-6xl px-6 py-16">

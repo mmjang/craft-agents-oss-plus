@@ -15,6 +15,13 @@ export const zh: Translations = {
     content: '作为程序员，我亲眼见证了 AI Agent 的强大。但我发现，这些工具对普通人来说门槛太高了——黑色终端、复杂配置、英文界面。于是我做了「巧作」：一个任何人都能用的 AI Agent 桌面应用。不需要技术背景，下载即用。',
     signature: '— 一个想让 AI 走进每个人工作的程序员',
   },
+  openSource: {
+    title: '用 ❤️ 构建',
+    description: '本应用基于',
+    linkText: 'Craft Agent',
+    descriptionAfter: ' 二次开发。感谢开源社区的力量！',
+    cta: '查看源码',
+  },
   features: {
     title: '为什么选择「巧作」？',
     claudeSdk: {
