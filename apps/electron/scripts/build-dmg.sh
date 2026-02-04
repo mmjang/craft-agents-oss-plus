@@ -37,17 +37,17 @@ if [ -f "$ROOT_DIR/.env" ]; then
 fi
 
 # Parse arguments
-ARCH="arm64"
 UPLOAD=false
 UPLOAD_LATEST=false
 UPLOAD_SCRIPT=false
 
 show_help() {
     cat << EOF
-Usage: build-dmg.sh [arm64|x64] [--upload] [--latest] [--script]
+Usage: build-dmg.sh [--upload] [--latest] [--script]
+
+Builds macOS DMG for both arm64 and x64 architectures.
 
 Arguments:
-  arm64|x64    Target architecture (default: arm64)
   --upload     Upload DMG to S3 after building
   --latest     Also update electron/latest (requires --upload)
   --script     Also upload install-app.sh (requires --upload)
@@ -64,7 +64,6 @@ EOF
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        arm64|x64)     ARCH="$1"; shift ;;
         --upload)      UPLOAD=true; shift ;;
         --latest)      UPLOAD_LATEST=true; shift ;;
         --script)      UPLOAD_SCRIPT=true; shift ;;
@@ -80,7 +79,7 @@ done
 # Configuration
 BUN_VERSION="bun-v1.3.5"  # Pinned version for reproducible builds
 
-echo "=== Building Craft Agents DMG (${ARCH}) using electron-builder ==="
+echo "=== Building Craft Agents DMG (arm64 + x64) using electron-builder ==="
 if [ "$UPLOAD" = true ]; then
     echo "Will upload to S3 after build"
 fi
@@ -97,28 +96,28 @@ echo "Installing dependencies..."
 cd "$ROOT_DIR"
 bun install
 
-# 3. Download Bun binary with checksum verification
-echo "Downloading Bun ${BUN_VERSION} for darwin-${ARCH}..."
+# 3. Download Bun binary for arm64 (used at runtime)
+# Note: We only bundle arm64 bun since x64 Macs can run arm64 binaries via Rosetta
+echo "Downloading Bun ${BUN_VERSION} for darwin-aarch64..."
 mkdir -p "$ELECTRON_DIR/vendor/bun"
-BUN_DOWNLOAD="bun-darwin-$([ "$ARCH" = "arm64" ] && echo "aarch64" || echo "x64")"
 
 # Create temp directory to avoid race conditions
 TEMP_DIR=$(mktemp -d)
 trap "rm -rf $TEMP_DIR" EXIT
 
 # Download binary and checksums
-curl -fSL "https://github.com/oven-sh/bun/releases/download/${BUN_VERSION}/${BUN_DOWNLOAD}.zip" -o "$TEMP_DIR/${BUN_DOWNLOAD}.zip"
+curl -fSL "https://github.com/oven-sh/bun/releases/download/${BUN_VERSION}/bun-darwin-aarch64.zip" -o "$TEMP_DIR/bun-darwin-aarch64.zip"
 curl -fSL "https://github.com/oven-sh/bun/releases/download/${BUN_VERSION}/SHASUMS256.txt" -o "$TEMP_DIR/SHASUMS256.txt"
 
 # Verify checksum
 echo "Verifying checksum..."
 cd "$TEMP_DIR"
-grep "${BUN_DOWNLOAD}.zip" SHASUMS256.txt | shasum -a 256 -c -
+grep "bun-darwin-aarch64.zip" SHASUMS256.txt | shasum -a 256 -c -
 cd - > /dev/null
 
 # Extract and install
-unzip -o "$TEMP_DIR/${BUN_DOWNLOAD}.zip" -d "$TEMP_DIR"
-cp "$TEMP_DIR/${BUN_DOWNLOAD}/bun" "$ELECTRON_DIR/vendor/bun/"
+unzip -o "$TEMP_DIR/bun-darwin-aarch64.zip" -d "$TEMP_DIR"
+cp "$TEMP_DIR/bun-darwin-aarch64/bun" "$ELECTRON_DIR/vendor/bun/"
 chmod +x "$ELECTRON_DIR/vendor/bun/bun"
 
 # 4. Copy SDK from root node_modules (monorepo hoisting)
@@ -149,8 +148,8 @@ cd "$ELECTRON_DIR"
 # Set up environment for electron-builder
 export CSC_IDENTITY_AUTO_DISCOVERY=true
 
-# Build electron-builder arguments
-BUILDER_ARGS="--mac --${ARCH}"
+# Build electron-builder arguments (builds both arm64 and x64)
+BUILDER_ARGS="--mac"
 
 # Add code signing if identity is available
 if [ -n "$APPLE_SIGNING_IDENTITY" ]; then
@@ -176,15 +175,16 @@ fi
 # Run electron-builder
 npx electron-builder $BUILDER_ARGS
 
-# 8. Verify the DMG was built
+# 8. Verify the DMGs were built
 # Read version from package.json for artifact name
 ELECTRON_VERSION=$(cat "$ELECTRON_DIR/package.json" | grep '"version"' | head -1 | sed 's/.*"version": *"\([^"]*\)".*/\1/')
-# electron-builder.yml uses artifactName to output: Craft-Agent-${version}-${arch}.dmg
-DMG_NAME="Craft-Agent-${ELECTRON_VERSION}-${ARCH}.dmg"
-DMG_PATH="$ELECTRON_DIR/release/$DMG_NAME"
 
-if [ ! -f "$DMG_PATH" ]; then
-    echo "ERROR: Expected DMG not found at $DMG_PATH"
+# Check both architectures
+DMG_ARM64="$ELECTRON_DIR/release/Craft-Agent-${ELECTRON_VERSION}-arm64.dmg"
+DMG_X64="$ELECTRON_DIR/release/Craft-Agent-${ELECTRON_VERSION}-x64.dmg"
+
+if [ ! -f "$DMG_ARM64" ] || [ ! -f "$DMG_X64" ]; then
+    echo "ERROR: Expected DMGs not found"
     echo "Contents of release directory:"
     ls -la "$ELECTRON_DIR/release/"
     exit 1
@@ -192,8 +192,8 @@ fi
 
 echo ""
 echo "=== Build Complete ==="
-echo "DMG: $ELECTRON_DIR/release/${DMG_NAME}"
-echo "Size: $(du -h "$ELECTRON_DIR/release/${DMG_NAME}" | cut -f1)"
+echo "DMG (arm64): $DMG_ARM64 ($(du -h "$DMG_ARM64" | cut -f1))"
+echo "DMG (x64):   $DMG_X64 ($(du -h "$DMG_X64" | cut -f1))"
 
 # 9. Create manifest.json for upload script
 echo "Creating manifest.json (version: $ELECTRON_VERSION)..."

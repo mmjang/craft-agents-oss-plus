@@ -3,16 +3,6 @@ name: Build macOS
 on:
   # 手动触发
   workflow_dispatch:
-    inputs:
-      arch:
-        description: 'Target architecture'
-        required: true
-        default: 'arm64'
-        type: choice
-        options:
-          - arm64
-          - x64
-          - both
   # 自动构建已禁用 - 取消注释以下内容可重新启用
   # push:
   #   branches: [main]
@@ -30,10 +20,8 @@ on:
   #     - 'bun.lock'
 
 jobs:
-  build-macos-arm64:
+  build-macos:
     runs-on: macos-latest
-    # 手动触发时：arch 为 arm64 或 both 时运行；自动触发时：始终运行
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.arch == 'arm64' || github.event.inputs.arch == 'both'
 
     steps:
       - name: Checkout repository
@@ -47,8 +35,8 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Build macOS DMG (arm64)
-        run: bash apps/electron/scripts/build-dmg.sh arm64
+      - name: Build macOS DMG (arm64 + x64)
+        run: bash apps/electron/scripts/build-dmg.sh
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -60,48 +48,10 @@ jobs:
           SLACK_OAUTH_CLIENT_SECRET: ${{ secrets.SLACK_OAUTH_CLIENT_SECRET }}
           MICROSOFT_OAUTH_CLIENT_ID: ${{ secrets.MICROSOFT_OAUTH_CLIENT_ID }}
 
-      - name: Upload macOS DMG (arm64)
+      - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
-          name: macos-dmg-arm64
-          path: apps/electron/release/*.dmg
-          if-no-files-found: error
-          retention-days: 30
-
-  build-macos-x64:
-    runs-on: macos-latest
-    # 手动触发时：arch 为 x64 或 both 时运行
-    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.arch == 'x64' || github.event.inputs.arch == 'both')
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Build macOS DMG (x64)
-        run: bash apps/electron/scripts/build-dmg.sh x64
-        env:
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
-          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
-          SLACK_OAUTH_CLIENT_ID: ${{ secrets.SLACK_OAUTH_CLIENT_ID }}
-          SLACK_OAUTH_CLIENT_SECRET: ${{ secrets.SLACK_OAUTH_CLIENT_SECRET }}
-          MICROSOFT_OAUTH_CLIENT_ID: ${{ secrets.MICROSOFT_OAUTH_CLIENT_ID }}
-
-      - name: Upload macOS DMG (x64)
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-dmg-x64
+          name: macos-dmg
           path: apps/electron/release/*.dmg
           if-no-files-found: error
           retention-days: 30
