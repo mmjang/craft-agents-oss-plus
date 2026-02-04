@@ -1,20 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-body: 'Manrope', 'Segoe UI', sans-serif;
+  --font-display: 'Sora', 'Avenir Next', 'Trebuchet MS', sans-serif;
+  --color-page: #f3efe8;
+  --color-surface: #fffdf9;
+  --color-surface-muted: #f8f4ee;
+  --color-ink: #1f2c37;
+  --color-muted: #5c6b76;
+  --color-line: #ddd5ca;
+  --color-accent: #0b7a72;
+  --color-accent-strong: #0a6059;
+  --color-accent-soft: #dff2ef;
+  --color-highlight: #bd9656;
+  --shadow-accent: rgba(11, 122, 114, 0.35);
+  font-family: var(--font-body);
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #0a0a0a;
+  color-scheme: light;
+  color: var(--color-ink);
+  background-color: var(--color-page);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background:
+    radial-gradient(920px 420px at 0% -5%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.1) 58%),
+    radial-gradient(760px 420px at 100% 0%, rgba(216, 238, 231, 0.7) 0%, rgba(216, 238, 231, 0) 60%),
+    linear-gradient(180deg, #faf7f1 0%, #f2eee6 100%);
+  color: var(--color-ink);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(88, 102, 114, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(88, 102, 114, 0.08) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: 0.2;
+  z-index: -1;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.animate-enter {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: rise-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.ambient-shape {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(48px);
+  opacity: 0.55;
+  animation: ambient-float 16s ease-in-out infinite;
+}
+
+.ambient-shape-one {
+  width: 420px;
+  height: 420px;
+  top: 58px;
+  left: -120px;
+  background: rgba(11, 122, 114, 0.16);
+}
+
+.ambient-shape-two {
+  width: 360px;
+  height: 360px;
+  right: -120px;
+  top: 160px;
+  background: rgba(189, 150, 86, 0.2);
+  animation-delay: -7s;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ambient-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -22px, 0);
+  }
 }
