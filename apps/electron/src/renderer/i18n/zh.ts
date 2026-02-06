@@ -139,15 +139,15 @@ export default {
 
   'preferences.title': '偏好',
   'preferences.basicInfo.title': '基础信息',
-  'preferences.basicInfo.desc': '帮助巧作个性化回复。',
+  'preferences.basicInfo.desc': '帮助妙技个性化回复。',
   'preferences.name.label': '姓名',
-  'preferences.name.desc': '巧作应如何称呼你。',
+  'preferences.name.desc': '妙技应如何称呼你。',
   'preferences.name.placeholder': '你的名字',
   'preferences.timezone.label': '时区',
   'preferences.timezone.desc': '用于"明天""下周"等相对日期。',
   'preferences.timezone.placeholder': '如：America/New_York',
   'preferences.language.label': '语言',
-  'preferences.language.desc': '巧作回复时使用的语言。',
+  'preferences.language.desc': '妙技回复时使用的语言。',
   'preferences.language.placeholder': '如：English',
   'preferences.location.title': '位置',
   'preferences.location.desc': '用于天气、本地时间和区域化信息。',
@@ -158,9 +158,9 @@ export default {
   'preferences.country.desc': '你的国家，提供区域化格式。',
   'preferences.country.placeholder': '如：中国',
   'preferences.notes.title': '备注',
-  'preferences.notes.desc': '帮助巧作理解你的偏好。',
+  'preferences.notes.desc': '帮助妙技理解你的偏好。',
   'preferences.editFile': '编辑文件',
-  'preferences.notes.placeholder': '想让巧作了解的其他上下文…',
+  'preferences.notes.placeholder': '想让妙技了解的其他上下文…',
 
   'appSettings.title': '应用设置',
   'appSettings.appearance.title': '外观',
@@ -433,7 +433,7 @@ export default {
   'onboarding.runtime.desc': '此应用需要便携运行时。',
 
   // 欢迎步骤
-  'onboarding.welcome.title': '欢迎使用巧作',
+  'onboarding.welcome.title': '欢迎使用妙技',
   'onboarding.welcome.titleUpdate': '更新设置',
   'onboarding.welcome.desc': '为 AI 代理提供应有的用户体验。连接一切，组织你的会话。一切你需要的，尽在其中！',
   'onboarding.welcome.descUpdate': '更新计费方式或修改设置。',
@@ -488,7 +488,7 @@ export default {
   // 重新认证界面
   'onboarding.reauth.title': '会话已过期',
   'onboarding.reauth.desc1': '你的 Craft 会话已过期或不再有效。',
-  'onboarding.reauth.desc2': '请重新登录以继续使用巧作。',
+  'onboarding.reauth.desc2': '请重新登录以继续使用妙技。',
   'onboarding.reauth.preserved': '你的对话和设置已保留。',
   'onboarding.reauth.loggingIn': '登录中...',
   'onboarding.reauth.logIn': '使用 Craft 登录',

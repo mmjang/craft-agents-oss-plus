@@ -23,7 +23,7 @@ function BrandMark({ className }: { className?: string }) {
 
 function Header() {
   const { t, lang, setLang } = useI18n()
-  const appName = lang === 'zh' ? '巧作' : 'CraftPlus'
+  const appName = lang === 'zh' ? '妙技' : 'CraftPlus'
 
   return (
     <header className="fixed top-0 w-full z-50 border-b border-[var(--color-line)] bg-[rgba(252,250,246,0.82)] backdrop-blur-xl">
@@ -53,7 +53,7 @@ function Header() {
 
 function Footer() {
   const { t, lang } = useI18n()
-  const appName = lang === 'zh' ? '巧作' : 'CraftPlus'
+  const appName = lang === 'zh' ? '妙技' : 'CraftPlus'
 
   return (
     <footer className="border-t border-[var(--color-line)] py-8">

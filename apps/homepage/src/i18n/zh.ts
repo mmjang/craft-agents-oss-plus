@@ -12,7 +12,7 @@ export const zh: Translations = {
     downloadFree: '免费下载',
   },
   story: {
-    content: '作为程序员，我亲眼见证了 AI Agent 的强大。但我发现，这些工具对普通人来说门槛太高了——黑色终端、复杂配置、英文界面。于是我做了「巧作」：一个任何人都能用的 AI Agent 桌面应用。不需要技术背景，下载即用。',
+    content: '作为程序员，我亲眼见证了 AI Agent 的强大。但我发现，这些工具对普通人来说门槛太高了——黑色终端、复杂配置、英文界面。于是我做了「妙技」：一个任何人都能用的 AI Agent 桌面应用。不需要技术背景，下载即用。',
     signature: '— 一个想让 AI 走进每个人工作的程序员',
   },
   openSource: {
@@ -43,7 +43,7 @@ export const zh: Translations = {
     },
   },
   features: {
-    title: '为什么选择「巧作」？',
+    title: '为什么选择「妙技」？',
     claudeSdk: {
       title: 'Claude Agent SDK',
       description: '基于官方 Claude Agent SDK 构建，提供可靠、强大的 AI 交互能力。',
@@ -71,14 +71,14 @@ export const zh: Translations = {
   },
   cta: {
     title: '准备好开始了吗？',
-    description: '立即下载「巧作」，体验 AI 驱动开发的未来。',
+    description: '立即下载「妙技」，体验 AI 驱动开发的未来。',
     downloadNow: '立即下载',
   },
   footer: {
     builtBy: '由以下团队用心打造',
   },
   download: {
-    title: '下载「巧作」',
+    title: '下载「妙技」',
     description: '选择您的平台，立即开始使用 AI 智能体进行开发。',
     macAppleSilicon: 'macOS Apple Silicon',
     macAppleSiliconDesc: '适用于搭载 M1/M2/M3/M4 芯片的 Mac',
