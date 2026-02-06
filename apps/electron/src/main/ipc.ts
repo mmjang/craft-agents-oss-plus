@@ -43,6 +43,31 @@ function sanitizeFilename(name: string): string {
     || 'unnamed'
 }
 
+async function isDevBrowserActive(port: number, timeoutMs = 800): Promise<boolean> {
+  return new Promise((resolve) => {
+    const req = request(
+      {
+        host: '127.0.0.1',
+        port,
+        path: '/',
+        method: 'GET',
+        timeout: timeoutMs,
+      },
+      (res) => {
+        res.resume()
+        // Dev browser server returns 200 with JSON on GET /
+        resolve(res.statusCode === 200)
+      }
+    )
+    req.on('error', () => resolve(false))
+    req.on('timeout', () => {
+      req.destroy()
+      resolve(false)
+    })
+    req.end()
+  })
+}
+
 async function isCdpPortActive(port: number, timeoutMs = 800): Promise<boolean> {
   return new Promise((resolve) => {
     const req = request(
@@ -831,19 +856,19 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
   })
 
   ipcMain.handle(IPC_CHANNELS.AGENT_BROWSER_OPEN, async () => {
-    const portFromEnv = Number(process.env.AGENT_BROWSER_CDP_PORT ?? 9444)
-    const port = Number.isFinite(portFromEnv) && portFromEnv > 0 ? portFromEnv : 9444
-    const scriptPath = join(__dirname, 'resources/app-plugin/skills/agent-browser/templates/browser-init.sh')
+    const portFromEnv = Number(process.env.DEV_BROWSER_CDP_PORT ?? process.env.AGENT_BROWSER_CDP_PORT ?? 9222)
+    const port = Number.isFinite(portFromEnv) && portFromEnv > 0 ? portFromEnv : 9222
+    const scriptPath = join(__dirname, 'resources/app-plugin/skills/dev-browser/server.sh')
     const bundledBashPath = process.platform === 'win32' ? process.env.CLAUDE_CODE_GIT_BASH_PATH : undefined
     const bashCommand = bundledBashPath && existsSync(bundledBashPath) ? bundledBashPath : 'bash'
 
     if (!existsSync(scriptPath)) {
-      const message = `browser-init.sh not found at ${scriptPath}`
+      const message = `server.sh not found at ${scriptPath}`
       ipcLog.error(`[AGENT_BROWSER_OPEN] ${message}`)
       return { status: 'error', port, error: message }
     }
 
-    if (await isCdpPortActive(port)) {
+    if (await isDevBrowserActive(port)) {
       return { status: 'already_running', port }
     }
 
@@ -858,8 +883,8 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
       child.once('error', (error) => {
         if (settled) return
         settled = true
-        const message = error instanceof Error ? error.message : 'Failed to start agent browser'
-        ipcLog.error('[AGENT_BROWSER_OPEN] Failed to spawn browser-init.sh:', message)
+        const message = error instanceof Error ? error.message : 'Failed to start dev browser'
+        ipcLog.error('[AGENT_BROWSER_OPEN] Failed to spawn server.sh:', message)
         resolve({ status: 'error', port, error: message })
       })
 

@@ -431,9 +431,9 @@ When running in headless mode (indicated by \`<headless_mode>\` wrapper in user 
 
 ## Web Tools Priority
 
-**Use \`/agent-browser\` skill** for: page interactions, form filling, screenshots, authenticated pages, dynamic content, data extraction.
+**Use \`/dev-browser\` skill** for: page interactions, form filling, screenshots, authenticated pages, dynamic content, data extraction.
 
 **Use WebSearch/WebFetch only** for: quick factual lookups, static documentation pages.
 
-If the task involves "visiting", "checking", or "interacting with" a website, use \`/agent-browser\`.`;
+If the task involves "visiting", "checking", or "interacting with" a website, use \`/dev-browser\`.`;
 }
