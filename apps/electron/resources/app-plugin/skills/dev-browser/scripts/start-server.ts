@@ -3,15 +3,22 @@ import { execSync } from "child_process";
 import { mkdirSync, existsSync, readdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { homedir } from "os";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const tmpDir = join(__dirname, "..", "tmp");
-const profileDir = join(__dirname, "..", "profiles");
+
+// Store data in user's home directory for persistence across app updates
+// ~/.craft-plus/dev-browser/
+const dataDir = join(homedir(), ".craft-plus", "dev-browser");
+const tmpDir = join(dataDir, "tmp");
+const profileDir = join(dataDir, "profiles");
 
 const HTTP_PORT = 9222;
 const CDP_PORT = 9223;
 
-// Create tmp and profile directories if they don't exist
+// Create data directories if they don't exist
+console.log(`Creating data directory: ${dataDir}`);
+mkdirSync(dataDir, { recursive: true });
 console.log("Creating tmp directory...");
 mkdirSync(tmpDir, { recursive: true });
 console.log("Creating profiles directory...");

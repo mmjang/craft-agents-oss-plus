@@ -7,6 +7,37 @@ description: Browser automation with persistent page state. Use when users ask t
 
 Browser automation that maintains page state across script executions. Write small, focused scripts to accomplish tasks incrementally. Once you've proven out part of a workflow and there is repeated work to be done, you can write a script to do the repeated work in a single execution.
 
+## Finding the Skill Directory
+
+**IMPORTANT**: Before running any commands, locate the dev-browser skill directory:
+
+**macOS:**
+```bash
+# Check common locations
+ls -la /Applications/Craft\ Agents.app/Contents/Resources/app/resources/app-plugin/skills/dev-browser 2>/dev/null || \
+find ~/.craft-agent -name "dev-browser" -type d 2>/dev/null | grep skills
+```
+
+**Windows (Git Bash):**
+```bash
+# Check installed app location
+ls -la "$LOCALAPPDATA/Programs/Craft Agents/resources/app/resources/app-plugin/skills/dev-browser" 2>/dev/null || \
+```
+
+**Windows (PowerShell/CMD):**
+```powershell
+# Installed app location
+dir "$env:LOCALAPPDATA\Programs\Craft Agents\resources\app\resources\app-plugin\skills\dev-browser"
+```
+
+Once found, use the **absolute path** in all commands. For example:
+```bash
+# Use absolute path instead of relative
+cd /path/to/dev-browser && npx tsx <<'EOF'
+...
+EOF
+```
+
 ## Choosing Your Approach
 
 - **Local/source-available sites**: Read the source code first to write selectors directly
@@ -17,12 +48,17 @@ Browser automation that maintains page state across script executions. Write sma
 
 Two modes available. Ask the user if unclear which to use.
 
+**First, locate the dev-browser directory** using the instructions in "Finding the Skill Directory" above. Store the path in a variable:
+```bash
+DEV_BROWSER_DIR="/path/to/dev-browser"  # Replace with actual path found above
+```
+
 ### Standalone Mode (Default)
 
 Launches a new Chromium browser for fresh automation sessions.
 
 ```bash
-./skills/dev-browser/server.sh &
+$DEV_BROWSER_DIR/server.sh &
 ```
 
 Add `--headless` flag if user requests it. **Wait for the `Ready` message before running scripts.**
@@ -39,7 +75,7 @@ Connects to user's existing Chrome browser. Use this when:
 **Start the relay server:**
 
 ```bash
-cd skills/dev-browser && npm i && npm run start-extension &
+cd $DEV_BROWSER_DIR && npm i && npm run start-extension &
 ```
 
 Wait for `Waiting for extension to connect...` followed by `Extension connected` in the console. To know that a client has connected and the browser is ready to be controlled.
@@ -52,12 +88,12 @@ If the extension hasn't connected yet, tell the user to launch and activate it. 
 
 ## Writing Scripts
 
-> **Run all scripts from `skills/dev-browser/` directory.** The `@/` import alias requires this directory's config.
+> **Run all scripts from the dev-browser directory.** The `@/` import alias requires this directory's config.
 
 Execute scripts inline using heredocs:
 
 ```bash
-cd skills/dev-browser && npx tsx <<'EOF'
+cd $DEV_BROWSER_DIR && npx tsx <<'EOF'
 import { connect, waitForPageLoad } from "@/client.js";
 
 const client = await connect();
@@ -147,9 +183,11 @@ await page.waitForURL("**/success"); // For specific URL
 
 ### Screenshots
 
+Screenshots are saved to `~/.craft-plus/dev-browser/tmp/`:
+
 ```typescript
-await page.screenshot({ path: "tmp/screenshot.png" });
-await page.screenshot({ path: "tmp/full.png", fullPage: true });
+await page.screenshot({ path: process.env.HOME + "/.craft-plus/dev-browser/tmp/screenshot.png" });
+await page.screenshot({ path: process.env.HOME + "/.craft-plus/dev-browser/tmp/full.png", fullPage: true });
 ```
 
 ### ARIA Snapshot (Element Discovery)
@@ -193,13 +231,16 @@ await element.click();
 Page state persists after failures. Debug with:
 
 ```bash
-cd skills/dev-browser && npx tsx <<'EOF'
+cd $DEV_BROWSER_DIR && npx tsx <<'EOF'
 import { connect } from "@/client.js";
+import { homedir } from "os";
+import { join } from "path";
 
 const client = await connect();
 const page = await client.page("hackernews");
 
-await page.screenshot({ path: "tmp/debug.png" });
+const tmpDir = join(homedir(), ".craft-plus", "dev-browser", "tmp");
+await page.screenshot({ path: join(tmpDir, "debug.png") });
 console.log({
   url: page.url(),
   title: await page.title(),

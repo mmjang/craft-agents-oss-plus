@@ -41,7 +41,7 @@ craft-agents-oss/
 - **Sessions** are the primary isolation boundary (not workspaces)
 - Each session maps 1:1 with a Claude Agent SDK session
 - Persistence: JSONL format with debounced writes (500ms)
-- Storage: `~/.craft-agent/workspaces/{id}/sessions/`
+- Storage: `~/.craft-plus/workspaces/{id}/sessions/`
 
 ### Permission System
 Three modes per session (SHIFT+TAB to cycle):
@@ -53,18 +53,21 @@ Customizable via `permissions.json` at workspace and source levels.
 
 ### Sources System
 External data connections (MCP servers, APIs, local filesystems):
-- Storage: `~/.craft-agent/workspaces/{id}/sources/{slug}/`
+- Storage: `~/.craft-plus/workspaces/{id}/sources/{slug}/`
 - Built-in: Google (Gmail, Calendar, Drive), Slack, Microsoft
 - OAuth: Separate per source (not shared with Craft API)
 
 ### Configuration Storage
-All config in `~/.craft-agent/`:
+All config in `~/.craft-plus/`:
 ```
-~/.craft-agent/
+~/.craft-plus/
 ├── config.json              # Main config (workspaces, auth)
 ├── credentials.enc          # AES-256-GCM encrypted credentials
 ├── preferences.json         # User preferences
 ├── theme.json               # App-level theme (6-color system)
+├── dev-browser/             # Dev browser skill data (persists across app updates)
+│   ├── profiles/            # Browser profile data (cookies, localStorage, etc.)
+│   └── tmp/                 # Screenshots and temporary files
 └── workspaces/{id}/
     ├── sessions/            # Session data (JSONL)
     ├── sources/             # Connected sources
@@ -72,6 +75,8 @@ All config in `~/.craft-agent/`:
     ├── statuses/            # Workflow states
     └── permissions.json     # Workspace-level rules
 ```
+
+**Important:** The config directory is `~/.craft-plus/`, NOT `~/.craft-agent/`. Always use `.craft-plus` when referencing user data paths.
 
 ### MCP Integration
 - **CraftMcpClient** wraps MCP SDK with validation and security
