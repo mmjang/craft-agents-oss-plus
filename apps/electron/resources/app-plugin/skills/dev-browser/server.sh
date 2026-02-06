@@ -16,8 +16,13 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-echo "Installing dependencies..."
-npm install
+# Only install dependencies if node_modules doesn't exist or package.json is newer
+if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
+    echo "Installing dependencies..."
+    npm install
+else
+    echo "Dependencies already installed, skipping npm install..."
+fi
 
 echo "Starting dev-browser server..."
 export HEADLESS=$HEADLESS

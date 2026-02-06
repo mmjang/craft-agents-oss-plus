@@ -54,9 +54,24 @@ async function isDevBrowserActive(port: number, timeoutMs = 800): Promise<boolea
         timeout: timeoutMs,
       },
       (res) => {
-        res.resume()
-        // Dev browser server returns 200 with JSON on GET /
-        resolve(res.statusCode === 200)
+        // Collect response body to verify it's dev-browser
+        let body = ''
+        res.on('data', (chunk) => {
+          body += chunk
+        })
+        res.on('end', () => {
+          if (res.statusCode !== 200) {
+            resolve(false)
+            return
+          }
+          try {
+            const data = JSON.parse(body)
+            // dev-browser server returns { wsEndpoint: "ws://..." }
+            resolve(typeof data.wsEndpoint === 'string' && data.wsEndpoint.startsWith('ws://'))
+          } catch {
+            resolve(false)
+          }
+        })
       }
     )
     req.on('error', () => resolve(false))
@@ -858,6 +873,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
   ipcMain.handle(IPC_CHANNELS.AGENT_BROWSER_OPEN, async () => {
     const portFromEnv = Number(process.env.DEV_BROWSER_CDP_PORT ?? process.env.AGENT_BROWSER_CDP_PORT ?? 9222)
     const port = Number.isFinite(portFromEnv) && portFromEnv > 0 ? portFromEnv : 9222
+    const cdpPort = 9223 // Chrome's CDP port used by dev-browser
     const scriptPath = join(__dirname, 'resources/app-plugin/skills/dev-browser/server.sh')
     const bundledBashPath = process.platform === 'win32' ? process.env.CLAUDE_CODE_GIT_BASH_PATH : undefined
     const bashCommand = bundledBashPath && existsSync(bundledBashPath) ? bundledBashPath : 'bash'
@@ -868,10 +884,52 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
       return { status: 'error', port, error: message }
     }
 
-    if (await isDevBrowserActive(port)) {
-      return { status: 'already_running', port }
+    // Check if dev-browser HTTP API is running
+    const httpServerActive = await isDevBrowserActive(port)
+
+    if (httpServerActive) {
+      // Also check if the browser's CDP port is active
+      // If HTTP server is running but CDP is not, the browser was closed manually
+      const browserActive = await isCdpPortActive(cdpPort)
+
+      if (browserActive) {
+        return { status: 'already_running', port }
+      }
+
+      // HTTP server is running but browser is dead - kill the stale server process
+      ipcLog.info('[AGENT_BROWSER_OPEN] Stale server detected (browser closed). Cleaning up...')
+      try {
+        const { execSync } = await import('child_process')
+        if (process.platform === 'win32') {
+          // Windows: use netstat and taskkill via cmd.exe to avoid Git Bash path issues
+          try {
+            const output = execSync(
+              `cmd.exe /c "netstat -ano | findstr :${port} | findstr LISTENING"`,
+              { encoding: 'utf-8', shell: 'cmd.exe' }
+            )
+            const lines = output.trim().split('\n')
+            for (const line of lines) {
+              const parts = line.trim().split(/\s+/)
+              const pid = parts[parts.length - 1]
+              if (pid && /^\d+$/.test(pid)) {
+                execSync(`cmd.exe /c "taskkill /F /PID ${pid}"`, { stdio: 'ignore', shell: 'cmd.exe' })
+              }
+            }
+          } catch {
+            // No process found
+          }
+        } else {
+          // Unix: use lsof and kill
+          execSync(`lsof -ti:${port} | xargs kill -9 2>/dev/null || true`, { encoding: 'utf-8' })
+        }
+        // Wait a moment for the port to be released
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      } catch {
+        // Best effort cleanup
+      }
     }
 
+    // Start the server and wait for it to be ready
     return await new Promise((resolve) => {
       let settled = false
       const child = spawn(bashCommand, [scriptPath], {
@@ -889,11 +947,37 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
       })
 
       child.unref()
-      setTimeout(() => {
+
+      // Poll for server readiness instead of just waiting a fixed time
+      const maxAttempts = 30 // 30 * 500ms = 15 seconds max wait
+      let attempts = 0
+
+      const checkReady = async () => {
         if (settled) return
-        settled = true
-        resolve({ status: 'starting', port })
-      }, 200)
+
+        attempts++
+        const isReady = await isDevBrowserActive(port)
+
+        if (isReady) {
+          settled = true
+          ipcLog.info('[AGENT_BROWSER_OPEN] Dev browser started successfully')
+          resolve({ status: 'started', port })
+          return
+        }
+
+        if (attempts >= maxAttempts) {
+          settled = true
+          ipcLog.warn('[AGENT_BROWSER_OPEN] Timeout waiting for dev browser to start')
+          resolve({ status: 'starting', port }) // Still return starting, it might come up later
+          return
+        }
+
+        // Check again after 500ms
+        setTimeout(checkReady, 500)
+      }
+
+      // Start checking after initial 500ms delay
+      setTimeout(checkReady, 500)
     })
   })
 
