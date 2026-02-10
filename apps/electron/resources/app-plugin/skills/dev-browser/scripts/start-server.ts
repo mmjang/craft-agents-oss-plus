@@ -1,4 +1,5 @@
 import { serve } from "@/index.js";
+import { detectChrome } from "@/chrome-detector.js";
 import { execSync } from "child_process";
 import { mkdirSync, existsSync, readdirSync } from "fs";
 import { join, dirname } from "path";
@@ -24,8 +25,8 @@ mkdirSync(tmpDir, { recursive: true });
 console.log("Creating profiles directory...");
 mkdirSync(profileDir, { recursive: true });
 
-// Install Playwright browsers if not already installed
-console.log("Checking Playwright browser installation...");
+// Detect system Chrome or install Playwright browsers
+console.log("Checking for browser...");
 
 function findPackageManager(): { name: string; command: string } | null {
   const managers = [
@@ -143,24 +144,34 @@ async function isDevBrowserServer(port: number): Promise<boolean> {
   }
 }
 
-try {
-  if (!isChromiumInstalled()) {
-    console.log("Playwright Chromium not found. Installing (this may take a minute)...");
+// Detect system Chrome or fall back to Playwright Chromium
+let executablePath: string | undefined;
 
-    const pm = findPackageManager();
-    if (!pm) {
-      throw new Error("No package manager found (tried bun, pnpm, npm)");
+const detected = detectChrome();
+if (detected) {
+  console.log(`Found ${detected.description} at: ${detected.executablePath}`);
+  executablePath = detected.executablePath;
+} else {
+  console.log("No system Chrome found. Falling back to Playwright Chromium...");
+  try {
+    if (!isChromiumInstalled()) {
+      console.log("Playwright Chromium not found. Installing (this may take a minute)...");
+
+      const pm = findPackageManager();
+      if (!pm) {
+        throw new Error("No package manager found (tried bun, pnpm, npm)");
+      }
+
+      console.log(`Using ${pm.name} to install Playwright...`);
+      execSync(pm.command, { stdio: "inherit" });
+      console.log("Chromium installed successfully.");
+    } else {
+      console.log("Playwright Chromium already installed.");
     }
-
-    console.log(`Using ${pm.name} to install Playwright...`);
-    execSync(pm.command, { stdio: "inherit" });
-    console.log("Chromium installed successfully.");
-  } else {
-    console.log("Playwright Chromium already installed.");
+  } catch (error) {
+    console.error("Failed to install Playwright browsers:", error);
+    console.log("You may need to run: npx playwright install chromium");
   }
-} catch (error) {
-  console.error("Failed to install Playwright browsers:", error);
-  console.log("You may need to run: npx playwright install chromium");
 }
 
 // Check if server is already running (and it's actually dev-browser)
@@ -185,6 +196,7 @@ const server = await serve({
   cdpPort: CDP_PORT,
   headless,
   profileDir,
+  executablePath,
 });
 
 console.log(`Dev browser server started`);

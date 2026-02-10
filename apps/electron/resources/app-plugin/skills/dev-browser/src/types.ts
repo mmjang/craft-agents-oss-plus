@@ -6,6 +6,8 @@ export interface ServeOptions {
   cdpPort?: number;
   /** Directory to store persistent browser profiles (cookies, localStorage, etc.) */
   profileDir?: string;
+  /** Path to a Chromium-based browser executable (e.g. system Chrome). When set, Playwright uses this instead of its bundled Chromium. */
+  executablePath?: string;
 }
 
 export interface ViewportSize {

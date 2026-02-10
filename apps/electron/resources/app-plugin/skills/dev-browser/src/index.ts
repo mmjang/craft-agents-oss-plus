@@ -56,6 +56,7 @@ export async function serve(options: ServeOptions = {}): Promise<DevBrowserServe
   const headless = options.headless ?? false;
   const cdpPort = options.cdpPort ?? 9223;
   const profileDir = options.profileDir;
+  const executablePath = options.executablePath;
 
   // Validate port numbers
   if (port < 1 || port > 65535) {
@@ -82,9 +83,10 @@ export async function serve(options: ServeOptions = {}): Promise<DevBrowserServe
   // Launch persistent context - this persists cookies, localStorage, cache, etc.
   const context: BrowserContext = await chromium.launchPersistentContext(userDataDir, {
     headless,
-    args: [`--remote-debugging-port=${cdpPort}`],
+    args: [`--remote-debugging-port=${cdpPort}`, "--disable-blink-features=AutomationControlled"],
+    ...(executablePath ? { executablePath } : {}),
   });
-  console.log("Browser launched with persistent profile...");
+  console.log(`Browser launched with persistent profile${executablePath ? ` (using ${executablePath})` : ""}...`);
 
   // Monitor browser disconnection - exit server when browser is closed manually
   context.on("close", () => {
