@@ -75,6 +75,27 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Compute SHA256 checksums
+        shell: pwsh
+        run: |
+          $checksumsFile = "apps/electron/release/windows-checksums.txt"
+          Get-ChildItem -Path "apps/electron/release/*.exe" | ForEach-Object {
+            $filename = $_.Name
+            $sha256 = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash.ToLower()
+            $size = $_.Length
+            "${filename}:${sha256}:${size}" | Out-File -Append -FilePath $checksumsFile -Encoding utf8
+          }
+          Write-Host "Checksums:"
+          Get-Content $checksumsFile
+
+      - name: Upload Windows checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-checksums
+          path: apps/electron/release/windows-checksums.txt
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Upload to R2
         if: inputs.upload-to-r2 == true && inputs.version != ''
         shell: pwsh

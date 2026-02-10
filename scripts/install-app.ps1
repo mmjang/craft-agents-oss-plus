@@ -3,7 +3,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$VERSIONS_URL = "https://agents.craft.do/electron"
+$VERSIONS_URL = "https://craft-plus-homepage.pages.dev/electron"
 $DOWNLOAD_DIR = "$env:TEMP\craft-agent-install"
 $APP_NAME = "Craft Agents"
 
@@ -31,7 +31,7 @@ New-Item -ItemType Directory -Force -Path $DOWNLOAD_DIR | Out-Null
 # Get latest version
 Write-Info "Fetching latest version..."
 try {
-    $latestJson = Invoke-RestMethod -Uri "$VERSIONS_URL/latest" -UseBasicParsing
+    $latestJson = Invoke-RestMethod -Uri "$VERSIONS_URL/latest.json" -UseBasicParsing
     $version = $latestJson.version
 } catch {
     Write-Err "Failed to fetch latest version: $_"

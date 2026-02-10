@@ -34,6 +34,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Download checksum artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-checksums'
+          path: checksums
+
       - name: Update downloads.json
         run: |
           cat > apps/homepage/public/downloads.json << EOF
@@ -49,12 +55,88 @@ jobs:
           }
           EOF
 
+      - name: Generate electron manifest files
+        run: |
+          VERSION="${{ inputs.version }}"
+          R2_BASE="https://pub-fb8517ffb9ba41819d8b1b504a51b121.r2.dev"
+          BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          BUILD_TIMESTAMP=$(date +%s)
+
+          # Create directories
+          mkdir -p "apps/homepage/public/electron/${VERSION}"
+
+          # Generate latest.json
+          cat > apps/homepage/public/electron/latest.json << EOF
+          {
+            "version": "${VERSION}"
+          }
+          EOF
+
+          # Parse checksums into variables
+          declare -A CHECKSUMS SIZES FILENAMES
+
+          for checksums_file in checksums/macos-checksums/macos-checksums.txt checksums/windows-checksums/windows-checksums.txt; do
+            if [ -f "$checksums_file" ]; then
+              while IFS=: read -r filename sha256 size; do
+                # Skip empty lines
+                [ -z "$filename" ] && continue
+                # Map filename to platform key
+                case "$filename" in
+                  *-arm64.dmg) platform="darwin-arm64" ;;
+                  *-x64.dmg)   platform="darwin-x64" ;;
+                  *-x64.exe)   platform="win32-x64" ;;
+                  *)           echo "Unknown file: $filename"; continue ;;
+                esac
+                CHECKSUMS[$platform]="$sha256"
+                SIZES[$platform]="$size"
+                FILENAMES[$platform]="$filename"
+              done < "$checksums_file"
+            fi
+          done
+
+          # Build binaries JSON
+          BINARIES=""
+          FIRST=true
+          for platform in darwin-arm64 darwin-x64 win32-x64; do
+            if [ -n "${CHECKSUMS[$platform]:-}" ]; then
+              if [ "$FIRST" = true ]; then
+                FIRST=false
+              else
+                BINARIES="${BINARIES},"
+              fi
+              BINARIES="${BINARIES}
+                \"${platform}\": {
+                  \"url\": \"${R2_BASE}/releases/v${VERSION}/${FILENAMES[$platform]}\",
+                  \"sha256\": \"${CHECKSUMS[$platform]}\",
+                  \"size\": ${SIZES[$platform]},
+                  \"filename\": \"${FILENAMES[$platform]}\"
+                }"
+            fi
+          done
+
+          # Generate version manifest
+          cat > "apps/homepage/public/electron/${VERSION}/manifest.json" << EOF
+          {
+            "version": "${VERSION}",
+            "build_time": "${BUILD_TIME}",
+            "build_timestamp": ${BUILD_TIMESTAMP},
+            "binaries": {${BINARIES}
+            }
+          }
+          EOF
+
+          echo "Generated manifest files:"
+          cat apps/homepage/public/electron/latest.json
+          echo "---"
+          cat "apps/homepage/public/electron/${VERSION}/manifest.json"
+
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add apps/homepage/public/downloads.json
-          git commit -m "chore: update download links for v${{ inputs.version }}"
+          git add apps/homepage/public/electron/
+          git commit -m "chore: update download links and manifests for v${{ inputs.version }}"
           git push
 
   deploy-homepage:

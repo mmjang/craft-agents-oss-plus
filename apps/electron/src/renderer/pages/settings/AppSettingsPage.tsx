@@ -379,7 +379,7 @@ export default function AppSettingsPage() {
 
   // Auto-update state
   // Temporary flag to disable auto-update UI
-  const DISABLE_AUTO_UPDATE_UI = true
+  const DISABLE_AUTO_UPDATE_UI = false
   const updateChecker = useUpdateChecker()
   const [isCheckingForUpdates, setIsCheckingForUpdates] = useState(false)
 

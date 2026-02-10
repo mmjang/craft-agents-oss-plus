@@ -30,7 +30,7 @@ import { initNotificationService, clearBadgeCount, initBadgeIcon, initInstanceBa
 import { checkForUpdatesOnLaunch, checkPendingUpdateAndInstall, setWindowManager as setAutoUpdateWindowManager } from './auto-update'
 
 // Temporary flag to disable auto-update functionality
-const DISABLE_AUTO_UPDATE = true
+const DISABLE_AUTO_UPDATE = false
 
 // Initialize electron-log for renderer process support
 log.initialize()

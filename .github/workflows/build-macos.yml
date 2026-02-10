@@ -61,6 +61,26 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Compute SHA256 checksums
+        run: |
+          checksums_file="apps/electron/release/macos-checksums.txt"
+          for file in apps/electron/release/*.dmg; do
+            filename=$(basename "$file")
+            sha256=$(shasum -a 256 "$file" | cut -d' ' -f1)
+            size=$(stat -f%z "$file")
+            echo "${filename}:${sha256}:${size}" >> "$checksums_file"
+          done
+          echo "Checksums:"
+          cat "$checksums_file"
+
+      - name: Upload macOS checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-checksums
+          path: apps/electron/release/macos-checksums.txt
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Upload to R2
         if: inputs.upload-to-r2 == true && inputs.version != ''
         run: |

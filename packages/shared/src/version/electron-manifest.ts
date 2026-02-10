@@ -3,15 +3,15 @@
  *
  * Uses the /electron/ path prefix for Electron app updates.
  * Endpoints:
- * - https://agents.craft.do/electron/latest
- * - https://agents.craft.do/electron/{version}/manifest.json
+ * - https://craft-plus-homepage.pages.dev/electron/latest.json
+ * - https://craft-plus-homepage.pages.dev/electron/{version}/manifest.json
  */
 
 import semver from 'semver';
 import { debug } from '../utils/debug';
 import type { VersionManifest } from './manifest';
 
-const ELECTRON_VERSIONS_URL = 'https://agents.craft.do/electron';
+const ELECTRON_VERSIONS_URL = 'https://craft-plus-homepage.pages.dev/electron';
 
 /** Default timeout for network requests (10 seconds) */
 const FETCH_TIMEOUT_MS = 10000;
@@ -36,7 +36,7 @@ async function fetchWithTimeout(url: string, timeoutMs = FETCH_TIMEOUT_MS): Prom
  */
 export async function getElectronLatestVersion(): Promise<string | null> {
   try {
-    const response = await fetchWithTimeout(`${ELECTRON_VERSIONS_URL}/latest`);
+    const response = await fetchWithTimeout(`${ELECTRON_VERSIONS_URL}/latest.json`);
     if (!response.ok) {
       debug(`[electron-manifest] Failed to fetch latest version: ${response.status}`);
       return null;

@@ -2,7 +2,7 @@
 
 set -e
 
-VERSIONS_URL="https://agents.craft.do/electron"
+VERSIONS_URL="https://craft-plus-homepage.pages.dev/electron"
 DOWNLOAD_DIR="$HOME/.craft-agent/downloads"
 
 # Colors for output
@@ -140,7 +140,7 @@ mkdir -p "$INSTALL_DIR"
 
 # Get latest version
 info "Fetching latest version..."
-latest_json=$(download_file "$VERSIONS_URL/latest")
+latest_json=$(download_file "$VERSIONS_URL/latest.json")
 
 if [ "$HAS_JQ" = true ]; then
     version=$(echo "$latest_json" | jq -r '.version // empty')
