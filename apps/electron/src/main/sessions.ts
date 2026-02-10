@@ -493,6 +493,11 @@ export class SessionManager {
 
       sessionLog.info('Reinitializing auth with billing type:', billing.type)
 
+      // Always clear ANTHROPIC_AUTH_TOKEN to prevent it leaking from the shell
+      // environment into the SDK subprocess (it would set the authorization header
+      // to a wrong value, causing 401 errors with third-party API providers)
+      delete process.env.ANTHROPIC_AUTH_TOKEN
+
       if (billing.type === 'oauth_token' && billing.claudeOAuthToken) {
         // Use Claude Max subscription via OAuth token
         process.env.CLAUDE_CODE_OAUTH_TOKEN = billing.claudeOAuthToken
