@@ -4,7 +4,7 @@
  * Update this constant when releasing a new version.
  */
 
-export const APP_VERSION = '0.3.10';
+export const APP_VERSION = '0.3.11';
 
 export function getAppVersion(): string {
   return APP_VERSION;
