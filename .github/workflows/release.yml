@@ -9,7 +9,48 @@ on:
         type: string
 
 jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump version numbers
+        run: |
+          VERSION="${{ inputs.version }}"
+
+          # Update package.json files
+          for pkg in \
+            package.json \
+            apps/electron/package.json \
+            apps/viewer/package.json \
+            packages/core/package.json \
+            packages/shared/package.json \
+            packages/ui/package.json; do
+            sed -i "s/\"version\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"version\": \"${VERSION}\"/" "$pkg"
+          done
+
+          # Update APP_VERSION constant
+          sed -i "s/APP_VERSION = '[0-9]*\.[0-9]*\.[0-9]*'/APP_VERSION = '${VERSION}'/" \
+            packages/shared/src/version/app-version.ts
+
+          echo "Updated version to ${VERSION} in:"
+          git diff --name-only
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: bump version to ${{ inputs.version }}"
+          git push
+
   build-macos:
+    needs: bump-version
     uses: ./.github/workflows/build-macos.yml
     secrets: inherit
     with:
@@ -17,6 +58,7 @@ jobs:
       upload-to-r2: true
 
   build-windows:
+    needs: bump-version
     uses: ./.github/workflows/build-windows.yml
     secrets: inherit
     with:
@@ -32,6 +74,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download checksum artifacts
@@ -130,34 +173,13 @@ jobs:
           echo "---"
           cat "apps/homepage/public/electron/${VERSION}/manifest.json"
 
-      - name: Bump version numbers
-        run: |
-          VERSION="${{ inputs.version }}"
-
-          # Update package.json files
-          for pkg in \
-            package.json \
-            apps/electron/package.json \
-            apps/viewer/package.json \
-            packages/core/package.json \
-            packages/shared/package.json \
-            packages/ui/package.json; do
-            sed -i "s/\"version\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"version\": \"${VERSION}\"/" "$pkg"
-          done
-
-          # Update APP_VERSION constant
-          sed -i "s/APP_VERSION = '[0-9]*\.[0-9]*\.[0-9]*'/APP_VERSION = '${VERSION}'/" \
-            packages/shared/src/version/app-version.ts
-
-          echo "Updated version to ${VERSION} in:"
-          git diff --name-only
-
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "chore: release v${{ inputs.version }}"
+          git add apps/homepage/public/downloads.json
+          git add apps/homepage/public/electron/
+          git commit -m "chore: update download links and manifests for v${{ inputs.version }}"
           git push
 
   deploy-homepage:
