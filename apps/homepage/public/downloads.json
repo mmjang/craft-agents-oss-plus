@@ -1,10 +1,10 @@
 {
-  "version": "0.3.7",
-  "releaseDate": "2026-02-06",
+  "version": "0.3.8",
+  "releaseDate": "2026-02-10",
   "baseUrl": "https://pub-fb8517ffb9ba41819d8b1b504a51b121.r2.dev",
   "downloads": {
-    "mac-arm": "/releases/v0.3.7/CraftPlus-0.3.7-arm64.dmg",
-    "mac-intel": "/releases/v0.3.7/CraftPlus-0.3.7-x64.dmg",
-    "windows": "/releases/v0.3.7/CraftPlus-0.3.7-x64.exe"
+    "mac-arm": "/releases/v0.3.8/CraftPlus-0.3.8-arm64.dmg",
+    "mac-intel": "/releases/v0.3.8/CraftPlus-0.3.8-x64.dmg",
+    "windows": "/releases/v0.3.8/CraftPlus-0.3.8-x64.exe"
   }
 }
