@@ -172,6 +172,8 @@ export default {
   'appSettings.notifications.title': '通知',
   'appSettings.notifications.desktop': '桌面通知',
   'appSettings.notifications.desc': '当 AI 处理完聊天时提醒我。',
+  'appSettings.notifications.soundAlerts': '提示音',
+  'appSettings.notifications.soundAlertsDesc': '当 AI 完成响应或需要批准权限时播放提示音。',
   'appSettings.billing.title': '计费',
   'appSettings.billing.desc': '选择如何支付 AI 用量',
   'appSettings.billing.paymentMethod': '支付方式',

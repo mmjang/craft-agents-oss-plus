@@ -20,6 +20,7 @@ import { useGlobalShortcuts } from '@/hooks/keyboard'
 import { useWindowCloseHandler } from '@/hooks/useWindowCloseHandler'
 import { useOnboarding } from '@/hooks/useOnboarding'
 import { useNotifications } from '@/hooks/useNotifications'
+import { useSoundAlerts } from '@/hooks/useSoundAlerts'
 import { useSession } from '@/hooks/useSession'
 import { useUpdateChecker } from '@/hooks/useUpdateChecker'
 import { NavigationProvider } from '@/contexts/NavigationContext'
@@ -201,6 +202,10 @@ export default function App() {
   // Notifications enabled state (from app settings)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
 
+  // Sound alerts enabled state (from app settings)
+  const [soundAlertsEnabled, setSoundAlertsEnabled] = useState(false)
+  const { playCompleteSound, playPermissionSound } = useSoundAlerts(soundAlertsEnabled)
+
   // Sources and skills for badge extraction
   const sources = useAtomValue(sourcesAtom)
   const skills = useAtomValue(skillsAtom)
@@ -339,6 +344,7 @@ export default function App() {
 
     window.electronAPI.getWorkspaces().then(setWorkspaces)
     window.electronAPI.getNotificationsEnabled().then(setNotificationsEnabled)
+    window.electronAPI.getSoundAlertsEnabled().then(setSoundAlertsEnabled)
     // Load API base URL and model together to ensure compatibility
     Promise.all([
       window.electronAPI.getBillingMethod(),
@@ -431,6 +437,7 @@ export default function App() {
       for (const effect of effects) {
         switch (effect.type) {
           case 'permission_request': {
+            playPermissionSound()
             setPendingPermissions(prevPerms => {
               const next = new Map(prevPerms)
               const existingQueue = next.get(sessionId) || []
@@ -475,6 +482,7 @@ export default function App() {
 
       // Clear pending permissions and credentials on complete
       if (eventType === 'complete') {
+        playCompleteSound()
         setPendingPermissions(prevPerms => {
           if (prevPerms.has(sessionId)) {
             const next = new Map(prevPerms)
@@ -584,7 +592,7 @@ export default function App() {
     })
 
     return cleanup
-  }, [processAgentEvent, windowWorkspaceId, store, updateSessionDirect, showSessionNotification])
+  }, [processAgentEvent, windowWorkspaceId, store, updateSessionDirect, showSessionNotification, playCompleteSound, playPermissionSound])
 
   // Listen for menu bar events
   useEffect(() => {

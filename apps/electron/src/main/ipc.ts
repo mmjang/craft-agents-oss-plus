@@ -2306,6 +2306,24 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     }
   })
 
+  // Get sound alerts enabled setting
+  ipcMain.handle(IPC_CHANNELS.SOUND_ALERTS_GET_ENABLED, async () => {
+    const { getSoundAlertsEnabled } = await import('@craft-agent/shared/config/storage')
+    return getSoundAlertsEnabled()
+  })
+
+  // Set sound alerts enabled setting
+  ipcMain.handle(IPC_CHANNELS.SOUND_ALERTS_SET_ENABLED, async (_event, enabled: boolean) => {
+    const { setSoundAlertsEnabled } = await import('@craft-agent/shared/config/storage')
+    setSoundAlertsEnabled(enabled)
+  })
+
+  // Play a sound alert
+  ipcMain.handle(IPC_CHANNELS.SOUND_ALERTS_PLAY, async (_event, type: 'complete' | 'permission') => {
+    const { playSoundAlert } = await import('./sounds')
+    playSoundAlert(type)
+  })
+
   // Update app badge count
   ipcMain.handle(IPC_CHANNELS.BADGE_UPDATE, async (_event, count: number) => {
     const { updateBadgeCount } = await import('./notifications')

@@ -370,6 +370,12 @@ const api: ElectronAPI = {
     ipcRenderer.invoke(IPC_CHANNELS.NOTIFICATION_GET_ENABLED) as Promise<boolean>,
   setNotificationsEnabled: (enabled: boolean) =>
     ipcRenderer.invoke(IPC_CHANNELS.NOTIFICATION_SET_ENABLED, enabled),
+  getSoundAlertsEnabled: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.SOUND_ALERTS_GET_ENABLED) as Promise<boolean>,
+  setSoundAlertsEnabled: (enabled: boolean) =>
+    ipcRenderer.invoke(IPC_CHANNELS.SOUND_ALERTS_SET_ENABLED, enabled),
+  playSoundAlert: (type: 'complete' | 'permission') =>
+    ipcRenderer.invoke(IPC_CHANNELS.SOUND_ALERTS_PLAY, type),
   updateBadgeCount: (count: number) =>
     ipcRenderer.invoke(IPC_CHANNELS.BADGE_UPDATE, count),
   clearBadgeCount: () =>

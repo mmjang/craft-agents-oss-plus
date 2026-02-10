@@ -172,6 +172,8 @@ export default {
   'appSettings.notifications.title': 'Notifications',
   'appSettings.notifications.desktop': 'Desktop notifications',
   'appSettings.notifications.desc': 'Get notified when AI finishes working in a chat.',
+  'appSettings.notifications.soundAlerts': 'Sound alerts',
+  'appSettings.notifications.soundAlertsDesc': 'Play a sound when AI finishes or needs approval.',
   'appSettings.billing.title': 'Billing',
   'appSettings.billing.desc': 'Choose how you pay for AI usage',
   'appSettings.billing.paymentMethod': 'Payment method',

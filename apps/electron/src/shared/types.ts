@@ -669,6 +669,11 @@ export const IPC_CHANNELS = {
   NOTIFICATION_GET_ENABLED: 'notification:getEnabled',
   NOTIFICATION_SET_ENABLED: 'notification:setEnabled',
 
+  // Sound alerts
+  SOUND_ALERTS_GET_ENABLED: 'sound-alerts:getEnabled',
+  SOUND_ALERTS_SET_ENABLED: 'sound-alerts:setEnabled',
+  SOUND_ALERTS_PLAY: 'sound-alerts:play',
+
   BADGE_UPDATE: 'badge:update',
   BADGE_CLEAR: 'badge:clear',
   BADGE_SET_ICON: 'badge:setIcon',
@@ -894,6 +899,11 @@ export interface ElectronAPI {
   showNotification(title: string, body: string, workspaceId: string, sessionId: string): Promise<void>
   getNotificationsEnabled(): Promise<boolean>
   setNotificationsEnabled(enabled: boolean): Promise<void>
+
+  // Sound alerts
+  getSoundAlertsEnabled(): Promise<boolean>
+  setSoundAlertsEnabled(enabled: boolean): Promise<void>
+  playSoundAlert(type: 'complete' | 'permission'): Promise<void>
 
   updateBadgeCount(count: number): Promise<void>
   clearBadgeCount(): Promise<void>

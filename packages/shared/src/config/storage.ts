@@ -54,6 +54,7 @@ export interface StoredConfig {
   model?: string;
   // Notifications
   notificationsEnabled?: boolean;  // Desktop notifications for task completion (default: true)
+  soundAlertsEnabled?: boolean;  // Sound alerts for task completion and permission requests (default: false)
   // Appearance
   colorTheme?: string;  // ID of selected preset theme (e.g., 'dracula', 'nord'). Default: 'default'
   // Auto-update
@@ -238,6 +239,29 @@ export function setNotificationsEnabled(enabled: boolean): void {
   const config = loadStoredConfig();
   if (!config) return;
   config.notificationsEnabled = enabled;
+  saveConfig(config);
+}
+
+/**
+ * Get whether sound alerts are enabled.
+ * Defaults to false if not set.
+ */
+export function getSoundAlertsEnabled(): boolean {
+  const config = loadStoredConfig();
+  if (config?.soundAlertsEnabled !== undefined) {
+    return config.soundAlertsEnabled;
+  }
+  const defaults = loadConfigDefaults();
+  return defaults.defaults.soundAlertsEnabled;
+}
+
+/**
+ * Set whether sound alerts are enabled.
+ */
+export function setSoundAlertsEnabled(enabled: boolean): void {
+  const config = loadStoredConfig();
+  if (!config) return;
+  config.soundAlertsEnabled = enabled;
   saveConfig(config);
 }
 

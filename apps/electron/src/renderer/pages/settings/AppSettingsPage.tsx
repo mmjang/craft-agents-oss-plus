@@ -375,6 +375,7 @@ export default function AppSettingsPage() {
 
   // Notifications state
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
+  const [soundAlertsEnabled, setSoundAlertsEnabled] = useState(false)
 
   // Auto-update state
   // Temporary flag to disable auto-update UI
@@ -396,15 +397,17 @@ export default function AppSettingsPage() {
     const loadSettings = async () => {
       if (!window.electronAPI) return
       try {
-        const [billing, notificationsOn] = await Promise.all([
+        const [billing, notificationsOn, soundAlertsOn] = await Promise.all([
           window.electronAPI.getBillingMethod(),
           window.electronAPI.getNotificationsEnabled(),
+          window.electronAPI.getSoundAlertsEnabled(),
         ])
         setAuthType(billing.authType)
         setHasCredential(billing.hasCredential)
         setApiBaseUrl(billing.baseUrl ?? '')
         setSavedApiBaseUrl(billing.baseUrl ?? '')
         setNotificationsEnabled(notificationsOn)
+        setSoundAlertsEnabled(soundAlertsOn)
       } catch (error) {
         console.error('Failed to load settings:', error)
       } finally {
@@ -644,6 +647,11 @@ export default function AppSettingsPage() {
     await window.electronAPI.setNotificationsEnabled(enabled)
   }, [])
 
+  const handleSoundAlertsEnabledChange = useCallback(async (enabled: boolean) => {
+    setSoundAlertsEnabled(enabled)
+    await window.electronAPI.setSoundAlertsEnabled(enabled)
+  }, [])
+
   return (
     <div className="h-full flex flex-col">
       <PanelHeader title={t('appSettings.title', 'App Settings')} actions={<HeaderMenu route={routes.view.settings('app')} helpFeature="app-settings" />} />
@@ -711,6 +719,12 @@ export default function AppSettingsPage() {
                   description={t('appSettings.notifications.desc', 'Get notified when AI finishes working in a chat.')}
                   checked={notificationsEnabled}
                   onCheckedChange={handleNotificationsEnabledChange}
+                />
+                <SettingsToggle
+                  label={t('appSettings.notifications.soundAlerts', 'Sound alerts')}
+                  description={t('appSettings.notifications.soundAlertsDesc', 'Play a sound when AI finishes or needs approval.')}
+                  checked={soundAlertsEnabled}
+                  onCheckedChange={handleSoundAlertsEnabledChange}
                 />
               </SettingsCard>
             </SettingsSection>
