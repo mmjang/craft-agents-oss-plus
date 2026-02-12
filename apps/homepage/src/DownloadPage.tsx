@@ -80,6 +80,9 @@ export function DownloadPage() {
         <div className="animate-enter text-center" style={{ animationDelay: '90ms' }}>
           <h1 className="text-4xl text-[var(--color-ink)] sm:text-5xl">{t.download.title}</h1>
           <p className="mt-4 text-xl text-[var(--color-muted)]">{t.download.description}</p>
+          {config.version !== '0.0.0' && (
+            <p className="mt-2 text-sm text-[var(--color-muted)]">v{config.version}</p>
+          )}
         </div>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2">
