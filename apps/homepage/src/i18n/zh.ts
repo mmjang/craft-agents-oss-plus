@@ -90,6 +90,8 @@ export const zh: Translations = {
     linux: 'Linux',
     linuxDesc: '适用于 Linux (AppImage)',
     downloadButton: '下载',
+    macSecurityTip: '首次打开遇到安全提示？',
+    macSecurityLink: '查看解决方法',
     requirements: '系统要求',
     requirementsList: {
       mac: 'macOS 11.0 或更高版本',

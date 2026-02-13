@@ -88,6 +88,8 @@ export const en = {
     linux: 'Linux',
     linuxDesc: 'For Linux (AppImage)',
     downloadButton: 'Download',
+    macSecurityTip: 'Seeing a security warning on macOS?',
+    macSecurityLink: 'Learn how to fix it',
     requirements: 'System Requirements',
     requirementsList: {
       mac: 'macOS 11.0 or later',

@@ -112,6 +112,13 @@ export function DownloadPage() {
           ))}
         </div>
 
+        <p className="animate-enter mt-4 text-center text-sm text-[var(--color-muted)]" style={{ animationDelay: '250ms' }}>
+          {t.download.macSecurityTip}{' '}
+          <Link to="/manual/mac-security" className="text-[var(--color-accent)] hover:underline">
+            {t.download.macSecurityLink}
+          </Link>
+        </p>
+
         <div className="animate-enter mt-12 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface-muted)] p-6" style={{ animationDelay: '300ms' }}>
           <div className="flex flex-col items-center text-center">
             <h2 className="mb-2 text-xl font-semibold text-[var(--color-ink)]">{t.download.wechatGroup.title}</h2>
