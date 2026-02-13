@@ -3,15 +3,15 @@
  *
  * Uses the /electron/ path prefix for Electron app updates.
  * Endpoints:
- * - https://craft-plus-homepage.pages.dev/electron/latest.json
- * - https://craft-plus-homepage.pages.dev/electron/{version}/manifest.json
+ * - https://craftplus.work/electron/latest.json
+ * - https://craftplus.work/electron/{version}/manifest.json
  */
 
 import semver from 'semver';
 import { debug } from '../utils/debug';
 import type { VersionManifest } from './manifest';
 
-const ELECTRON_VERSIONS_URL = 'https://craft-plus-homepage.pages.dev/electron';
+const ELECTRON_VERSIONS_URL = 'https://craftplus.work/electron';
 
 /** Default timeout for network requests (10 seconds) */
 const FETCH_TIMEOUT_MS = 10000;

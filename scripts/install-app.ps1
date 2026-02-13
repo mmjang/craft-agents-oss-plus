@@ -3,7 +3,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$VERSIONS_URL = "https://craft-plus-homepage.pages.dev/electron"
+$VERSIONS_URL = "https://craftplus.work/electron"
 $DOWNLOAD_DIR = "$env:TEMP\craft-agent-install"
 $APP_NAME = "Craft Agents"
 

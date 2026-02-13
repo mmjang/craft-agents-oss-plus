@@ -2,7 +2,7 @@
 
 set -e
 
-VERSIONS_URL="https://craft-plus-homepage.pages.dev/electron"
+VERSIONS_URL="https://craftplus.work/electron"
 DOWNLOAD_DIR="$HOME/.craft-agent/downloads"
 
 # Colors for output
