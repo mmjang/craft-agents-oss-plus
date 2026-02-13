@@ -1,0 +1,25 @@
+{
+  "version": "0.3.14",
+  "build_time": "2026-02-13T07:57:52Z",
+  "build_timestamp": 1770969472,
+  "binaries": {
+      "darwin-arm64": {
+        "url": "https://assets.craftplus.work/releases/v0.3.14/CraftPlus-0.3.14-arm64.dmg",
+        "sha256": "67ff8901cba6ccb83f763612f3c70c69ebe76ee38733735b69dd3674e0c5361a",
+        "size": 155749200,
+        "filename": "CraftPlus-0.3.14-arm64.dmg"
+      },
+      "darwin-x64": {
+        "url": "https://assets.craftplus.work/releases/v0.3.14/CraftPlus-0.3.14-x64.dmg",
+        "sha256": "28bb3e0250105c556ffaee20dc53907e3823c40c6feac4031de878600b4bd7ec",
+        "size": 160377053,
+        "filename": "CraftPlus-0.3.14-x64.dmg"
+      },
+      "win32-x64": {
+        "url": "https://assets.craftplus.work/releases/v0.3.14/CraftPlus-0.3.14-x64.exe",
+        "sha256": "82f7c4e8e8024d069e0a3d827bb534d3e5825953b4299a89c732c577cbf9e9d5",
+        "size": 163659115,
+        "filename": "CraftPlus-0.3.14-x64.exe"
+      }
+  }
+}
