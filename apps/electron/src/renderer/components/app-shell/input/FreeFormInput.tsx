@@ -1285,8 +1285,9 @@ export function FreeFormInput({
                   'claude-sonnet-4-5-20250929': t('freeform.model.sonnet', 'Best for everyday tasks'),
                   'claude-haiku-4-5-20251001': t('freeform.model.haiku', 'Fastest for quick answers'),
                   // Zhipu models
-                  'glm-4.7': t('freeform.model.glm47', 'Most capable for complex work'),
-                  'glm-4.5-air': t('freeform.model.glm45air', 'Balanced performance'),
+                  'glm-5': t('freeform.model.glm5', 'Most capable for complex work'),
+                  'glm-4.7': t('freeform.model.glm47', 'Balanced performance'),
+                  'glm-4.5-air': t('freeform.model.glm45air', 'Fast and efficient'),
                 }
                 return (
                   <StyledDropdownMenuItem

@@ -367,8 +367,9 @@ export default {
   'freeform.model.opus': '最强大，适合复杂任务',
   'freeform.model.sonnet': '日常任务的最佳选择',
   'freeform.model.haiku': '最快速，适合快速问答',
-  'freeform.model.glm47': '最强大，适合复杂任务',
-  'freeform.model.glm45air': '性能均衡',
+  'freeform.model.glm5': '最强大，适合复杂任务',
+  'freeform.model.glm47': '性能均衡',
+  'freeform.model.glm45air': '快速高效',
   'freeform.thinking.desc': '扩展推理深度',
   'freeform.context.label': '上下文',
 

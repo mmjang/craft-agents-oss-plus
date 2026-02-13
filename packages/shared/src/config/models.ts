@@ -23,8 +23,9 @@ export const CLAUDE_MODELS: ModelDefinition[] = [
 
 /** Zhipu AI models (for bigmodel.cn API) */
 export const ZHIPU_MODELS: ModelDefinition[] = [
-  { id: 'glm-4.7', name: 'GLM-4.7', shortName: 'GLM-4.7', description: 'Most capable' },
-  { id: 'glm-4.5-air', name: 'GLM-4.5 Air', shortName: 'GLM-4.5', description: 'Balanced' },
+  { id: 'glm-5', name: 'GLM-5', shortName: 'GLM-5', description: 'Most capable' },
+  { id: 'glm-4.7', name: 'GLM-4.7', shortName: 'GLM-4.7', description: 'Balanced' },
+  { id: 'glm-4.5-air', name: 'GLM-4.5 Air', shortName: 'GLM-4.5', description: 'Fast & efficient' },
 ];
 
 /** Zhipu API base URL pattern */
@@ -65,7 +66,7 @@ export const MODELS: ModelDefinition[] = CLAUDE_MODELS;
 export const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
 
 /** Default model for main chat (user-facing) - Zhipu */
-export const DEFAULT_ZHIPU_MODEL = 'glm-4.7';
+export const DEFAULT_ZHIPU_MODEL = 'glm-5';
 
 /** Model for agent definition extraction (always high quality) */
 export const EXTRACTION_MODEL = 'claude-opus-4-5-20251101';

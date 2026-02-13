@@ -367,8 +367,9 @@ export default {
   'freeform.model.opus': 'Most capable for complex work',
   'freeform.model.sonnet': 'Best for everyday tasks',
   'freeform.model.haiku': 'Fastest for quick answers',
-  'freeform.model.glm47': 'Most capable for complex work',
-  'freeform.model.glm45air': 'Balanced performance',
+  'freeform.model.glm5': 'Most capable for complex work',
+  'freeform.model.glm47': 'Balanced performance',
+  'freeform.model.glm45air': 'Fast and efficient',
   'freeform.thinking.desc': 'Extended reasoning depth',
   'freeform.context.label': 'Context',
 
