@@ -166,6 +166,14 @@ bun run homepage:deploy     # Deploy to Cloudflare Pages
 - i18n files: `apps/homepage/src/i18n/{en,zh}.ts`
 - Deployment: Cloudflare Pages (project: `craft-plus-homepage`)
 
+### Manual Docs (User Manual)
+- Location: `apps/homepage/src/manual/*.md` (Chinese)
+- Routes: `#/manual` (index/README), `#/manual/{slug}` (individual pages)
+- Auto-discovery via `import.meta.glob` — adding a new `.md` file with frontmatter is all that's needed
+- Each non-README file requires YAML frontmatter: `title` (display name) + `order` (sidebar sort)
+- Rendered by `react-markdown` + `remark-gfm` in `ManualPage.tsx`
+- Internal links use `./xxx.md` format in markdown, auto-converted to `#/manual/xxx` at render time
+
 ## Project Conventions
 
 - **TypeScript**: Strict mode, no implicit any
