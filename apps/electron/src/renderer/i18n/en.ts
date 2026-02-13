@@ -475,6 +475,7 @@ export default {
   // Credentials Step - API Key
   'onboarding.credentials.enterApiKey': 'Enter API Key',
   'onboarding.credentials.getApiKey': 'Get your API key from',
+  'onboarding.credentials.apiKeyGuide': 'How to get an API key?',
   'onboarding.credentials.validating': 'Validating...',
   'onboarding.credentials.apiKeyLabel': 'Anthropic API Key',
   'onboarding.credentials.baseUrlLabel': 'API Base URL (optional)',

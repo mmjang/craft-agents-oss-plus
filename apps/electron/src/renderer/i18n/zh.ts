@@ -475,6 +475,7 @@ export default {
   // 凭证步骤 - API 密钥
   'onboarding.credentials.enterApiKey': '输入 API 密钥',
   'onboarding.credentials.getApiKey': '从以下网址获取你的 API 密钥',
+  'onboarding.credentials.apiKeyGuide': '如何获取 API 密钥？',
   'onboarding.credentials.validating': '验证中...',
   'onboarding.credentials.apiKeyLabel': 'Anthropic API 密钥',
   'onboarding.credentials.baseUrlLabel': 'API 基础 URL（可选）',

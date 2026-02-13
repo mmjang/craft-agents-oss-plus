@@ -254,14 +254,13 @@ export function CredentialsStep({
       title={t('onboarding.credentials.enterApiKey', 'Enter API Key')}
       description={
         <>
-          {t('onboarding.credentials.getApiKey', 'Get your API key from')}{' '}
           <a
-            href="https://console.anthropic.com"
+            href="https://craftplus.work/#/manual/api-key"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-foreground hover:underline"
+            className="text-foreground underline"
           >
-            console.anthropic.com
+            {t('onboarding.credentials.apiKeyGuide', 'How to get an API key?')}
           </a>
         </>
       }
