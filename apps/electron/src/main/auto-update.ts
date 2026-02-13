@@ -404,6 +404,12 @@ export async function installUpdate(): Promise<void> {
     return
   }
 
+  // If update is available but not yet downloaded, trigger download first
+  if (updateInfo.available && updateInfo.downloadState !== 'ready') {
+    mainLog.info('[auto-update] Update not yet downloaded, downloading first...')
+    await downloadUpdate()
+  }
+
   if (updateInfo.downloadState !== 'ready' || !downloadedInstallerPath) {
     throw new Error('No update ready to install')
   }

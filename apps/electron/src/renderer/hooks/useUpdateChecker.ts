@@ -30,8 +30,9 @@ interface UseUpdateCheckerResult {
   installUpdate: () => Promise<void>
 }
 
-// Toast ID for update notification (allows dismiss/update)
+// Toast IDs for update notifications (allows dismiss/replace)
 const UPDATE_TOAST_ID = 'update-available'
+const INSTALL_TOAST_ID = 'update-install'
 
 export function useUpdateChecker(): UseUpdateCheckerResult {
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
@@ -66,20 +67,22 @@ export function useUpdateChecker(): UseUpdateCheckerResult {
     try {
       // Dismiss the update toast first
       toast.dismiss(UPDATE_TOAST_ID)
-      // Use longer duration since app is about to quit - user should see this until the app closes.
-      // Don't promise automatic restart as the external update script may fail to relaunch.
-      toast.info('Installing update...', {
-        description: 'Closing app. It will reopen shortly.',
-        duration: 30000,
+      // Show appropriate message based on whether download is needed
+      const needsDownload = updateInfo?.downloadState !== 'ready'
+      toast.info(needsDownload ? 'Downloading and installing update...' : 'Installing update...', {
+        id: INSTALL_TOAST_ID,
+        description: needsDownload ? 'This may take a moment.' : 'Closing app. It will reopen shortly.',
+        duration: needsDownload ? 120000 : 30000,
       })
       await window.electronAPI.installUpdate()
     } catch (error) {
       console.error('[useUpdateChecker] Install failed:', error)
       toast.error('Failed to install update', {
+        id: INSTALL_TOAST_ID,
         description: error instanceof Error ? error.message : 'Unknown error',
       })
     }
-  }, [])
+  }, [updateInfo?.downloadState])
 
   // Load initial state and check if update ready
   useEffect(() => {
