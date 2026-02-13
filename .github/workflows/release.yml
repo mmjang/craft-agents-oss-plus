@@ -93,7 +93,7 @@ jobs:
           {
             "version": "${{ inputs.version }}",
             "releaseDate": "$(date +%Y-%m-%d)",
-            "baseUrl": "https://pub-fb8517ffb9ba41819d8b1b504a51b121.r2.dev",
+            "baseUrl": "https://assets.craftplus.work",
             "downloads": {
               "mac-arm": "/releases/v${{ inputs.version }}/CraftPlus-${{ inputs.version }}-arm64.dmg",
               "mac-intel": "/releases/v${{ inputs.version }}/CraftPlus-${{ inputs.version }}-x64.dmg",
@@ -105,7 +105,7 @@ jobs:
       - name: Generate electron manifest files
         run: |
           VERSION="${{ inputs.version }}"
-          R2_BASE="https://pub-fb8517ffb9ba41819d8b1b504a51b121.r2.dev"
+          R2_BASE="https://assets.craftplus.work"
           BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           BUILD_TIMESTAMP=$(date +%s)
 

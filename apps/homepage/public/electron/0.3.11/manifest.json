@@ -4,21 +4,22 @@
   "build_timestamp": 1770802684,
   "binaries": {
       "darwin-arm64": {
-        "url": "https://pub-fb8517ffb9ba41819d8b1b504a51b121.r2.dev/releases/v0.3.11/CraftPlus-0.3.11-arm64.dmg",
+        "url": "https://assets.craftplus.work/releases/v0.3.11/CraftPlus-0.3.11-arm64.dmg",
         "sha256": "7752a056a34acee1ed15649cafc0d649c18728f684a6bf7ebb8011e1c5885ebe",
         "size": 155748882,
         "filename": "CraftPlus-0.3.11-arm64.dmg"
       },
       "darwin-x64": {
-        "url": "https://pub-fb8517ffb9ba41819d8b1b504a51b121.r2.dev/releases/v0.3.11/CraftPlus-0.3.11-x64.dmg",
+        "url": "https://assets.craftplus.work/releases/v0.3.11/CraftPlus-0.3.11-x64.dmg",
         "sha256": "c747979fb5ea5641f0f437c9a002810e543ef598f76423a6eee28635235e3104",
         "size": 160377793,
         "filename": "CraftPlus-0.3.11-x64.dmg"
       },
       "win32-x64": {
-        "url": "https://pub-fb8517ffb9ba41819d8b1b504a51b121.r2.dev/releases/v0.3.11/CraftPlus-0.3.11-x64.exe",
+        "url": "https://assets.craftplus.work/releases/v0.3.11/CraftPlus-0.3.11-x64.exe",
         "sha256": "edbe5b1fc5bfeef0f2ba143e84b4069f437bbfe8142644a5376fd481e8073e9b",
-        "size": 163658901,
+        "size": 163658901
+,
         "filename": "CraftPlus-0.3.11-x64.exe"
       }
   }
