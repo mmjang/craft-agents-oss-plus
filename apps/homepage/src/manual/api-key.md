@@ -21,7 +21,7 @@ Claude 官方 API Key 可从 [console.anthropic.com](https://console.anthropic.c
 
 购买套餐后，在中转站页面创建 API Key，并获取 Base URL:
 
-![](image.png)
+![](/manual/image.png)
 
 如上图，一般服务商网站的教程页面，都会有设置与 claude 兼容的 base url 的步骤，把这个 base url的网址复制下来，后面使用。
 
@@ -35,8 +35,8 @@ Claude 官方 API Key 可从 [console.anthropic.com](https://console.anthropic.c
 
 首次使用时，在欢迎页面选择“Anthropic API 密钥“：
 
-![alt text](image-1.png)
+![alt text](/manual/image-1.png)
 
 填入在以上三种渠道之一获取的“密钥“和“Base URL“（如果是 claude 官方密钥，base url 可以省略）：
 
-![alt text](image-2.png)
+![alt text](/manual/image-2.png)
