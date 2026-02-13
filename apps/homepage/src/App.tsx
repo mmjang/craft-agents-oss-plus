@@ -2,6 +2,7 @@ import { I18nProvider, useI18n } from './i18n'
 import { RouterProvider, useRouter, Link } from './router'
 import { HomePage } from './HomePage'
 import { DownloadPage } from './DownloadPage'
+import { ManualPage } from './ManualPage'
 import { Download, Globe } from './icons'
 
 function BrandMark({ className }: { className?: string }) {
@@ -33,6 +34,10 @@ function Header() {
           <span className="text-xl font-semibold tracking-tight text-[var(--color-ink)]">{appName}</span>
         </Link>
         <div className="flex items-center gap-3 sm:gap-4">
+          <Link to="/manual"
+            className="text-sm text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]">
+            {t.nav.manual}
+          </Link>
           <button
             onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
             className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-line)] bg-white/85 px-3 py-1.5 text-sm text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]"
@@ -52,7 +57,7 @@ function Header() {
 }
 
 function Footer() {
-  const { t, lang } = useI18n()
+  const { lang } = useI18n()
   const appName = lang === 'zh' ? '妙技' : 'CraftPlus'
 
   return (
@@ -82,7 +87,7 @@ function AppContent() {
       </div>
       <Header />
       <div className="relative z-10 flex-1">
-        {route === '/download' ? <DownloadPage /> : <HomePage />}
+        {route === '/download' ? <DownloadPage /> : route.startsWith('/manual') ? <ManualPage /> : <HomePage />}
       </div>
       <Footer />
     </div>

@@ -1,8 +1,13 @@
+---
+title: 快速开始
+order: 1
+---
+
 # 快速开始
 
 ## 简介
 
-Craft Agents 将 Claude 的编码能力带到您的整个数字工作流程。它基于 Claude Agent SDK 构建，可以跨所有工具工作：GitHub、Linear、Slack、Craft 文档、本地文件以及任何您可以连接的 API。
+Craft Plus 将 Claude 的编码能力带到您的整个数字工作流程。它基于 Claude Agent SDK 构建，可以跨所有工具工作：GitHub、Linear、Slack、Craft 文档、本地文件以及任何您可以连接的 API。
 
 ### 主要优势
 
@@ -32,7 +37,7 @@ Craft Agents 将 Claude 的编码能力带到您的整个数字工作流程。�
 
 ## 安装
 
-Craft Agents 是原生桌面应用，在本地运行，凭据加密存储在磁盘上。
+Craft Plus 是原生桌面应用，在本地运行，凭据加密存储在磁盘上。
 
 ### 系统要求
 

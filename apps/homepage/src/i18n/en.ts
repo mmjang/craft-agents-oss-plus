@@ -1,6 +1,7 @@
 export const en = {
   nav: {
     download: 'Download',
+    manual: 'Manual',
   },
   hero: {
     badge: 'Ready to Use',

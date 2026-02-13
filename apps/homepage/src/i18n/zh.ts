@@ -3,6 +3,7 @@ import type { Translations } from './en'
 export const zh: Translations = {
   nav: {
     download: '下载',
+    manual: '手册',
   },
   hero: {
     badge: '开箱即用',

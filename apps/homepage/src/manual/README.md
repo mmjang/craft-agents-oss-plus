@@ -1,6 +1,6 @@
-# Craft Agents 用户手册
+# Craft Plus 用户手册
 
-Craft Agents 是一款开源桌面应用，将 Claude 的编码能力扩展到您的整个数字工作流程。它基于 Claude Agent SDK 构建，可以连接 GitHub、Linear、Slack、Craft 文档、本地文件以及任何您可以连接的 API。
+Craft Plus 是一款开源桌面应用，将 Claude 的编码能力扩展到您的整个数字工作流程。它基于 Claude Agent SDK 构建，可以连接 GitHub、Linear、Slack、Craft 文档、本地文件以及任何您可以连接的 API。
 
 ## 目录
 
@@ -33,9 +33,9 @@ Craft Agents 是一款开源桌面应用，将 Claude 的编码能力扩展到�
 | 会话即文档 | 每个会话都记录决策和实现细节 |
 | 完全可定制 | 主题、技能、状态、权限都可配置 |
 
-## Craft Agents vs Claude Code
+## Craft Plus vs Claude Code
 
-| 方面 | Claude Code | Craft Agents |
+| 方面 | Claude Code | Craft Plus |
 |------|-------------|--------------|
 | 界面 | 终端 CLI | 桌面应用 |
 | 数据源 | MCP 服务器 | MCP + REST API + 本地文件 |
@@ -45,4 +45,4 @@ Craft Agents 是一款开源桌面应用，将 Claude 的编码能力扩展到�
 
 ## 开源
 
-Craft Agents 采用 Apache 2.0 许可证开源。代码仓库位于 [github.com/lukilabs/craft-agents-oss](https://github.com/lukilabs/craft-agents-oss)。
+Craft Plus 采用 Apache 2.0 许可证开源。代码仓库位于 [github.com/lukilabs/craft-agents-oss](https://github.com/lukilabs/craft-agents-oss)。

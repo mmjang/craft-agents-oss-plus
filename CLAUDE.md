@@ -1,10 +1,10 @@
-# Craft Agents
+# Craft Plus
 
 **Important:** Keep this file and package-specific CLAUDE.md files up-to-date when making architectural changes.
 
 ## Overview
 
-Craft Agents is an open-source desktop application for working with AI agents, built by Craft.do. It provides a document-centric alternative to Claude Code (CLI) with a GUI, advanced session management, and external integrations.
+Craft Plus is an open-source desktop application for working with AI agents, built by Craft.do. It provides a document-centric alternative to Claude Code (CLI) with a GUI, advanced session management, and external integrations.
 
 **Key Features:**
 - Desktop-first experience (Electron + React)
@@ -12,7 +12,7 @@ Craft Agents is an open-source desktop application for working with AI agents, b
 - MCP server integration for external data sources
 - Three-level permission system (Explore/Ask/Auto)
 - Session sharing and collaboration
-- Built entirely using Craft Agents itself
+- Built entirely using Craft Plus itself
 
 **Tech Stack:** Bun, TypeScript, Electron, React, Tailwind CSS v4, Claude Agent SDK
 

@@ -1,17 +1,17 @@
-# Craft Agents
+# Craft Plus
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
-Craft Agents is a tool we built so that we (at craft.do) can work effectively with agents. It enables intuitive multitasking, no-fluff connection to any API or Service, sharing sessions, and a more document (vs code) centric workflow - in a beautiful and fluid UI.
+Craft Plus is a tool we built so that we (at craft.do) can work effectively with agents. It enables intuitive multitasking, no-fluff connection to any API or Service, sharing sessions, and a more document (vs code) centric workflow - in a beautiful and fluid UI.
 
 It leans on Claude Code through the Claude Agent SDK - follows what we found great, and improves areas where we've desired improvements.
 
 It's built with Agent Native software principles in mind, and is highly customisable out of the box. One of the first of its kind.
 
-Craft Agents is open source under the Apache 2.0 license - so you are free to remix, change anything. And that's actually possible. We ourselves are building Craft Agents with Craft Agents only - no code editors - so really, any customisation is just a prompt away.
+Craft Plus is open source under the Apache 2.0 license - so you are free to remix, change anything. And that's actually possible. We ourselves are building Craft Plus with Craft Plus only - no code editors - so really, any customisation is just a prompt away.
 
-We built Craft Agents because we wanted a better, more opinionated (and preferably non-CLI way) of working with the most powerful agents in the world. We'll continue to improve it, based on our experiences and intuition.
+We built Craft Plus because we wanted a better, more opinionated (and preferably non-CLI way) of working with the most powerful agents in the world. We'll continue to improve it, based on our experiences and intuition.
 
 <img width="1578" height="894" alt="image" src="https://github.com/user-attachments/assets/3f1f2fe8-7cf6-4487-99ff-76f6c8c0a3fb" />
 
@@ -136,7 +136,7 @@ bun run electron:start
 # Type checking
 bun run typecheck:all
 
-# Debug logging (writes to ~/Library/Logs/Craft Agents/)
+# Debug logging (writes to ~/Library/Logs/Craft Plus/)
 # Logs are automatically enabled in development
 ```
 
@@ -213,7 +213,7 @@ This project uses the [Claude Agent SDK](https://www.npmjs.com/package/@anthropi
 
 ### Trademark
 
-"Craft" and "Craft Agents" are trademarks of Craft Docs Ltd. See [TRADEMARK.md](TRADEMARK.md) for usage guidelines.
+"Craft" and "Craft Plus" are trademarks of Craft Docs Ltd. See [TRADEMARK.md](TRADEMARK.md) for usage guidelines.
 
 ## Contributing
 

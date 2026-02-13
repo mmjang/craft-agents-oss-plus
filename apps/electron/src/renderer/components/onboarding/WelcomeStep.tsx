@@ -12,7 +12,7 @@ interface WelcomeStepProps {
  * WelcomeStep - Initial welcome screen for onboarding
  *
  * Shows different messaging for new vs existing users:
- * - New users: Welcome to Craft Agents
+ * - New users: Welcome to Craft Plus
  * - Existing users: Update your billing settings
  */
 export function WelcomeStep({
@@ -28,7 +28,7 @@ export function WelcomeStep({
           <CraftAgentsSymbol className="size-10 text-accent" />
         </div>
       }
-      title={isExistingUser ? t('onboarding.welcome.titleUpdate', 'Update Settings') : t('onboarding.welcome.title', 'Welcome to Craft Agents')}
+      title={isExistingUser ? t('onboarding.welcome.titleUpdate', 'Update Settings') : t('onboarding.welcome.title', 'Welcome to Craft Plus')}
       description={
         isExistingUser
           ? t('onboarding.welcome.descUpdate', 'Update billing or change your setup.')

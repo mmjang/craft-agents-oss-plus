@@ -1,8 +1,13 @@
+---
+title: 核心概念
+order: 2
+---
+
 # 核心概念
 
 ## 会话
 
-Craft Agents 将会话组织成类似邮件收件箱的形式，便于管理多个进行中的任务并返回之前的工作。
+Craft Plus 将会话组织成类似邮件收件箱的形式，便于管理多个进行中的任务并返回之前的工作。
 
 ### 多会话收件箱
 
@@ -64,7 +69,7 @@ YYMMDD-adjective-noun
 
 ### 会话连续性
 
-返回会话时，Craft Agents 恢复完整上下文：
+返回会话时，Craft Plus 恢复完整上下文：
 
 - 所有之前的消息都可用
 - 代理记得讨论过的内容
@@ -73,7 +78,7 @@ YYMMDD-adjective-noun
 
 ### 长会话
 
-对于长时间工作会话，Craft Agents 自动管理上下文：
+对于长时间工作会话，Craft Plus 自动管理上下文：
 
 - 超过 15,000 tokens 的大型工具结果会自动摘要
 - Claude Agent SDK 透明处理上下文窗口管理
@@ -152,7 +157,7 @@ This is a Next.js application with TypeScript.
 
 ## 权限
 
-Craft Agents 可以代表您执行强大的操作 - 读取文件、运行命令和修改文档。为了让您保持控制，应用提供三种权限模式。
+Craft Plus 可以代表您执行强大的操作 - 读取文件、运行命令和修改文档。为了让您保持控制，应用提供三种权限模式。
 
 ### 权限模式
 

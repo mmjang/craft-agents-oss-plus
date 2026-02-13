@@ -1,18 +1,23 @@
+---
+title: 技能
+order: 4
+---
+
 # 技能 (Skills)
 
-Skills 扩展 Craft Agents 的能力。创建一个带有指令的 `SKILL.md` 文件，Craft Agents 会将其添加到工具包中 - 在相关时自动使用，或在您 `@mention` 时直接调用。
+Skills 扩展 Craft Plus 的能力。创建一个带有指令的 `SKILL.md` 文件，Craft Plus 会将其添加到工具包中 - 在相关时自动使用，或在您 `@mention` 时直接调用。
 
 Skills 遵循 [Agent Skills](https://agentskills.io) 开放标准，与 Claude Code 和其他支持该规范的工具兼容。
 
 ## 创建 Skills
 
-**最简单的方式是让 Craft Agents 创建。** 描述您想要的，代理会为您创建 skill：
+**最简单的方式是让 Craft Plus 创建。** 描述您想要的，代理会为您创建 skill：
 
 ```
 Create a skill called "commit" that generates conventional commit messages
 ```
 
-Craft Agents 知道 skills 存放在哪里以及如何编写它们。
+Craft Plus 知道 skills 存放在哪里以及如何编写它们。
 
 ## Skill 结构
 
@@ -44,7 +49,7 @@ When creating commits:
 - Explain why, not what
 ```
 
-frontmatter 告诉 Craft Agents 何时使用 skill。正文包含调用时代理遵循的指令。
+frontmatter 告诉 Craft Plus 何时使用 skill。正文包含调用时代理遵循的指令。
 
 ## Frontmatter 字段
 
@@ -73,7 +78,7 @@ frontmatter 告诉 Craft Agents 何时使用 skill。正文包含调用时代理
 | 位置 | 路径 | 优先级 |
 |------|------|--------|
 | 工作区 | `~/.craft-agent/workspaces/{id}/skills/{slug}/` | 第一（覆盖内置） |
-| 内置 | 与 Craft Agents 捆绑 | 后备 |
+| 内置 | 与 Craft Plus 捆绑 | 后备 |
 
 创建与内置 skill 相同 slug 的工作区 skill 可以用您自己的行为覆盖它。
 

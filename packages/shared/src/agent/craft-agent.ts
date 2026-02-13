@@ -791,7 +791,7 @@ export class CraftAgent {
         preferences: getPreferencesServer(false),
         // Session-scoped tools (SubmitPlan, source_test, etc.)
         session: getSessionScopedTools(sessionId, this.workspaceRootPath),
-        // Craft Agents documentation - always available for searching setup guides
+        // Craft Plus documentation - always available for searching setup guides
         // This is a public Mintlify MCP server, no auth needed
         'craft-agents-docs': {
           type: 'http',

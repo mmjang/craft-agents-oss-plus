@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-We take security seriously. If you discover a security vulnerability in Craft Agents, please report it responsibly.
+We take security seriously. If you discover a security vulnerability in Craft Plus, please report it responsibly.
 
 ### How to Report
 
@@ -25,9 +25,9 @@ Include the following information:
 ### Scope
 
 This policy applies to:
-- The Craft Agents desktop application
+- The Craft Plus desktop application
 - The `@craft-agent/*` npm packages
-- Official Craft Agents repositories
+- Official Craft Plus repositories
 
 ### Out of Scope
 
@@ -46,7 +46,7 @@ We only provide security updates for the latest version. Please keep your instal
 
 ## Security Best Practices
 
-When using Craft Agents:
+When using Craft Plus:
 
 1. **Keep credentials secure**: Never commit `.env` files or credentials
 2. **Use environment variables**: Store secrets in environment variables

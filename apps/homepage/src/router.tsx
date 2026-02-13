@@ -1,22 +1,18 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
-type Route = '/' | '/download'
-
 interface RouterContextType {
-  route: Route
-  navigate: (route: Route) => void
+  route: string
+  navigate: (route: string) => void
 }
 
 const RouterContext = createContext<RouterContextType | null>(null)
 
-function getRouteFromHash(): Route {
-  const hash = window.location.hash.slice(1) || '/'
-  if (hash === '/download') return '/download'
-  return '/'
+function getRouteFromHash(): string {
+  return window.location.hash.slice(1) || '/'
 }
 
 export function RouterProvider({ children }: { children: ReactNode }) {
-  const [route, setRoute] = useState<Route>(getRouteFromHash)
+  const [route, setRoute] = useState<string>(getRouteFromHash)
 
   useEffect(() => {
     const handleHashChange = () => setRoute(getRouteFromHash())
@@ -24,7 +20,7 @@ export function RouterProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
 
-  const navigate = (newRoute: Route) => {
+  const navigate = (newRoute: string) => {
     window.location.hash = newRoute
   }
 
@@ -41,7 +37,7 @@ export function useRouter() {
   return context
 }
 
-export function Link({ to, children, className }: { to: Route; children: ReactNode; className?: string }) {
+export function Link({ to, children, className }: { to: string; children: ReactNode; className?: string }) {
   const { navigate } = useRouter()
   return (
     <a

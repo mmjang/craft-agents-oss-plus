@@ -51,7 +51,7 @@ export function ReauthScreen({ onLogin, onReset }: ReauthScreenProps) {
             <>
               {t('onboarding.reauth.desc1', 'Your Craft session has expired or is no longer valid.')}
               <br />
-              {t('onboarding.reauth.desc2', 'Please log in again to continue using Craft Agents.')}
+              {t('onboarding.reauth.desc2', 'Please log in again to continue using Craft Plus.')}
               <br />
               <span className="text-muted-foreground/70 text-xs mt-2 block">
                 {t('onboarding.reauth.preserved', 'Your conversations and settings are preserved.')}
