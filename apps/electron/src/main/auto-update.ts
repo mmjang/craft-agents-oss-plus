@@ -470,8 +470,12 @@ async function installMacOS(): Promise<void> {
 
   if (!existsSync(scriptPath)) {
     mainLog.warn('[auto-update] Self-update script not found, opening DMG manually')
+    // Clear pending update so we don't re-prompt on every launch
+    clearPendingUpdate()
     const { shell } = await import('electron')
     await shell.openPath(downloadedInstallerPath)
+    // Exit so the user can replace the app from the DMG
+    app.exit(0)
     return
   }
 
@@ -517,8 +521,10 @@ async function installWindows(): Promise<void> {
 
   if (!existsSync(scriptPath)) {
     mainLog.warn('[auto-update] Self-update script not found, opening installer manually')
+    clearPendingUpdate()
     const { shell } = await import('electron')
     await shell.openPath(downloadedInstallerPath)
+    app.exit(0)
     return
   }
 
@@ -568,8 +574,10 @@ async function installLinux(): Promise<void> {
 
   if (!existsSync(scriptPath)) {
     mainLog.warn('[auto-update] Self-update script not found, opening file location')
+    clearPendingUpdate()
     const { shell } = await import('electron')
     await shell.showItemInFolder(downloadedInstallerPath)
+    app.exit(0)
     return
   }
 
