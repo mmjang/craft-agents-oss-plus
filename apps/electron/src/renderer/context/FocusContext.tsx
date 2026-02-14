@@ -60,14 +60,26 @@ export function FocusProvider({ children }: { children: React.ReactNode }) {
 
   const focusNextZone = useCallback(() => {
     const currentIndex = currentZone ? ZONE_ORDER.indexOf(currentZone) : -1
-    const nextIndex = (currentIndex + 1) % ZONE_ORDER.length
-    focusZone(ZONE_ORDER[nextIndex])
+    for (let step = 1; step <= ZONE_ORDER.length; step++) {
+      const nextIndex = (currentIndex + step) % ZONE_ORDER.length
+      const nextZone = ZONE_ORDER[nextIndex]
+      if (zonesRef.current.has(nextZone)) {
+        focusZone(nextZone)
+        return
+      }
+    }
   }, [currentZone, focusZone])
 
   const focusPreviousZone = useCallback(() => {
     const currentIndex = currentZone ? ZONE_ORDER.indexOf(currentZone) : 0
-    const prevIndex = (currentIndex - 1 + ZONE_ORDER.length) % ZONE_ORDER.length
-    focusZone(ZONE_ORDER[prevIndex])
+    for (let step = 1; step <= ZONE_ORDER.length; step++) {
+      const prevIndex = (currentIndex - step + ZONE_ORDER.length) % ZONE_ORDER.length
+      const prevZone = ZONE_ORDER[prevIndex]
+      if (zonesRef.current.has(prevZone)) {
+        focusZone(prevZone)
+        return
+      }
+    }
   }, [currentZone, focusZone])
 
   const isZoneFocused = useCallback((id: FocusZoneId) => {

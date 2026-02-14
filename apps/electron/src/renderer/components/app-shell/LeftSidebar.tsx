@@ -176,7 +176,7 @@ export function LeftSidebar({ links, isCollapsed, getItemProps, focusedItemId, i
               onClick={link.onClick}
               data-tutorial={link.dataTutorial}
               className={cn(
-                "group flex w-full items-center gap-2 rounded-[6px] py-[5px] text-[13px] select-none outline-none",
+                "group flex w-full min-w-0 items-center justify-start gap-2 overflow-hidden rounded-[6px] py-[5px] text-[13px] text-left select-none outline-none",
                 "focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
                 // Same padding for all items
                 "px-2",
@@ -213,7 +213,7 @@ export function LeftSidebar({ links, isCollapsed, getItemProps, focusedItemId, i
                   renderIcon(link)
                 )}
               </span>
-              {link.title}
+              <span className="block min-w-0 flex-1 truncate text-left" title={link.title}>{link.title}</span>
               {/* Label Badge: Shows count or status on the right */}
               {link.label && (
                 <span className="ml-auto text-xs text-foreground/30 opacity-0 group-hover/section:opacity-100 transition-opacity">
@@ -257,7 +257,7 @@ export function LeftSidebar({ links, isCollapsed, getItemProps, focusedItemId, i
           const content = link.contextMenu ? (
             <ContextMenu modal={true}>
               <ContextMenuTrigger asChild>
-                <div className="group/section">
+                <div className="group/section min-w-0">
                   {innerContent}
                 </div>
               </ContextMenuTrigger>
@@ -275,14 +275,14 @@ export function LeftSidebar({ links, isCollapsed, getItemProps, focusedItemId, i
               </StyledContextMenuContent>
             </ContextMenu>
           ) : (
-            <div className="group/section">
+            <div className="group/section min-w-0">
               {innerContent}
             </div>
           )
 
           // For nested items, wrap in motion.div for stagger animation
           return isNested ? (
-            <motion.div key={link.id} variants={itemVariants}>
+            <motion.div key={link.id} variants={itemVariants} className="w-full min-w-0">
               {content}
             </motion.div>
           ) : (
