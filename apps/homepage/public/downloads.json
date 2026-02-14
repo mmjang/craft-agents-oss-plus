@@ -1,10 +1,10 @@
 {
-  "version": "0.3.15",
-  "releaseDate": "2026-02-13",
+  "version": "0.3.16",
+  "releaseDate": "2026-02-14",
   "baseUrl": "https://assets.craftplus.work",
   "downloads": {
-    "mac-arm": "/releases/v0.3.15/CraftPlus-0.3.15-arm64.dmg",
-    "mac-intel": "/releases/v0.3.15/CraftPlus-0.3.15-x64.dmg",
-    "windows": "/releases/v0.3.15/CraftPlus-0.3.15-x64.exe"
+    "mac-arm": "/releases/v0.3.16/CraftPlus-0.3.16-arm64.dmg",
+    "mac-intel": "/releases/v0.3.16/CraftPlus-0.3.16-x64.dmg",
+    "windows": "/releases/v0.3.16/CraftPlus-0.3.16-x64.exe"
   }
 }
