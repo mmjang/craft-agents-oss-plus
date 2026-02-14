@@ -710,11 +710,9 @@ export const RichTextInput = React.forwardRef<RichTextInputHandle, RichTextInput
           suppressContentEditableWarning
           tabIndex={disabled ? -1 : 0}
           className={cn(
-            'outline-none text-sm whitespace-pre-wrap break-words',
+            'relative z-10 outline-none text-sm whitespace-pre-wrap break-words',
             'min-h-[1.5em]',
             disabled && 'opacity-50 cursor-not-allowed',
-            // Make text transparent when showing placeholder (so caret is still visible)
-            showPlaceholder && 'text-transparent caret-foreground',
             className
           )}
           // Use inline style for line-height to override text-sm's built-in line-height
@@ -738,7 +736,7 @@ export const RichTextInput = React.forwardRef<RichTextInputHandle, RichTextInput
             placeholders={placeholderArray}
             intervalMs={5000}
             className={cn(
-              'absolute inset-0 text-sm text-muted-foreground pointer-events-none select-none',
+              'absolute inset-0 z-0 text-sm text-muted-foreground pointer-events-none select-none',
               className
             )}
           />
