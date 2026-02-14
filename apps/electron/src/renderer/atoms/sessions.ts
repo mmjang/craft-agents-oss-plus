@@ -226,17 +226,36 @@ export const updateStreamingContentAtom = atom(
 export const initializeSessionsAtom = atom(
   null,
   (get, set, sessions: Session[]) => {
+    const loadedSessions = get(loadedSessionsAtom)
+
     // Set individual session atoms
     for (const session of sessions) {
+      const existingSession = get(sessionAtomFamily(session.id))
+
+      // CRITICAL: If session messages were already loaded (lazy-loaded),
+      // don't overwrite with empty messages from getSessions()
+      // This prevents message history from disappearing when switching workspaces
+      if (loadedSessions.has(session.id) && existingSession?.messages?.length) {
+        // Preserve existing session with loaded messages, only update metadata
+        const metaMap = get(sessionMetaMapAtom)
+        const newMetaMap = new Map(metaMap)
+        newMetaMap.set(session.id, extractSessionMeta(existingSession))
+        set(sessionMetaMapAtom, newMetaMap)
+        continue
+      }
+
       set(sessionAtomFamily(session.id), session)
     }
 
     // Build metadata map
-    const metaMap = new Map<string, SessionMeta>()
+    const metaMap = get(sessionMetaMapAtom)
+    const newMetaMap = new Map(metaMap)
     for (const session of sessions) {
-      metaMap.set(session.id, extractSessionMeta(session))
+      if (!newMetaMap.has(session.id)) {
+        newMetaMap.set(session.id, extractSessionMeta(session))
+      }
     }
-    set(sessionMetaMapAtom, metaMap)
+    set(sessionMetaMapAtom, newMetaMap)
 
     // Set ordered IDs (sorted by lastMessageAt desc)
     const ids = sessions
