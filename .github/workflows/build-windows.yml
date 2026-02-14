@@ -50,13 +50,23 @@ jobs:
           path: apps/electron/vendor/bun
           key: bun-runtime-${{ runner.os }}-${{ hashFiles('apps/electron/scripts/build-win.ps1') }}
 
+      - name: Cache Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-install-cache-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-install-cache-${{ runner.os }}-
+
       - name: Cache Electron downloads
         uses: actions/cache@v4
         with:
           path: |
             ${{ github.workspace }}\.cache\electron
             ${{ github.workspace }}\.cache\electron-builder
-          key: electron-cache-${{ runner.os }}-${{ hashFiles('apps/electron/package.json', 'package.json', 'bun.lock') }}
+          key: electron-cache-${{ runner.os }}-${{ hashFiles('apps/electron/electron-builder.yml', 'apps/electron/scripts/build-win.ps1', 'bun.lock') }}
+          restore-keys: |
+            electron-cache-${{ runner.os }}-
 
       - name: Build Windows installer
         shell: pwsh
