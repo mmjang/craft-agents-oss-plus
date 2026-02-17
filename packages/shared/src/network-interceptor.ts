@@ -219,6 +219,91 @@ function shouldCaptureApiErrors(url: string): boolean {
   return isMessagesEndpointUrl(url);
 }
 
+function isOpenRouterUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    return host === 'openrouter.ai' || host.endsWith('.openrouter.ai');
+  } catch {
+    return url.includes('openrouter.ai');
+  }
+}
+
+function stripBetaQuery(url: string): string {
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.delete('beta');
+    return parsed.toString();
+  } catch {
+    return url.replace(/[?&]beta=[^&]*/g, '').replace(/[?&]$/, '');
+  }
+}
+
+function isAnthropicFamilyModel(model: unknown): boolean {
+  if (typeof model !== 'string') return false;
+  const normalized = model.toLowerCase().trim();
+  return (
+    normalized.startsWith('claude-') ||
+    normalized.startsWith('anthropic/')
+  );
+}
+
+function applyOpenRouterCompatibility(
+  url: string,
+  parsedBody: Record<string, unknown>
+): Record<string, unknown> {
+  if (!isOpenRouterUrl(url)) return parsedBody;
+  if (isAnthropicFamilyModel(parsedBody.model)) return parsedBody;
+
+  const provider =
+    parsedBody.provider && typeof parsedBody.provider === 'object'
+      ? { ...(parsedBody.provider as Record<string, unknown>) }
+      : {};
+
+  // Keep routing broad so OpenRouter can pick any provider that supports
+  // the current payload. For non-Claude models this avoids accidental over-filtering.
+  if (provider.allow_fallbacks === undefined) provider.allow_fallbacks = true;
+  provider.require_parameters = false;
+
+  return {
+    ...parsedBody,
+    provider,
+  };
+}
+
+function buildHeadersWithOpenRouterAuth(
+  url: string,
+  headersInit: HeadersInitType | undefined
+): Headers {
+  const headers = new Headers(headersInit as any);
+  if (!isOpenRouterUrl(url)) return headers;
+
+  const authToken = process.env.ANTHROPIC_AUTH_TOKEN?.trim();
+  if (authToken && !headers.has('authorization')) {
+    headers.set('authorization', `Bearer ${authToken}`);
+  }
+  return headers;
+}
+
+async function responseBodyText(response: Response): Promise<string> {
+  try {
+    return await response.clone().text();
+  } catch {
+    return '';
+  }
+}
+
+function isNoAllowedProvidersMessage(bodyText: string): boolean {
+  return /no allowed providers are available for the selected model/i.test(bodyText);
+}
+
+function removeToolFields(parsedBody: Record<string, unknown>): Record<string, unknown> {
+  const next = { ...parsedBody };
+  delete next.tools;
+  delete next.tool_choice;
+  return next;
+}
+
 function getRequestMethod(input: string | URL | Request, init?: RequestInit): string {
   if (init?.method) return init.method.toUpperCase();
   if (input instanceof Request) return input.method.toUpperCase();
@@ -428,18 +513,50 @@ async function interceptedFetch(
     try {
       const body = typeof init.body === 'string' ? init.body : undefined;
       if (body) {
-        let parsed = JSON.parse(body);
+        let parsed = JSON.parse(body) as Record<string, unknown>;
 
         // Add _intent and _displayName to MCP tool schemas
         parsed = addMetadataToMcpTools(parsed);
+        parsed = applyOpenRouterCompatibility(url, parsed);
+
+        const requestUrl = isOpenRouterUrl(url) ? stripBetaQuery(url) : url;
+        const headers = buildHeadersWithOpenRouterAuth(requestUrl, init.headers as HeadersInitType | undefined);
 
         const modifiedInit = {
           ...init,
+          headers,
           body: JSON.stringify(parsed),
         };
 
-        const response = await originalFetch(url, modifiedInit);
-        return logResponse(response, url, startTime, method);
+        const response = await originalFetch(requestUrl, modifiedInit);
+
+        // OpenRouter fallback:
+        // If provider routing rejects tool-enabled payload for a non-Claude model,
+        // retry once in text-only mode (remove tools/tool_choice).
+        if (
+          isOpenRouterUrl(requestUrl) &&
+          response.status === 404 &&
+          !isAnthropicFamilyModel(parsed.model) &&
+          (parsed.tools !== undefined || parsed.tool_choice !== undefined)
+        ) {
+          const firstBody = await responseBodyText(response);
+          if (isNoAllowedProvidersMessage(firstBody)) {
+            debugLog('[OpenRouter fallback] No providers for tool payload; retrying without tools/tool_choice');
+            const fallbackBody = removeToolFields(parsed);
+            const fallbackInit = {
+              ...modifiedInit,
+              body: JSON.stringify(fallbackBody),
+            };
+            const fallbackResponse = await originalFetch(requestUrl, fallbackInit);
+            if (fallbackResponse.ok) {
+              // Clear stale captured error from failed first attempt
+              setStoredError(null);
+            }
+            return logResponse(fallbackResponse, requestUrl, startTime, method);
+          }
+        }
+
+        return logResponse(response, requestUrl, startTime, method);
       }
     } catch (e) {
       debugLog('FETCH modification failed:', e);
