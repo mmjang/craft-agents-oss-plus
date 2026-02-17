@@ -82,6 +82,8 @@ export interface SessionConfig {
   sharedId?: string;
   /** Model to use for this session (overrides global config if set) */
   model?: string;
+  /** Personality ID to use for this session (undefined = built-in default personality) */
+  personality?: string;
   /** Thinking level for this session ('off', 'think', 'max') */
   thinkingLevel?: ThinkingLevel;
   /**
@@ -141,6 +143,8 @@ export interface SessionHeader {
   sharedId?: string;
   /** Model to use for this session (overrides global config if set) */
   model?: string;
+  /** Personality ID to use for this session (undefined = built-in default personality) */
+  personality?: string;
   /** Thinking level for this session ('off', 'think', 'max') */
   thinkingLevel?: ThinkingLevel;
   /**
@@ -198,6 +202,8 @@ export interface SessionMetadata {
   lastMessageRole?: 'user' | 'assistant' | 'plan' | 'tool' | 'error';
   /** Model to use for this session (overrides global config if set) */
   model?: string;
+  /** Personality ID to use for this session (undefined = built-in default personality) */
+  personality?: string;
   /** Thinking level for this session ('off', 'think', 'max') */
   thinkingLevel?: ThinkingLevel;
 }

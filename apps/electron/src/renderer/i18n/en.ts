@@ -370,6 +370,11 @@ export default {
   'freeform.model.glm5': 'Most capable for complex work',
   'freeform.model.glm47': 'Balanced performance',
   'freeform.model.glm45air': 'Fast and efficient',
+  'freeform.personality.label': 'Personality',
+  'freeform.personality.tooltip': 'Personality',
+  'freeform.personality.defaultName': 'Default',
+  'freeform.personality.defaultDescription': 'Use the built-in personality',
+  'freeform.personality.missingDescription': 'This personality file is missing',
   'freeform.thinking.desc': 'Extended reasoning depth',
   'freeform.context.label': 'Context',
 

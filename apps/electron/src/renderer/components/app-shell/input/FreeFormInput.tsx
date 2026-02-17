@@ -50,7 +50,7 @@ import { AttachmentPreview } from '../AttachmentPreview'
 import { getModelsForBaseUrl, getModelShortName } from '@config/models'
 import { SourceAvatar } from '@/components/ui/source-avatar'
 import { FreeFormInputContextBadge } from './FreeFormInputContextBadge'
-import type { FileAttachment, LoadedSource, LoadedSkill } from '../../../../shared/types'
+import type { FileAttachment, LoadedSource, LoadedSkill, WorkspacePersonality } from '../../../../shared/types'
 import type { PermissionMode } from '@craft-agent/shared/agent/modes'
 import { PERMISSION_MODE_ORDER } from '@craft-agent/shared/agent/modes'
 import { type ThinkingLevel, THINKING_LEVELS, getThinkingLevelName } from '@craft-agent/shared/agent/thinking-levels'
@@ -88,6 +88,12 @@ export interface FreeFormInputProps {
   currentModel: string
   /** Callback when model changes */
   onModelChange: (model: string) => void
+  /** Workspace personalities loaded from personalities/*.md */
+  personalities?: WorkspacePersonality[]
+  /** Current personality ID ('__default__' uses built-in personality) */
+  currentPersonalityId?: string
+  /** Callback when personality changes */
+  onPersonalityChange?: (personalityId: string) => void
   /** API base URL for determining which models to show */
   apiBaseUrl?: string | null
   // Thinking level (session-level setting)
@@ -167,6 +173,9 @@ export function FreeFormInput({
   inputRef: externalInputRef,
   currentModel,
   onModelChange,
+  personalities = [],
+  currentPersonalityId = '__default__',
+  onPersonalityChange,
   apiBaseUrl,
   thinkingLevel = 'think',
   onThinkingLevelChange,
@@ -272,6 +281,34 @@ export function FreeFormInput({
   const [isFocused, setIsFocused] = React.useState(false)
   const [inputMaxHeight, setInputMaxHeight] = React.useState(540)
   const [modelDropdownOpen, setModelDropdownOpen] = React.useState(false)
+  const [personalityDropdownOpen, setPersonalityDropdownOpen] = React.useState(false)
+
+  const DEFAULT_PERSONALITY_ID = '__default__'
+  const personalityOptions = React.useMemo(() => {
+    const options: WorkspacePersonality[] = [
+      {
+        id: DEFAULT_PERSONALITY_ID,
+        name: t('freeform.personality.defaultName', 'Default'),
+        description: t('freeform.personality.defaultDescription', 'Use the built-in personality'),
+      },
+      ...personalities,
+    ]
+
+    if (currentPersonalityId !== DEFAULT_PERSONALITY_ID && !options.some((p) => p.id === currentPersonalityId)) {
+      options.push({
+        id: currentPersonalityId,
+        name: currentPersonalityId,
+        description: t('freeform.personality.missingDescription', 'This personality file is missing'),
+      })
+    }
+
+    return options
+  }, [currentPersonalityId, personalities, t])
+
+  const selectedPersonality = React.useMemo(
+    () => personalityOptions.find((personality) => personality.id === currentPersonalityId) ?? personalityOptions[0],
+    [currentPersonalityId, personalityOptions]
+  )
 
   // Double-Esc interrupt: show warning overlay on first Esc, interrupt on second
   const { showEscapeOverlay } = useEscapeInterrupt()
@@ -1254,7 +1291,55 @@ export function FreeFormInput({
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* 5. Model Selector - Radix DropdownMenu for automatic positioning and submenu support */}
+          {/* 5. Personality Selector */}
+          {onPersonalityChange && selectedPersonality && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground select-none">{t('freeform.personality.label', 'Personality')}</span>
+              <DropdownMenu open={personalityDropdownOpen} onOpenChange={setPersonalityDropdownOpen}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className={cn(
+                          "inline-flex items-center h-7 px-1.5 gap-0.5 text-[13px] shrink-0 rounded-[6px] hover:bg-foreground/5 transition-colors select-none",
+                          personalityDropdownOpen && "bg-foreground/5"
+                        )}
+                      >
+                        {selectedPersonality.name}
+                        <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
+                      </button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{t('freeform.personality.tooltip', 'Personality')}</TooltipContent>
+                </Tooltip>
+                <StyledDropdownMenuContent side="top" align="end" sideOffset={8} className="min-w-[240px]">
+                  {personalityOptions.map((personality) => {
+                    const isSelected = personality.id === currentPersonalityId
+                    return (
+                      <StyledDropdownMenuItem
+                        key={personality.id}
+                        onSelect={() => onPersonalityChange(personality.id)}
+                        className="flex items-center justify-between px-2 py-2 rounded-lg cursor-pointer"
+                      >
+                        <div className="text-left">
+                          <div className="font-medium text-sm">{personality.name}</div>
+                          {personality.description && (
+                            <div className="text-xs text-muted-foreground">{personality.description}</div>
+                          )}
+                        </div>
+                        {isSelected && (
+                          <Check className="h-4 w-4 text-foreground shrink-0 ml-3" />
+                        )}
+                      </StyledDropdownMenuItem>
+                    )
+                  })}
+                </StyledDropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+
+          {/* 6. Model Selector - Radix DropdownMenu for automatic positioning and submenu support */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground select-none">{t('freeform.model.label', 'Model')}</span>
             <DropdownMenu open={modelDropdownOpen} onOpenChange={setModelDropdownOpen}>
@@ -1365,7 +1450,7 @@ export function FreeFormInput({
           </DropdownMenu>
           </div>
 
-          {/* 5.5 Context Usage Warning Badge - shows when approaching auto-compaction threshold */}
+          {/* 6.5 Context Usage Warning Badge - shows when approaching auto-compaction threshold */}
           {(() => {
             // Calculate usage percentage based on compaction threshold (~77.5% of context window),
             // not the full context window - this gives users meaningful warnings before compaction kicks in.

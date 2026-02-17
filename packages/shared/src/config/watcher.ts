@@ -12,6 +12,7 @@
  * - ~/.craft-agent/workspaces/{slug}/ - Workspace directory (recursive)
  *   - sources/{slug}/config.json, guide.md, permissions.json
  *   - skills/{slug}/SKILL.md, icon.*
+ *   - personalities/*.md
  *   - permissions.json
  */
 
@@ -37,9 +38,11 @@ import {
   downloadSourceIcon,
 } from '../sources/storage.ts';
 import { permissionsConfigCache, getAppPermissionsDir } from '../agent/permissions-config.ts';
-import { getWorkspacePath, getWorkspaceSourcesPath, getWorkspaceSkillsPath } from '../workspaces/storage.ts';
+import { getWorkspacePath, getWorkspaceSourcesPath, getWorkspaceSkillsPath, getWorkspacePersonalitiesPath } from '../workspaces/storage.ts';
 import type { LoadedSkill } from '../skills/types.ts';
 import { loadSkill, loadWorkspaceSkills, skillNeedsIconDownload, downloadSkillIcon } from '../skills/storage.ts';
+import type { LoadedPersonality } from '../personalities/types.ts';
+import { loadWorkspacePersonalities } from '../personalities/storage.ts';
 import {
   loadStatusConfig,
   statusNeedsIconDownload,
@@ -100,6 +103,10 @@ export interface ConfigWatcherCallbacks {
   onSkillChange?: (slug: string, skill: LoadedSkill | null) => void;
   /** Called when the skills list changes (add/remove folders) */
   onSkillsListChange?: (skills: LoadedSkill[]) => void;
+
+  // Personality callbacks
+  /** Called when workspace personalities list changes */
+  onPersonalitiesListChange?: (personalities: LoadedPersonality[]) => void;
 
   // Permissions callbacks
   /** Called when app-level default permissions change (~/.craft-agent/permissions/default.json) */
@@ -169,12 +176,14 @@ export class ConfigWatcher {
   // Track known items for detecting adds/removes
   private knownSources: Set<string> = new Set();
   private knownSkills: Set<string> = new Set();
+  private knownPersonalities: Set<string> = new Set();
   private knownThemes: Set<string> = new Set();
 
   // Computed paths
   private workspaceDir: string;
   private sourcesDir: string;
   private skillsDir: string;
+  private personalitiesDir: string;
 
   constructor(workspaceIdOrPath: string, callbacks: ConfigWatcherCallbacks) {
     this.callbacks = callbacks;
@@ -191,6 +200,7 @@ export class ConfigWatcher {
     }
     this.sourcesDir = getWorkspaceSourcesPath(this.workspaceDir);
     this.skillsDir = getWorkspaceSkillsPath(this.workspaceDir);
+    this.personalitiesDir = getWorkspacePersonalitiesPath(this.workspaceDir);
   }
 
   /**
@@ -242,6 +252,9 @@ export class ConfigWatcher {
     this.scanSkills();
     span.mark('scanSkills');
 
+    this.scanPersonalities();
+    span.mark('scanPersonalities');
+
     this.scanAppThemes();
     span.mark('scanAppThemes');
 
@@ -273,6 +286,7 @@ export class ConfigWatcher {
 
     this.knownSources.clear();
     this.knownSkills.clear();
+    this.knownPersonalities.clear();
     this.knownThemes.clear();
 
     debug('[ConfigWatcher] Stopped');
@@ -379,6 +393,22 @@ export class ConfigWatcher {
       } else if (file && /^icon\.(svg|png|jpg|jpeg)$/i.test(file)) {
         // Icon file changes also trigger a skill change (to update iconPath)
         this.debounce(`skill-icon:${slug}`, () => this.handleSkillChange(slug));
+      }
+      return;
+    }
+
+    // Personalities changes: personalities/*.md
+    if (parts[0] === 'personalities') {
+      // Directory-level changes (folder created/deleted/renamed)
+      if (parts.length === 1) {
+        this.debounce('personalities-dir', () => this.handlePersonalitiesDirChange());
+        return;
+      }
+
+      // File-level changes: markdown files
+      const file = parts[1];
+      if (file && /\.(md|markdown)$/i.test(file)) {
+        this.debounce('personalities-dir', () => this.handlePersonalitiesDirChange());
       }
       return;
     }
@@ -699,6 +729,48 @@ export class ConfigWatcher {
         .catch((error) => {
           debug('[ConfigWatcher] Icon download failed for skill:', slug, error);
         });
+    }
+  }
+
+  // ============================================================
+  // Personalities Handlers
+  // ============================================================
+
+  /**
+   * Scan personalities directory to populate known personalities
+   */
+  private scanPersonalities(): void {
+    if (!existsSync(this.personalitiesDir)) {
+      return;
+    }
+
+    try {
+      const entries = readdirSync(this.personalitiesDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isFile() && /\.(md|markdown)$/i.test(entry.name)) {
+          this.knownPersonalities.add(entry.name);
+        }
+      }
+
+      debug('[ConfigWatcher] Known personalities:', Array.from(this.knownPersonalities));
+    } catch (error) {
+      debug('[ConfigWatcher] Error scanning personalities:', error);
+    }
+  }
+
+  /**
+   * Handle personalities directory change (add/remove/update markdown files)
+   */
+  private handlePersonalitiesDirChange(): void {
+    debug('[ConfigWatcher] Personalities directory changed');
+
+    const personalities = loadWorkspacePersonalities(this.workspaceDir);
+    this.callbacks.onPersonalitiesListChange?.(personalities);
+
+    // Refresh known set for diagnostics
+    this.knownPersonalities.clear();
+    for (const personality of personalities) {
+      this.knownPersonalities.add(personality.fileName);
     }
   }
 

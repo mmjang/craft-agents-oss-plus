@@ -370,6 +370,11 @@ export default {
   'freeform.model.glm5': '最强大，适合复杂任务',
   'freeform.model.glm47': '性能均衡',
   'freeform.model.glm45air': '快速高效',
+  'freeform.personality.label': '人格',
+  'freeform.personality.tooltip': '人格',
+  'freeform.personality.defaultName': '默认',
+  'freeform.personality.defaultDescription': '使用内置人格',
+  'freeform.personality.missingDescription': '该人格文件不存在',
   'freeform.thinking.desc': '扩展推理深度',
   'freeform.context.label': '上下文',
 

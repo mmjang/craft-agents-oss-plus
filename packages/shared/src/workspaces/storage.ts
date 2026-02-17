@@ -85,6 +85,14 @@ export function getWorkspaceSkillsPath(rootPath: string): string {
   return join(rootPath, 'skills');
 }
 
+/**
+ * Get path to workspace personalities directory
+ * @param rootPath - Absolute path to workspace root folder
+ */
+export function getWorkspacePersonalitiesPath(rootPath: string): string {
+  return join(rootPath, 'personalities');
+}
+
 // ============================================================
 // Config Operations
 // ============================================================

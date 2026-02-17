@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Headless execution mode
 - Dynamic status system
 - Session persistence
+- Workspace personality loading (`personalities/*.md`)
 
 ## Package Exports
 
@@ -41,6 +42,7 @@ src/
 ├── headless/           # Non-interactive execution mode
 ├── mcp/                # MCP client and connection validation
 ├── prompts/            # System prompt generation
+├── personalities/      # Workspace personality markdown loader (frontmatter + content)
 ├── sessions/           # Session index, storage, persistence-queue
 ├── sources/            # Source types, storage, service
 ├── statuses/           # Dynamic status types, CRUD, storage
@@ -123,6 +125,12 @@ Cascading theme configuration: app → workspace (last wins)
 - **persistence-queue.ts:** Debounced async session writes (500ms)
 - **storage.ts:** Session CRUD, portable path format
 - **index.ts:** Session listing and metadata
+- **personality field:** Optional per-session personality ID persisted in session metadata
+
+### Personalities (`src/personalities/`)
+- Loads markdown files from `{workspaceRoot}/personalities/*.md`
+- Parses optional YAML frontmatter (`name`, `description`)
+- Provides markdown body content for system prompt injection
 
 ### Credentials (`src/credentials/`)
 All sensitive credentials (API keys, OAuth tokens) are stored in an AES-256-GCM encrypted file at `~/.craft-agent/credentials.enc`. The `CredentialManager` provides the API for reading and writing credentials.

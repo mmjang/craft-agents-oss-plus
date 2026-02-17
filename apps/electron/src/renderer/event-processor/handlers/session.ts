@@ -24,6 +24,7 @@ import type {
   WorkingDirectoryChangedEvent,
   PermissionModeChangedEvent,
   SessionModelChangedEvent,
+  SessionPersonalityChangedEvent,
   UserMessageEvent,
   SessionSharedEvent,
   SessionUnsharedEvent,
@@ -403,6 +404,24 @@ export function handleSessionModelChanged(
   return {
     state: {
       session: { ...session, model: event.model ?? undefined },
+      streaming,
+    },
+    effects: [],
+  }
+}
+
+/**
+ * Handle session_personality_changed - update session personality
+ */
+export function handleSessionPersonalityChanged(
+  state: SessionState,
+  event: SessionPersonalityChangedEvent
+): ProcessResult {
+  const { session, streaming } = state
+
+  return {
+    state: {
+      session: { ...session, personality: event.personality ?? undefined },
       streaming,
     },
     effects: [],

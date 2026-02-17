@@ -36,7 +36,7 @@ import {
 import { useFocusZone } from "@/hooks/keyboard"
 import { useTheme } from "@/hooks/useTheme"
 import { useI18n } from "@/i18n/I18nContext"
-import type { Session, Message, FileAttachment, StoredAttachment, PermissionRequest, CredentialRequest, CredentialResponse, LoadedSource, LoadedSkill } from "../../../shared/types"
+import type { Session, Message, FileAttachment, StoredAttachment, PermissionRequest, CredentialRequest, CredentialResponse, LoadedSource, LoadedSkill, WorkspacePersonality } from "../../../shared/types"
 import type { PermissionMode } from "@craft-agent/shared/agent/modes"
 import type { ThinkingLevel } from "@craft-agent/shared/agent/thinking-levels"
 import { TurnCard, UserMessageBubble, groupMessagesByTurn, formatTurnAsMarkdown, formatActivityAsMarkdown, type Turn, type AssistantTurn, type UserTurn, type SystemTurn, type AuthRequestTurn } from "@craft-agent/ui"
@@ -81,6 +81,10 @@ interface ChatDisplayProps {
   // Model selection
   currentModel: string
   onModelChange: (model: string) => void
+  // Personality selection
+  personalities?: WorkspacePersonality[]
+  currentPersonalityId?: string
+  onPersonalityChange?: (personalityId: string) => void
   /** API base URL for determining which models to show */
   apiBaseUrl?: string | null
   /** Ref for the input, used for external focus control */
@@ -318,6 +322,9 @@ export function ChatDisplay({
   onOpenUrl,
   currentModel,
   onModelChange,
+  personalities = [],
+  currentPersonalityId,
+  onPersonalityChange,
   apiBaseUrl,
   textareaRef: externalTextareaRef,
   disabled = false,
@@ -866,6 +873,9 @@ export function ChatDisplay({
               textareaRef={textareaRef}
               currentModel={currentModel}
               onModelChange={onModelChange}
+              personalities={personalities}
+              currentPersonalityId={currentPersonalityId}
+              onPersonalityChange={onPersonalityChange}
               apiBaseUrl={apiBaseUrl}
               thinkingLevel={thinkingLevel}
               onThinkingLevelChange={onThinkingLevelChange}

@@ -48,6 +48,21 @@ export type { LoadedSource, FolderSourceConfig, SourceConnectionStatus };
 import type { LoadedSkill, SkillMetadata } from '@craft-agent/shared/skills/types';
 export type { LoadedSkill, SkillMetadata };
 
+/**
+ * Workspace personality option loaded from personalities/*.md
+ */
+export interface WorkspacePersonality {
+  /** Stable ID (filename without extension) */
+  id: string
+  /** Display name shown in the UI */
+  name: string
+  /** Optional short description shown in the UI */
+  description?: string
+}
+
+/** Synthetic ID used in the UI for the built-in default personality */
+export const DEFAULT_PERSONALITY_ID = '__default__' as const
+
 
 /**
  * File/directory entry in a skill folder
@@ -318,6 +333,8 @@ export interface Session {
   sharedId?: string
   // Model to use for this session (overrides global config if set)
   model?: string
+  // Personality ID for this session (undefined = built-in default personality)
+  personality?: string
   // Thinking level for this session ('off', 'think', 'max')
   thinkingLevel?: ThinkingLevel
   // Role/type of the last message (for badge display without loading messages)
@@ -353,6 +370,8 @@ export interface Session {
 export interface CreateSessionOptions {
   /** Initial permission mode for the session (overrides workspace default) */
   permissionMode?: PermissionMode
+  /** Initial personality ID (undefined/null uses built-in default personality) */
+  personality?: string
   /**
    * Working directory for the session:
    * - 'user_default' or undefined: Use workspace's configured default working directory
@@ -399,6 +418,7 @@ export type SessionEvent =
   | { type: 'session_flagged'; sessionId: string }
   | { type: 'session_unflagged'; sessionId: string }
   | { type: 'session_model_changed'; sessionId: string; model: string | null }
+  | { type: 'session_personality_changed'; sessionId: string; personality: string | null }
   | { type: 'todo_state_changed'; sessionId: string; todoState: TodoState }
   | { type: 'session_deleted'; sessionId: string }
   | { type: 'session_shared'; sessionId: string; sharedUrl: string }
@@ -595,6 +615,8 @@ export const IPC_CHANNELS = {
   SETTINGS_SET_MODEL: 'settings:setModel',
   SESSION_GET_MODEL: 'session:getModel',
   SESSION_SET_MODEL: 'session:setModel',
+  SESSION_GET_PERSONALITY: 'session:getPersonality',
+  SESSION_SET_PERSONALITY: 'session:setPersonality',
 
   // Folder dialog (for selecting working directory)
   OPEN_FOLDER_DIALOG: 'dialog:openFolder',
@@ -635,6 +657,9 @@ export const IPC_CHANNELS = {
   SKILLS_OPEN_EDITOR: 'skills:openEditor',
   SKILLS_OPEN_FINDER: 'skills:openFinder',
   SKILLS_CHANGED: 'skills:changed',
+  // Personalities (workspace-scoped)
+  PERSONALITIES_LIST: 'personalities:list',
+  PERSONALITIES_CHANGED: 'personalities:changed',
 
   // Status management (workspace-scoped)
   STATUSES_LIST: 'statuses:list',
@@ -812,6 +837,13 @@ export interface ElectronAPI {
   // Session-specific model (overrides global)
   getSessionModel(sessionId: string, workspaceId: string): Promise<string | null>
   setSessionModel(sessionId: string, workspaceId: string, model: string | null): Promise<void>
+  // Session-specific personality (overrides built-in default)
+  getSessionPersonality(sessionId: string, workspaceId: string): Promise<string | null>
+  setSessionPersonality(sessionId: string, workspaceId: string, personality: string | null): Promise<void>
+  // Workspace personalities loaded from workspaceRoot/personalities/*.md
+  listPersonalities(workspaceId: string): Promise<WorkspacePersonality[]>
+  // Personalities change listener (live updates when personalities are added/removed/modified)
+  onPersonalitiesChanged(callback: (workspaceId: string) => void): () => void
 
   // Workspace Settings (per-workspace configuration)
   getWorkspaceSettings(workspaceId: string): Promise<WorkspaceSettings | null>

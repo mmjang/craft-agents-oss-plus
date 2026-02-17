@@ -126,22 +126,45 @@ export interface DebugModeConfig {
  */
 export function getSystemPrompt(
   pinnedPreferencesPrompt?: string,
+  pinnedPersonalityPrompt?: string,
   debugMode?: DebugModeConfig,
   workspaceRootPath?: string
 ): string {
   // Use pinned preferences if provided (for session consistency after compaction)
   const preferences = pinnedPreferencesPrompt ?? formatPreferencesForPrompt();
+  const personality = formatPersonalityPrompt(pinnedPersonalityPrompt);
   const debugContext = debugMode?.enabled ? formatDebugModeContext(debugMode.logFilePath) : '';
 
   // Note: Date/time context is now added to user messages instead of system prompt
   // to enable prompt caching. The system prompt stays static and cacheable.
   // Safe Mode context is also in user messages for the same reason.
   const basePrompt = getCraftAssistantPrompt(workspaceRootPath);
-  const fullPrompt = `${preferences}${basePrompt}${debugContext}`;
+  const fullPrompt = `${preferences}${basePrompt}${personality}${debugContext}`;
 
   debug('[getSystemPrompt] full prompt length:', fullPrompt.length);
 
   return fullPrompt;
+}
+
+/**
+ * Format selected personality content for system prompt injection.
+ */
+function formatPersonalityPrompt(personalityPrompt?: string): string {
+  const content = personalityPrompt?.trim();
+  if (!content) {
+    return '';
+  }
+
+  return `
+
+## Selected Personality
+
+Apply the personality instructions below while still following higher-priority safety and developer instructions.
+
+<selected_personality>
+${content}
+</selected_personality>
+`;
 }
 
 /**

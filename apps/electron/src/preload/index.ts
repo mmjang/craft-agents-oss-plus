@@ -202,6 +202,14 @@ const api: ElectronAPI = {
     ipcRenderer.invoke(IPC_CHANNELS.SESSION_GET_MODEL, sessionId, workspaceId),
   setSessionModel: (sessionId: string, workspaceId: string, model: string | null) =>
     ipcRenderer.invoke(IPC_CHANNELS.SESSION_SET_MODEL, sessionId, workspaceId, model),
+  // Session-specific personality (overrides built-in default)
+  getSessionPersonality: (sessionId: string, workspaceId: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.SESSION_GET_PERSONALITY, sessionId, workspaceId),
+  setSessionPersonality: (sessionId: string, workspaceId: string, personality: string | null) =>
+    ipcRenderer.invoke(IPC_CHANNELS.SESSION_SET_PERSONALITY, sessionId, workspaceId, personality),
+  // Workspace personalities from personalities/*.md
+  listPersonalities: (workspaceId: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.PERSONALITIES_LIST, workspaceId),
 
   // Workspace Settings (per-workspace configuration)
   getWorkspaceSettings: (workspaceId: string) =>
@@ -314,6 +322,17 @@ const api: ElectronAPI = {
     ipcRenderer.on(IPC_CHANNELS.SKILLS_CHANGED, handler)
     return () => {
       ipcRenderer.removeListener(IPC_CHANNELS.SKILLS_CHANGED, handler)
+    }
+  },
+
+  // Personalities change listener (live updates when personalities are added/removed/modified)
+  onPersonalitiesChanged: (callback: (workspaceId: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, workspaceId: string) => {
+      callback(workspaceId)
+    }
+    ipcRenderer.on(IPC_CHANNELS.PERSONALITIES_CHANGED, handler)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.PERSONALITIES_CHANGED, handler)
     }
   },
 

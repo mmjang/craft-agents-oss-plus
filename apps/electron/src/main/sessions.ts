@@ -48,6 +48,7 @@ import { type Session, type Message, type SessionEvent, type FileAttachment, typ
 import { generateSessionTitle, regenerateSessionTitle, formatPathsToRelative, formatToolInputPaths, perf } from '@craft-agent/shared/utils'
 import { DEFAULT_MODEL } from '@craft-agent/shared/config'
 import { type ThinkingLevel, DEFAULT_THINKING_LEVEL } from '@craft-agent/shared/agent/thinking-levels'
+import { loadWorkspacePersonality } from '@craft-agent/shared/personalities'
 
 /**
  * Sanitize message content for use as session title.
@@ -181,6 +182,8 @@ interface ManagedSession {
   sharedId?: string
   // Model to use for this session (overrides global config if set)
   model?: string
+  // Personality ID to use for this session (overrides built-in default when set)
+  personality?: string
   // Thinking level for this session ('off', 'think', 'max')
   thinkingLevel?: ThinkingLevel
   // Role/type of the last message (for badge display without loading messages)
@@ -400,6 +403,15 @@ export class SessionManager {
         const skills = loadWorkspaceSkills(workspaceRootPath)
         this.broadcastSkillsChanged(skills)
       },
+      onPersonalitiesListChange: (_personalities) => {
+        const workspaceId = this.getWorkspaceIdByRootPath(workspaceRootPath)
+        if (!workspaceId) {
+          sessionLog.warn(`Failed to resolve workspace ID for personalities change: ${workspaceRootPath}`)
+          return
+        }
+        sessionLog.info(`Personalities changed in ${workspaceRootPath}`)
+        this.broadcastPersonalitiesChanged(workspaceId)
+      },
     }
 
     const watcher = new ConfigWatcher(workspaceRootPath, callbacks)
@@ -441,6 +453,23 @@ export class SessionManager {
     if (!this.windowManager) return
     sessionLog.info(`Broadcasting skills changed (${skills.length} skills)`)
     this.windowManager.broadcastToAll(IPC_CHANNELS.SKILLS_CHANGED, skills)
+  }
+
+  /**
+   * Broadcast personalities changed event to all windows
+   */
+  private broadcastPersonalitiesChanged(workspaceId: string): void {
+    if (!this.windowManager) return
+    sessionLog.info(`Broadcasting personalities changed for ${workspaceId}`)
+    this.windowManager.broadcastToAll(IPC_CHANNELS.PERSONALITIES_CHANGED, workspaceId)
+  }
+
+  /**
+   * Resolve workspace ID by root path.
+   */
+  private getWorkspaceIdByRootPath(workspaceRootPath: string): string | null {
+    const workspace = getWorkspaces().find((item) => item.rootPath === workspaceRootPath)
+    return workspace?.id ?? null
   }
 
   /**
@@ -635,6 +664,7 @@ export class SessionManager {
             workingDirectory: meta.workingDirectory ?? wsDefaultWorkingDir,
             sdkCwd: meta.sdkCwd,
             model: meta.model,
+            personality: meta.personality,
             thinkingLevel: meta.thinkingLevel,
             lastMessageRole: meta.lastMessageRole,
             messageQueue: [],
@@ -679,6 +709,7 @@ export class SessionManager {
         workingDirectory: managed.workingDirectory,
         sdkCwd: managed.sdkCwd,
         thinkingLevel: managed.thinkingLevel,
+        personality: managed.personality,
         messages: persistableMessages.map(messageToStored),
         tokenUsage: managed.tokenUsage ?? {
           inputTokens: 0,
@@ -998,6 +1029,7 @@ export class SessionManager {
         lastReadMessageId: m.lastReadMessageId,
         workingDirectory: m.workingDirectory,
         model: m.model,
+        personality: m.personality,
         enabledSourceSlugs: m.enabledSourceSlugs,
         sharedUrl: m.sharedUrl,
         sharedId: m.sharedId,
@@ -1034,6 +1066,7 @@ export class SessionManager {
       lastReadMessageId: m.lastReadMessageId,
       workingDirectory: m.workingDirectory,
       model: m.model,
+      personality: m.personality,
       sessionFolderPath: getSessionStoragePath(m.workspace.rootPath, m.id),
       enabledSourceSlugs: m.enabledSourceSlugs,
       sharedUrl: m.sharedUrl,
@@ -1134,6 +1167,7 @@ export class SessionManager {
     const storedSession = createStoredSession(workspaceRootPath, {
       permissionMode: defaultPermissionMode,
       workingDirectory: resolvedWorkingDir,
+      personality: options?.personality,
     })
 
     const managed: ManagedSession = {
@@ -1153,6 +1187,7 @@ export class SessionManager {
       workingDirectory: resolvedWorkingDir,
       sdkCwd: storedSession.sdkCwd,
       model: storedSession.model,
+      personality: storedSession.personality,
       thinkingLevel: defaultThinkingLevel,
       messageQueue: [],
       backgroundShellCommands: new Map(),
@@ -1173,9 +1208,23 @@ export class SessionManager {
       todoState: undefined,  // User-controlled, defaults to undefined (treated as 'todo')
       workingDirectory: resolvedWorkingDir,
       model: managed.model,
+      personality: managed.personality,
       thinkingLevel: defaultThinkingLevel,
       sessionFolderPath: getSessionStoragePath(workspaceRootPath, storedSession.id),
     }
+  }
+
+  /**
+   * Resolve personality markdown content for a managed session.
+   * Returns undefined when using the built-in default personality.
+   */
+  private getSessionPersonalityPrompt(managed: ManagedSession): string | undefined {
+    if (!managed.personality) {
+      return undefined
+    }
+
+    const loaded = loadWorkspacePersonality(managed.workspace.rootPath, managed.personality)
+    return loaded?.content
   }
 
   /**
@@ -1242,6 +1291,8 @@ export class SessionManager {
         } : undefined,
         // App-level preset skills directory (bundled with the app)
         appSkillsDir: join(__dirname, 'resources/app-plugin'),
+        // Session-selected personality markdown (if any)
+        personalityPrompt: this.getSessionPersonalityPrompt(managed),
       })
       sessionLog.info(`Created agent for session ${managed.id}${managed.sdkSessionId ? ' (resuming)' : ''}`)
 
@@ -1986,6 +2037,27 @@ export class SessionManager {
       // Notify renderer of the model change
       this.sendEvent({ type: 'session_model_changed', sessionId, model }, managed.workspace.id)
       sessionLog.info(`Session ${sessionId} model updated to: ${model ?? '(global config)'}`)
+    }
+  }
+
+  /**
+   * Update the personality for a session.
+   * Pass null to clear and use the built-in default personality.
+   */
+  async updateSessionPersonality(sessionId: string, workspaceId: string, personality: string | null): Promise<void> {
+    const managed = this.sessions.get(sessionId)
+    if (managed) {
+      const nextPersonality = personality ?? undefined
+      managed.personality = nextPersonality
+      // Persist to disk
+      updateSessionMetadata(managed.workspace.rootPath, sessionId, { personality: nextPersonality })
+      // Update existing agent immediately (takes effect on next query)
+      if (managed.agent) {
+        managed.agent.setPersonalityPrompt(this.getSessionPersonalityPrompt(managed))
+      }
+      // Notify renderer of the personality change
+      this.sendEvent({ type: 'session_personality_changed', sessionId, personality }, managed.workspace.id)
+      sessionLog.info(`Session ${sessionId} personality updated to: ${personality ?? '(default)'}`)
     }
   }
 

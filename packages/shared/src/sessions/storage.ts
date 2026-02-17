@@ -143,6 +143,7 @@ export function createSession(
     permissionMode?: SessionConfig['permissionMode'];
     enabledSourceSlugs?: string[];
     model?: string;
+    personality?: string;
   }
 ): SessionConfig {
   ensureSessionsDir(workspaceRootPath);
@@ -169,6 +170,7 @@ export function createSession(
     permissionMode: options?.permissionMode,
     enabledSourceSlugs: options?.enabledSourceSlugs,
     model: options?.model,
+    personality: options?.personality,
   };
 
   // Save empty session
@@ -369,6 +371,7 @@ function headerToMetadata(header: SessionHeader, workspaceRootPath: string): Ses
       workingDirectory: workingDir,
       sdkCwd,
       model: header.model,
+      personality: header.personality,
       // Shared viewer state - must be included for persistence across app restarts
       sharedUrl: header.sharedUrl,
       sharedId: header.sharedId,
@@ -474,6 +477,7 @@ export function updateSessionMetadata(
     | 'sharedUrl'
     | 'sharedId'
     | 'model'
+    | 'personality'
   >>
 ): void {
   const session = loadSession(workspaceRootPath, sessionId);
@@ -488,7 +492,8 @@ export function updateSessionMetadata(
   if ('lastReadMessageId' in updates) session.lastReadMessageId = updates.lastReadMessageId;
   if ('sharedUrl' in updates) session.sharedUrl = updates.sharedUrl;
   if ('sharedId' in updates) session.sharedId = updates.sharedId;
-  if (updates.model !== undefined) session.model = updates.model;
+  if ('model' in updates) session.model = updates.model;
+  if ('personality' in updates) session.personality = updates.personality;
 
   saveSession(session);
 }

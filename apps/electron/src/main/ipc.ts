@@ -1173,6 +1173,35 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     ipcLog.info(`Session ${sessionId} model updated to: ${model}`)
   })
 
+  // Get session-specific personality
+  ipcMain.handle(IPC_CHANNELS.SESSION_GET_PERSONALITY, async (_event, sessionId: string, _workspaceId: string): Promise<string | null> => {
+    const session = await sessionManager.getSession(sessionId)
+    return session?.personality ?? null
+  })
+
+  // Set session-specific personality
+  ipcMain.handle(IPC_CHANNELS.SESSION_SET_PERSONALITY, async (_event, sessionId: string, workspaceId: string, personality: string | null) => {
+    await sessionManager.updateSessionPersonality(sessionId, workspaceId, personality)
+    ipcLog.info(`Session ${sessionId} personality updated to: ${personality}`)
+  })
+
+  // List workspace personalities from personalities/*.md
+  ipcMain.handle(IPC_CHANNELS.PERSONALITIES_LIST, async (_event, workspaceId: string) => {
+    const workspace = getWorkspaceByNameOrId(workspaceId)
+    if (!workspace) {
+      ipcLog.error(`Workspace not found: ${workspaceId}`)
+      return []
+    }
+
+    const { loadWorkspacePersonalities } = await import('@craft-agent/shared/personalities')
+    const personalities = loadWorkspacePersonalities(workspace.rootPath)
+    return personalities.map((personality) => ({
+      id: personality.id,
+      name: personality.metadata.name?.trim() || personality.id,
+      description: personality.metadata.description,
+    }))
+  })
+
   // Open native folder dialog for selecting working directory
   ipcMain.handle(IPC_CHANNELS.OPEN_FOLDER_DIALOG, async () => {
     const result = await dialog.showOpenDialog({

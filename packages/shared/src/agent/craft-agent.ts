@@ -119,6 +119,8 @@ export interface CraftAgentConfig {
   };
   /** Path to app-level preset skills plugin directory (e.g., resources/app-plugin) */
   appSkillsDir?: string;
+  /** Session-selected personality markdown content */
+  personalityPrompt?: string;
 }
 
 // Permission request tracking
@@ -357,6 +359,7 @@ export class CraftAgent {
   private configWatcher: ConfigWatcher | null = null;
   // Pinned system prompt components (captured on first chat, used for consistency after compaction)
   private pinnedPreferencesPrompt: string | null = null;
+  private pinnedPersonalityPrompt: string | null = null;
   // Track if preference drift notification has been shown this session
   private preferencesDriftNotified: boolean = false;
   // Captured stderr from SDK subprocess (for error diagnostics when process exits with code 1)
@@ -750,22 +753,29 @@ export class CraftAgent {
       // Pin system prompt components on first chat() call for consistency after compaction
       // The SDK's resume mechanism expects system prompt consistency within a session
       const currentPreferencesPrompt = formatPreferencesForPrompt();
+      const currentPersonalityPrompt = this.config.personalityPrompt ?? '';
 
-      if (this.pinnedPreferencesPrompt === null) {
+      if (this.pinnedPreferencesPrompt === null || this.pinnedPersonalityPrompt === null) {
         // First chat in this session - pin current values
         this.pinnedPreferencesPrompt = currentPreferencesPrompt;
+        this.pinnedPersonalityPrompt = currentPersonalityPrompt;
         debug('[chat] Pinned system prompt components for session consistency');
       } else {
         // Detect drift: warn user if context has changed since session started
         const preferencesDrifted = currentPreferencesPrompt !== this.pinnedPreferencesPrompt;
+        const personalityDrifted = currentPersonalityPrompt !== this.pinnedPersonalityPrompt;
 
-        if (preferencesDrifted && !this.preferencesDriftNotified) {
+        if ((preferencesDrifted || personalityDrifted) && !this.preferencesDriftNotified) {
+          const changed = [
+            preferencesDrifted ? 'preferences' : null,
+            personalityDrifted ? 'personality' : null,
+          ].filter(Boolean).join(', ');
           yield {
             type: 'info',
-            message: `Note: Your preferences changed since this session started. Start a new session to apply changes.`,
+            message: `Note: Your ${changed} changed since this session started. Start a new session to apply changes.`,
           };
           this.preferencesDriftNotified = true;
-          debug(`[chat] Detected drift in: preferences`);
+          debug(`[chat] Detected drift in: ${changed}`);
         }
       }
 
@@ -848,6 +858,7 @@ export class CraftAgent {
           preset: 'claude_code',
           append: getSystemPrompt(
             this.pinnedPreferencesPrompt ?? undefined,
+            this.pinnedPersonalityPrompt ?? undefined,
             this.config.debugMode,
             this.workspaceRootPath
           ),
@@ -1742,6 +1753,7 @@ export class CraftAgent {
           this.config.onSdkSessionIdCleared?.();
           // Clear pinned state for fresh start
           this.pinnedPreferencesPrompt = null;
+          this.pinnedPersonalityPrompt = null;
           this.preferencesDriftNotified = false;
 
           // Build recovery context from previous messages to inject into retry
@@ -1899,6 +1911,7 @@ export class CraftAgent {
             this.sessionId = null;
             // Clear pinned state so retry captures fresh values
             this.pinnedPreferencesPrompt = null;
+            this.pinnedPersonalityPrompt = null;
             this.preferencesDriftNotified = false;
             // Use 'info' instead of 'status' to show message without spinner
             yield { type: 'info', message: 'Session expired, restoring context...' };
@@ -1963,6 +1976,7 @@ export class CraftAgent {
           this.sessionId = null;
           // Clear pinned state so retry captures fresh values
           this.pinnedPreferencesPrompt = null;
+          this.pinnedPersonalityPrompt = null;
           this.preferencesDriftNotified = false;
 
           // Provide context-aware message (conservative: only match explicit session/resume terms)
@@ -3212,6 +3226,7 @@ Please continue the conversation naturally from where we left off.
     this.sessionId = null;
     // Clear pinned state so next chat() will capture fresh values
     this.pinnedPreferencesPrompt = null;
+    this.pinnedPersonalityPrompt = null;
     this.preferencesDriftNotified = false;
   }
 
@@ -3245,6 +3260,17 @@ Please continue the conversation naturally from where we left off.
   setModel(model: string): void {
     this.config.model = model;
     // Note: Model change takes effect on the next query
+  }
+
+  /**
+   * Set the personality markdown content for this session.
+   * Takes effect on the next query.
+   */
+  setPersonalityPrompt(prompt?: string): void {
+    this.config.personalityPrompt = prompt;
+    // Keep pinned prompt in sync so user-initiated personality switches apply immediately.
+    this.pinnedPersonalityPrompt = prompt ?? '';
+    this.preferencesDriftNotified = false;
   }
 
   getWorkspace(): Workspace {
@@ -3417,6 +3443,7 @@ Please continue the conversation naturally from where we left off.
 
     // Clear pinned system prompt state
     this.pinnedPreferencesPrompt = null;
+    this.pinnedPersonalityPrompt = null;
     this.preferencesDriftNotified = false;
 
     // Clear callbacks

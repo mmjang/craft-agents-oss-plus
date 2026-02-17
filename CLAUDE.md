@@ -11,6 +11,7 @@ Craft Plus is an open-source desktop application for working with AI agents, bui
 - Multi-workspace support with isolated sessions
 - MCP server integration for external data sources
 - Three-level permission system (Explore/Ask/Auto)
+- Workspace custom personalities (`personalities/*.md`) selectable per chat session
 - Session sharing and collaboration
 - Built entirely using Craft Plus itself
 

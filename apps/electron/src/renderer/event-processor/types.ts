@@ -236,6 +236,15 @@ export interface SessionModelChangedEvent {
 }
 
 /**
+ * Session personality changed event
+ */
+export interface SessionPersonalityChangedEvent {
+  type: 'session_personality_changed'
+  sessionId: string
+  personality: string | null
+}
+
+/**
  * Credential request event - prompts user for credentials
  */
 export interface CredentialRequestEvent {
@@ -381,6 +390,7 @@ export type AgentEvent =
   | WorkingDirectoryChangedEvent
   | PermissionModeChangedEvent
   | SessionModelChangedEvent
+  | SessionPersonalityChangedEvent
   | TaskBackgroundedEvent
   | ShellBackgroundedEvent
   | TaskProgressEvent

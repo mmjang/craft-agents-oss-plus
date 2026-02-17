@@ -20,10 +20,13 @@ import { routes } from '@/lib/navigate'
 import { ensureSessionMessagesLoadedAtom, loadedSessionsAtom, sessionMetaMapAtom } from '@/atoms/sessions'
 import { getSessionTitle } from '@/utils/session'
 import { useI18n } from '@/i18n/I18nContext'
+import type { WorkspacePersonality } from '../../shared/types'
 
 export interface ChatPageProps {
   sessionId: string
 }
+
+const DEFAULT_PERSONALITY_ID = '__default__'
 
 const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
   // Diagnostic: mark when component runs
@@ -202,6 +205,44 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     onInputChange(sessionId, value)
   }, [sessionId, onInputChange])
 
+  // Workspace personalities (custom markdown files under personalities/*.md)
+  const [personalities, setPersonalities] = React.useState<WorkspacePersonality[]>([])
+
+  React.useEffect(() => {
+    let cancelled = false
+
+    const loadPersonalities = async () => {
+      if (!activeWorkspaceId) {
+        setPersonalities([])
+        return
+      }
+      try {
+        const loaded = await window.electronAPI.listPersonalities(activeWorkspaceId)
+        if (!cancelled) {
+          setPersonalities(loaded)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setPersonalities([])
+        }
+        console.error('[ChatPage] Failed to load personalities:', error)
+      }
+    }
+
+    loadPersonalities()
+
+    const unsubscribe = window.electronAPI.onPersonalitiesChanged((changedWorkspaceId) => {
+      if (changedWorkspaceId === activeWorkspaceId) {
+        loadPersonalities()
+      }
+    })
+
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [activeWorkspaceId])
+
   // Session model change handler - persists per-session model
   const handleModelChange = React.useCallback((model: string) => {
     if (activeWorkspaceId) {
@@ -209,8 +250,17 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     }
   }, [sessionId, activeWorkspaceId])
 
+  // Session personality change handler - persists per-session personality
+  const handlePersonalityChange = React.useCallback((personalityId: string) => {
+    if (activeWorkspaceId) {
+      const next = personalityId === DEFAULT_PERSONALITY_ID ? null : personalityId
+      window.electronAPI.setSessionPersonality(sessionId, activeWorkspaceId, next)
+    }
+  }, [sessionId, activeWorkspaceId, DEFAULT_PERSONALITY_ID])
+
   // Effective model for this session (session-specific or global fallback)
   const effectiveModel = session?.model || currentModel
+  const effectivePersonalityId = session?.personality || DEFAULT_PERSONALITY_ID
 
   // Working directory for this session
   const workingDirectory = session?.workingDirectory
@@ -380,6 +430,9 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
                 onOpenUrl={handleOpenUrl}
                 currentModel={effectiveModel}
                 onModelChange={handleModelChange}
+                personalities={personalities}
+                currentPersonalityId={effectivePersonalityId}
+                onPersonalityChange={handlePersonalityChange}
                 apiBaseUrl={apiBaseUrl}
                 textareaRef={textareaRef}
                 pendingPermission={undefined}
@@ -446,6 +499,9 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
             onOpenUrl={handleOpenUrl}
             currentModel={effectiveModel}
             onModelChange={handleModelChange}
+            personalities={personalities}
+            currentPersonalityId={effectivePersonalityId}
+            onPersonalityChange={handlePersonalityChange}
             apiBaseUrl={apiBaseUrl}
             textareaRef={textareaRef}
             pendingPermission={pendingPermission}
