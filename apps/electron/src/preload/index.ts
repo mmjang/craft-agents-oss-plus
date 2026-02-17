@@ -191,7 +191,7 @@ const api: ElectronAPI = {
 
   // Settings - Billing
   getBillingMethod: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET_BILLING_METHOD),
-  updateBillingMethod: (params: { authType: AuthType; credential?: string; baseUrl?: string | null }) =>
+  updateBillingMethod: (params: { authType: AuthType; credential?: string; baseUrl?: string | null; customModelIds?: string[] | null }) =>
     ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_UPDATE_BILLING_METHOD, params),
 
   // Settings - Model (global default)

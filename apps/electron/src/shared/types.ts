@@ -829,7 +829,7 @@ export interface ElectronAPI {
 
   // Settings - Billing
   getBillingMethod(): Promise<BillingMethodInfo>
-  updateBillingMethod(params: { authType: AuthType; credential?: string; baseUrl?: string | null }): Promise<void>
+  updateBillingMethod(params: { authType: AuthType; credential?: string; baseUrl?: string | null; customModelIds?: string[] | null }): Promise<void>
 
   // Settings - Model (global default)
   getModel(): Promise<string | null>
@@ -966,6 +966,7 @@ export interface BillingMethodInfo {
   authType: AuthType
   hasCredential: boolean
   baseUrl?: string | null
+  customModelIds?: string[]
 }
 
 /**

@@ -12,6 +12,7 @@ export type DiagnosticCode =
   | 'token_expired'
   | 'invalid_credentials'
   | 'rate_limited'          // HTTP 429 from Anthropic API
+  | 'network_error'         // Request failed before receiving HTTP response
   | 'mcp_unreachable'
   | 'service_unavailable'
   | 'unknown_error';
@@ -54,6 +55,18 @@ async function checkCapturedApiError(): Promise<CheckResult> {
 
   if (!apiError) {
     return { ok: true, detail: '✓ API error: None captured' };
+  }
+
+  // Network-level failure (DNS/TLS/connection refused/timeout, etc.)
+  if (apiError.status === 0 || apiError.statusText === 'NETWORK_ERROR') {
+    const requestTarget = apiError.url ? `${apiError.method ?? 'REQUEST'} ${apiError.url}` : 'REQUEST';
+    return {
+      ok: false,
+      detail: `✗ API network error: ${requestTarget} -> ${apiError.message}`,
+      failCode: 'network_error',
+      failTitle: 'Network Request Failed',
+      failMessage: apiError.message || 'Request failed before receiving an HTTP response.',
+    };
   }
 
   // HTTP 402 - Payment Required

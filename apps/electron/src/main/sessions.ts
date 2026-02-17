@@ -520,6 +520,16 @@ export class SessionManager {
       const optionsEnv: Record<string, string> = {}
       const trimmedBaseUrl = billing.apiBaseUrl?.trim()
 
+      const isOpenRouterBaseUrl = (() => {
+        if (!trimmedBaseUrl) return false
+        try {
+          const host = new URL(trimmedBaseUrl).hostname.toLowerCase()
+          return host === 'openrouter.ai' || host.endsWith('.openrouter.ai')
+        } catch {
+          return false
+        }
+      })()
+
       sessionLog.info('Reinitializing auth with billing type:', billing.type)
 
       // Always clear ANTHROPIC_AUTH_TOKEN to prevent it leaking from the shell
@@ -531,12 +541,26 @@ export class SessionManager {
         // Use Claude Max subscription via OAuth token
         process.env.CLAUDE_CODE_OAUTH_TOKEN = billing.claudeOAuthToken
         delete process.env.ANTHROPIC_API_KEY
+        delete process.env.ANTHROPIC_AUTH_TOKEN
         delete process.env.ANTHROPIC_BASE_URL
         optionsEnv.CLAUDE_CODE_OAUTH_TOKEN = billing.claudeOAuthToken
         sessionLog.info('Set Claude Max OAuth Token')
       } else if (billing.apiKey) {
         // Use API key (pay-as-you-go)
-        process.env.ANTHROPIC_API_KEY = billing.apiKey
+        // OpenRouter Anthropic-compatible integration requires:
+        // - ANTHROPIC_AUTH_TOKEN=<openrouter key>
+        // - ANTHROPIC_API_KEY="" (explicitly empty)
+        if (isOpenRouterBaseUrl) {
+          process.env.ANTHROPIC_AUTH_TOKEN = billing.apiKey
+          process.env.ANTHROPIC_API_KEY = ''
+          optionsEnv.ANTHROPIC_AUTH_TOKEN = billing.apiKey
+          optionsEnv.ANTHROPIC_API_KEY = ''
+          sessionLog.info('Set OpenRouter auth token mode (ANTHROPIC_AUTH_TOKEN + empty ANTHROPIC_API_KEY)')
+        } else {
+          process.env.ANTHROPIC_API_KEY = billing.apiKey
+          delete process.env.ANTHROPIC_AUTH_TOKEN
+          optionsEnv.ANTHROPIC_API_KEY = billing.apiKey
+        }
         delete process.env.CLAUDE_CODE_OAUTH_TOKEN
         if (trimmedBaseUrl) {
           process.env.ANTHROPIC_BASE_URL = trimmedBaseUrl
@@ -546,10 +570,10 @@ export class SessionManager {
           delete process.env.ANTHROPIC_BASE_URL
           sessionLog.info('Set Anthropic API Key')
         }
-        optionsEnv.ANTHROPIC_API_KEY = billing.apiKey
       } else {
         sessionLog.error('No authentication configured!')
         delete process.env.ANTHROPIC_API_KEY
+        delete process.env.ANTHROPIC_AUTH_TOKEN
         delete process.env.CLAUDE_CODE_OAUTH_TOKEN
         delete process.env.ANTHROPIC_BASE_URL
       }
@@ -3115,6 +3139,18 @@ To view this task's output:
         }
         // Typed errors have structured information - send both formats for compatibility
         sessionLog.info('typed_error:', JSON.stringify(event.error, null, 2))
+        if (event.error.code === 'network_error' || event.error.code === 'unknown_error') {
+          sessionLog.error(
+            'Detailed network diagnostics:',
+            JSON.stringify({
+              code: event.error.code,
+              title: event.error.title,
+              message: event.error.message,
+              details: event.error.details,
+              originalError: event.error.originalError,
+            }, null, 2)
+          )
+        }
         const typedErrorMessage: Message = {
           id: generateMessageId(),
           role: 'error',

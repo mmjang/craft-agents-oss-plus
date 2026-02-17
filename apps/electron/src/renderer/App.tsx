@@ -173,6 +173,8 @@ export default function App() {
   const [currentModel, setCurrentModel] = useState(DEFAULT_MODEL)
   // API base URL for model selection (determines which models to show)
   const [apiBaseUrl, setApiBaseUrl] = useState<string | null>(null)
+  // Optional custom model IDs configured with API key billing
+  const [customModelIds, setCustomModelIds] = useState<string[]>([])
   const [menuNewChatTrigger, setMenuNewChatTrigger] = useState(0)
   // Permission requests per session (queue to handle multiple concurrent requests)
   const [pendingPermissions, setPendingPermissions] = useState<Map<string, PermissionRequest[]>>(new Map())
@@ -351,17 +353,19 @@ export default function App() {
       window.electronAPI.getModel(),
     ]).then(([billing, storedModel]) => {
       const baseUrl = billing.baseUrl ?? null
+      const configuredCustomModelIds = billing.customModelIds ?? []
       setApiBaseUrl(baseUrl)
+      setCustomModelIds(configuredCustomModelIds)
 
       // Check if stored model is compatible with current API base URL
-      const availableModels = getModelsForBaseUrl(baseUrl)
+      const availableModels = getModelsForBaseUrl(baseUrl, configuredCustomModelIds)
       const isModelCompatible = storedModel && availableModels.some(m => m.id === storedModel)
 
       if (isModelCompatible) {
         setCurrentModel(storedModel)
       } else {
         // Switch to default model for this API base URL
-        const defaultModel = getDefaultModelForBaseUrl(baseUrl)
+        const defaultModel = getDefaultModelForBaseUrl(baseUrl, configuredCustomModelIds)
         setCurrentModel(defaultModel)
       }
     })
@@ -862,6 +866,21 @@ export default function App() {
     window.electronAPI.setModel(model)
   }, [])
 
+  const handleBillingConfigChange = useCallback((baseUrl: string | null, nextCustomModelIds: string[]) => {
+    setApiBaseUrl(baseUrl)
+    setCustomModelIds(nextCustomModelIds)
+
+    const availableModels = getModelsForBaseUrl(baseUrl, nextCustomModelIds)
+    setCurrentModel((prevModel) => {
+      if (availableModels.some(m => m.id === prevModel)) {
+        return prevModel
+      }
+      const fallbackModel = getDefaultModelForBaseUrl(baseUrl, nextCustomModelIds)
+      window.electronAPI.setModel(fallbackModel)
+      return fallbackModel
+    })
+  }, [])
+
   /**
    * Unified handler for all session option changes.
    * Handles persistence and backend sync for each option type.
@@ -1137,6 +1156,7 @@ export default function App() {
     activeWorkspaceId: windowWorkspaceId,
     currentModel,
     apiBaseUrl,
+    customModelIds,
     pendingPermissions,
     pendingCredentials,
     getDraft,
@@ -1158,6 +1178,7 @@ export default function App() {
     onOpenUrl: handleOpenUrl,
     // Model
     onModelChange: handleModelChange,
+    onBillingConfigChange: handleBillingConfigChange,
     // Workspace
     onSelectWorkspace: handleSelectWorkspace,
     onRefreshWorkspaces: handleRefreshWorkspaces,
@@ -1177,6 +1198,7 @@ export default function App() {
     windowWorkspaceId,
     currentModel,
     apiBaseUrl,
+    customModelIds,
     pendingPermissions,
     pendingCredentials,
     getDraft,
@@ -1195,6 +1217,7 @@ export default function App() {
     handleOpenFile,
     handleOpenUrl,
     handleModelChange,
+    handleBillingConfigChange,
     handleSelectWorkspace,
     handleRefreshWorkspaces,
     handleOpenSettings,

@@ -96,6 +96,8 @@ export interface FreeFormInputProps {
   onPersonalityChange?: (personalityId: string) => void
   /** API base URL for determining which models to show */
   apiBaseUrl?: string | null
+  /** Custom model IDs configured via app settings */
+  customModelIds?: string[]
   // Thinking level (session-level setting)
   /** Current thinking level ('off', 'think', 'max') */
   thinkingLevel?: ThinkingLevel
@@ -177,6 +179,7 @@ export function FreeFormInput({
   currentPersonalityId = '__default__',
   onPersonalityChange,
   apiBaseUrl,
+  customModelIds,
   thinkingLevel = 'think',
   onThinkingLevelChange,
   ultrathinkEnabled = false,
@@ -1362,7 +1365,7 @@ export function FreeFormInput({
               </Tooltip>
             <StyledDropdownMenuContent side="top" align="end" sideOffset={8} className="min-w-[240px]">
               {/* Model options - dynamically based on API base URL */}
-              {getModelsForBaseUrl(apiBaseUrl).map((model) => {
+              {getModelsForBaseUrl(apiBaseUrl, customModelIds).map((model) => {
                 const isSelected = currentModel === model.id
                 const descriptions: Record<string, string> = {
                   // Claude models

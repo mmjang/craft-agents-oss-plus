@@ -7,6 +7,7 @@ import { getSystemPrompt, getDateTimeContext, getWorkingDirectoryContext } from 
 import { parseError, type AgentError } from './errors.ts';
 import { runErrorDiagnostics } from './diagnostics.ts';
 import { loadStoredConfig, loadConfigDefaults, type Workspace } from '../config/storage.ts';
+import { getLastApiError, type LastApiError } from '../network-interceptor.ts';
 import { isLocalMcpEnabled } from '../workspaces/storage.ts';
 import { loadPlanFromPath, type SessionConfig as Session } from '../sessions/storage.ts';
 import { DEFAULT_MODEL } from '../config/models.ts';
@@ -830,6 +831,7 @@ export class CraftAgent {
 
       // Clear stderr buffer at start of each query
       this.lastStderrOutput = [];
+      const compatibleBetas = this.getCompatibleBetas();
 
       const options: Options = {
         ...getDefaultOptions(),
@@ -848,7 +850,8 @@ export class CraftAgent {
         },
         // Beta features:
         // - advanced-tool-use-2025-11-20: Enhanced tool use capabilities
-        betas: ['advanced-tool-use-2025-11-20'] as any,
+        // Only send beta headers to official Anthropic endpoints.
+        ...(compatibleBetas.length > 0 ? { betas: compatibleBetas as any } : {}),
         // Extended thinking: tokens based on effective thinking level (session level + ultrathink override)
         maxThinkingTokens: thinkingTokens,
         // Option A: Append to Claude Code's system prompt (recommended by docs)
@@ -2401,6 +2404,68 @@ Please continue the conversation naturally from where we left off.
     return supported[mimeType] || null;
   }
 
+  private isOfficialAnthropicEndpoint(): boolean {
+    const baseUrl = process.env.ANTHROPIC_BASE_URL?.trim();
+    if (!baseUrl) return true;
+    try {
+      const host = new URL(baseUrl).hostname.toLowerCase();
+      return host === 'api.anthropic.com' || host.endsWith('.anthropic.com');
+    } catch {
+      return false;
+    }
+  }
+
+  private getCompatibleBetas(): string[] {
+    // Non-official Anthropic-compatible endpoints may reject Claude-specific beta headers.
+    if (!this.isOfficialAnthropicEndpoint()) {
+      this.onDebug?.('[CraftAgent] Custom ANTHROPIC_BASE_URL detected, disabling Claude beta headers');
+      return [];
+    }
+    return ['advanced-tool-use-2025-11-20'];
+  }
+
+  private sanitizeDiagnosticText(value: string, maxLength = 500): string {
+    const normalized = value
+      // Redact Anthropic key-like tokens
+      .replace(/sk-ant-[A-Za-z0-9_-]+/g, '[REDACTED_API_KEY]')
+      // Redact common bearer tokens
+      .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [REDACTED_TOKEN]');
+
+    if (normalized.length <= maxLength) return normalized;
+    return `${normalized.slice(0, maxLength)}...`;
+  }
+
+  private buildSdkErrorDiagnostics(errorCode: SDKAssistantMessageError, capturedApiError: LastApiError | null): string[] {
+    const details: string[] = [];
+
+    details.push(`SDK error code: ${errorCode}`);
+    details.push(`Model: ${this.config.model || DEFAULT_MODEL}`);
+
+    const baseUrl = process.env.ANTHROPIC_BASE_URL?.trim();
+    if (baseUrl) {
+      details.push(`ANTHROPIC_BASE_URL: ${baseUrl}`);
+    }
+
+    if (capturedApiError) {
+      const requestLabel = capturedApiError.url
+        ? `${capturedApiError.method ?? 'REQUEST'} ${capturedApiError.url}`
+        : (capturedApiError.method ?? 'REQUEST');
+      details.push(`Captured API error: ${capturedApiError.status} ${capturedApiError.statusText}`);
+      details.push(`Captured request: ${requestLabel}`);
+      details.push(`Captured message: ${this.sanitizeDiagnosticText(capturedApiError.message, 1200)}`);
+    }
+
+    if (this.lastStderrOutput.length > 0) {
+      const stderrSummary = this.lastStderrOutput
+        .slice(-6)
+        .map((line) => this.sanitizeDiagnosticText(line, 800))
+        .join(' | ');
+      details.push(`SDK stderr (latest): ${stderrSummary}`);
+    }
+
+    return details;
+  }
+
   /**
    * Map SDK assistant message error codes to typed error events with user-friendly messages.
    */
@@ -2468,8 +2533,8 @@ Please continue the conversation naturally from where we left off.
       'unknown': {
         code: 'unknown_error',
         title: 'Unknown Error',
-        message: 'An unexpected error occurred while connecting to Anthropic.',
-        details: ['This may be a temporary issue', 'Check your network connection'],
+        message: 'An unexpected error occurred while connecting to the API endpoint.',
+        details: ['This may be a temporary issue', 'Check your network connection or endpoint configuration'],
         actions: [
           { key: 'r', label: 'Retry', action: 'retry' },
         ],
@@ -2478,7 +2543,41 @@ Please continue the conversation naturally from where we left off.
       },
     };
 
-    const error = errorMap[errorCode];
+    const capturedApiError = getLastApiError();
+    const baseError = errorMap[errorCode];
+    const diagnosticDetails = this.buildSdkErrorDiagnostics(errorCode, capturedApiError);
+    const mergedDetails = [...(baseError.details ?? []), ...diagnosticDetails];
+    const dedupedDetails = Array.from(new Set(mergedDetails));
+
+    let resolvedError: AgentError = baseError;
+    if (
+      errorCode === 'unknown' &&
+      capturedApiError?.status === 404 &&
+      capturedApiError.message.toLowerCase().includes('no allowed providers')
+    ) {
+      resolvedError = {
+        ...baseError,
+        title: 'Model Provider Unavailable',
+        message: 'No providers are available for the selected model on this endpoint. Choose a different model or provider.',
+        canRetry: false,
+        retryDelayMs: undefined,
+      };
+    }
+
+    const error: AgentError = {
+      ...resolvedError,
+      details: dedupedDetails.length > 0 ? dedupedDetails : undefined,
+      originalError: dedupedDetails.length > 0
+        ? this.sanitizeDiagnosticText(dedupedDetails.join(' || '), 3000)
+        : undefined,
+    };
+
+    if (error.code === 'network_error' || error.code === 'unknown_error') {
+      const diagnosticText = dedupedDetails.join('\n');
+      console.error(`[CraftAgent] Detailed ${error.code} diagnostics:\n${diagnosticText}`);
+      this.onDebug?.(`[CraftAgent] Detailed ${error.code} diagnostics: ${diagnosticText}`);
+    }
+
     return {
       type: 'typed_error',
       error,

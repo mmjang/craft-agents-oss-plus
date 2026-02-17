@@ -51,12 +51,13 @@ export default function WorkspaceSettingsPage() {
   const onModelChange = appShellContext.onModelChange
   const activeWorkspaceId = appShellContext.activeWorkspaceId
   const apiBaseUrl = appShellContext.apiBaseUrl
+  const customModelIds = appShellContext.customModelIds
   const onRefreshWorkspaces = appShellContext.onRefreshWorkspaces
   const { t } = useI18n()
 
   // Get available models based on API base URL
-  const availableModels = getModelsForBaseUrl(apiBaseUrl)
-  const defaultModel = getDefaultModelForBaseUrl(apiBaseUrl)
+  const availableModels = getModelsForBaseUrl(apiBaseUrl, customModelIds)
+  const defaultModel = getDefaultModelForBaseUrl(apiBaseUrl, customModelIds)
 
   // Workspace settings state
   const [wsName, setWsName] = useState('')
@@ -129,7 +130,7 @@ export default function WorkspaceSettingsPage() {
     }
 
     loadWorkspaceSettings()
-  }, [activeWorkspaceId])
+  }, [activeWorkspaceId, defaultModel])
 
   // Save workspace setting
   const updateWorkspaceSetting = useCallback(

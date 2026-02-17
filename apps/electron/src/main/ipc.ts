@@ -12,7 +12,7 @@ import { WindowManager } from './window-manager'
 import { registerOnboardingHandlers } from './onboarding'
 import { IPC_CHANNELS, type FileAttachment, type StoredAttachment, type AuthType, type BillingMethodInfo, type SendMessageOptions } from '../shared/types'
 import { readFileAttachment, perf, validateImageForClaudeAPI, IMAGE_LIMITS } from '@craft-agent/shared/utils'
-import { getAnthropicBaseUrl, setAnthropicBaseUrl, getAuthType, setAuthType, getPreferencesPath, getModel, setModel, getSessionDraft, setSessionDraft, deleteSessionDraft, getAllSessionDrafts, getWorkspaceByNameOrId, addWorkspace, setActiveWorkspace, type Workspace } from '@craft-agent/shared/config'
+import { getAnthropicBaseUrl, setAnthropicBaseUrl, getCustomModelIds, setCustomModelIds, getAuthType, setAuthType, getPreferencesPath, getModel, setModel, getSessionDraft, setSessionDraft, deleteSessionDraft, getAllSessionDrafts, getWorkspaceByNameOrId, addWorkspace, setActiveWorkspace, type Workspace } from '@craft-agent/shared/config'
 import { getSessionAttachmentsPath } from '@craft-agent/shared/sessions'
 import { loadWorkspaceSources, getSourcesBySlugs, type LoadedSource } from '@craft-agent/shared/sources'
 import { isValidThinkingLevel } from '@craft-agent/shared/agent/thinking-levels'
@@ -1074,6 +1074,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     const authType = getAuthType()
     const manager = getCredentialManager()
     const baseUrl = getAnthropicBaseUrl()
+    const customModelIds = getCustomModelIds()
 
     let hasCredential = false
     if (authType === 'api_key') {
@@ -1082,14 +1083,15 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
       hasCredential = !!(await manager.getClaudeOAuth())
     }
 
-    return { authType, hasCredential, baseUrl }
+    return { authType, hasCredential, baseUrl, customModelIds }
   })
 
   // Update billing method and credential
-  ipcMain.handle(IPC_CHANNELS.SETTINGS_UPDATE_BILLING_METHOD, async (_event, params: { authType: AuthType; credential?: string; baseUrl?: string | null }) => {
-    const { authType, credential, baseUrl } = params
+  ipcMain.handle(IPC_CHANNELS.SETTINGS_UPDATE_BILLING_METHOD, async (_event, params: { authType: AuthType; credential?: string; baseUrl?: string | null; customModelIds?: string[] | null }) => {
+    const { authType, credential, baseUrl, customModelIds } = params
     const manager = getCredentialManager()
     const hasBaseUrlField = Object.prototype.hasOwnProperty.call(params, 'baseUrl')
+    const hasCustomModelIdsField = Object.prototype.hasOwnProperty.call(params, 'customModelIds')
 
     // Clear old credentials when switching auth types
     const oldAuthType = getAuthType()
@@ -1106,6 +1108,13 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
       setAnthropicBaseUrl(baseUrl)
     } else if (authType !== 'api_key') {
       setAnthropicBaseUrl(null)
+    }
+
+    // Persist custom model IDs for API key billing (clear when switching away)
+    if (authType === 'api_key' && hasCustomModelIdsField) {
+      setCustomModelIds(customModelIds)
+    } else if (authType !== 'api_key') {
+      setCustomModelIds(null)
     }
 
     // Set new auth type

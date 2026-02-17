@@ -14,6 +14,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { HeaderMenu } from '@/components/ui/HeaderMenu'
@@ -68,8 +69,10 @@ export const meta: DetailsPageMeta = {
 interface ApiKeyDialogProps {
   value: string
   baseUrl: string
+  modelIdsText: string
   onChange: (value: string) => void
   onBaseUrlChange: (value: string) => void
+  onModelIdsTextChange: (value: string) => void
   onSave: () => void
   onCancel: () => void
   isSaving: boolean
@@ -77,7 +80,7 @@ interface ApiKeyDialogProps {
   error?: string
 }
 
-function ApiKeyDialogContent({ value, baseUrl, onChange, onBaseUrlChange, onSave, onCancel, isSaving, hasExistingKey, error }: ApiKeyDialogProps) {
+function ApiKeyDialogContent({ value, baseUrl, modelIdsText, onChange, onBaseUrlChange, onModelIdsTextChange, onSave, onCancel, isSaving, hasExistingKey, error }: ApiKeyDialogProps) {
   const [showValue, setShowValue] = useState(false)
   const { t } = useI18n()
 
@@ -137,6 +140,23 @@ function ApiKeyDialogContent({ value, baseUrl, onChange, onBaseUrlChange, onSave
         </p>
       </div>
 
+      {/* Custom model IDs */}
+      <div className="space-y-2">
+        <Label htmlFor="api-custom-models">{t('appSettings.apiKey.modelsLabel', 'Custom model IDs (optional)')}</Label>
+        <Textarea
+          id="api-custom-models"
+          value={modelIdsText}
+          onChange={(e) => onModelIdsTextChange(e.target.value)}
+          placeholder={t('appSettings.apiKey.modelsPlaceholder', 'e.g.\nclaude-sonnet-4-5-20250929\nglm-4.5-air')}
+          disabled={isSaving}
+          rows={4}
+          className="resize-y min-h-[96px]"
+        />
+        <p className="text-xs text-muted-foreground">
+          {t('appSettings.apiKey.modelsHint', 'Enter one model ID per line. Commas are also supported. Leave empty to use built-in Claude models.')}
+        </p>
+      </div>
+
       {/* Error message */}
       {error && (
         <p className="text-xs text-destructive">{error}</p>
@@ -170,6 +190,15 @@ function ApiKeyDialogContent({ value, baseUrl, onChange, onBaseUrlChange, onSave
       </div>
     </div>
   )
+}
+
+function parseCustomModelIds(raw: string): string[] {
+  const unique = new Set<string>()
+  for (const value of raw.split(/[\n,]/)) {
+    const modelId = value.trim()
+    if (modelId) unique.add(modelId)
+  }
+  return Array.from(unique)
 }
 
 // ============================================
@@ -347,8 +376,8 @@ export default function AppSettingsPage() {
   const { t, locale, setLocale } = useI18n()
   const { mode, setMode, colorTheme, setColorTheme, setPreviewColorTheme, font, setFont } = useTheme()
 
-  // Get workspace ID from context for loading preset themes
-  const { activeWorkspaceId } = useAppShellContext()
+  // Access app-level callbacks from shell context
+  const { onBillingConfigChange } = useAppShellContext()
 
   // Preset themes state
   const [presetThemes, setPresetThemes] = useState<PresetTheme[]>([])
@@ -363,6 +392,8 @@ export default function AppSettingsPage() {
   const [apiKeyValue, setApiKeyValue] = useState('')
   const [apiBaseUrl, setApiBaseUrl] = useState('')
   const [savedApiBaseUrl, setSavedApiBaseUrl] = useState('')
+  const [apiModelIdsText, setApiModelIdsText] = useState('')
+  const [savedApiModelIdsText, setSavedApiModelIdsText] = useState('')
   const [isSavingApiKey, setIsSavingApiKey] = useState(false)
   const [apiKeyError, setApiKeyError] = useState<string | undefined>()
 
@@ -406,6 +437,9 @@ export default function AppSettingsPage() {
         setHasCredential(billing.hasCredential)
         setApiBaseUrl(billing.baseUrl ?? '')
         setSavedApiBaseUrl(billing.baseUrl ?? '')
+        const modelIdsText = (billing.customModelIds ?? []).join('\n')
+        setApiModelIdsText(modelIdsText)
+        setSavedApiModelIdsText(modelIdsText)
         setNotificationsEnabled(notificationsOn)
         setSoundAlertsEnabled(soundAlertsOn)
       } catch (error) {
@@ -483,10 +517,11 @@ export default function AppSettingsPage() {
     setExpandedMethod(null)
     setApiKeyValue('')
     setApiBaseUrl(savedApiBaseUrl)
+    setApiModelIdsText(savedApiModelIdsText)
     setApiKeyError(undefined)
     setClaudeOAuthStatus('idle')
     setClaudeOAuthError(undefined)
-  }, [savedApiBaseUrl])
+  }, [savedApiBaseUrl, savedApiModelIdsText])
 
   // Save API key
   const handleSaveApiKey = useCallback(async () => {
@@ -494,6 +529,8 @@ export default function AppSettingsPage() {
 
     const trimmedKey = apiKeyValue.trim()
     const trimmedBaseUrl = apiBaseUrl.trim()
+    const parsedCustomModelIds = parseCustomModelIds(apiModelIdsText)
+    const customModelIdsToSave: string[] | null = parsedCustomModelIds.length > 0 ? parsedCustomModelIds : null
     const hasExistingKey = hasCredential && authType === 'api_key'
 
     if (!trimmedKey && !hasExistingKey) {
@@ -524,12 +561,17 @@ export default function AppSettingsPage() {
         authType: 'api_key',
         credential: trimmedKey || undefined,
         baseUrl: baseUrlToSave,
+        customModelIds: customModelIdsToSave,
       })
       setAuthType('api_key')
       setHasCredential(true)
       setApiKeyValue('')
       setApiBaseUrl(baseUrlToSave ?? '')
       setSavedApiBaseUrl(baseUrlToSave ?? '')
+      const normalizedModelIdsText = parsedCustomModelIds.join('\n')
+      setApiModelIdsText(normalizedModelIdsText)
+      setSavedApiModelIdsText(normalizedModelIdsText)
+      onBillingConfigChange?.(baseUrlToSave ?? null, parsedCustomModelIds)
       setExpandedMethod(null)
     } catch (error) {
       console.error('Failed to save API key:', error)
@@ -537,7 +579,7 @@ export default function AppSettingsPage() {
     } finally {
       setIsSavingApiKey(false)
     }
-  }, [apiKeyValue, apiBaseUrl, hasCredential, authType, t])
+  }, [apiKeyValue, apiBaseUrl, apiModelIdsText, hasCredential, authType, t, onBillingConfigChange])
 
   // Use existing Claude token
   const handleUseExistingClaudeToken = useCallback(async () => {
@@ -554,13 +596,16 @@ export default function AppSettingsPage() {
       setHasCredential(true)
       setApiBaseUrl('')
       setSavedApiBaseUrl('')
+      setApiModelIdsText('')
+      setSavedApiModelIdsText('')
+      onBillingConfigChange?.(null, [])
       setClaudeOAuthStatus('success')
       setExpandedMethod(null)
     } catch (error) {
       setClaudeOAuthStatus('error')
       setClaudeOAuthError(error instanceof Error ? error.message : t('appSettings.oauth.saveTokenFailed', 'Failed to save token'))
     }
-  }, [existingClaudeToken, t])
+  }, [existingClaudeToken, t, onBillingConfigChange])
 
   // Start Claude OAuth flow (native browser-based)
   const handleStartClaudeOAuth = useCallback(async () => {
@@ -609,6 +654,9 @@ export default function AppSettingsPage() {
         setHasCredential(true)
         setApiBaseUrl('')
         setSavedApiBaseUrl('')
+        setApiModelIdsText('')
+        setSavedApiModelIdsText('')
+        onBillingConfigChange?.(null, [])
         setClaudeOAuthStatus('success')
         setIsWaitingForCode(false)
         setAuthCode('')
@@ -621,7 +669,7 @@ export default function AppSettingsPage() {
       setClaudeOAuthStatus('error')
       setClaudeOAuthError(error instanceof Error ? error.message : t('appSettings.oauth.exchangeFailed', 'Failed to exchange code'))
     }
-  }, [t])
+  }, [t, onBillingConfigChange])
 
   // Cancel OAuth flow and clear state
   const handleCancelOAuth = useCallback(async () => {
@@ -762,8 +810,10 @@ export default function AppSettingsPage() {
                   <ApiKeyDialogContent
                     value={apiKeyValue}
                     baseUrl={apiBaseUrl}
+                    modelIdsText={apiModelIdsText}
                     onChange={setApiKeyValue}
                     onBaseUrlChange={setApiBaseUrl}
+                    onModelIdsTextChange={setApiModelIdsText}
                     onSave={handleSaveApiKey}
                     onCancel={handleCancel}
                     isSaving={isSavingApiKey}

@@ -202,6 +202,7 @@ export function registerOnboardingHandlers(sessionManager: SessionManager): void
       if (targetAuthType === 'oauth_token') {
         // Clear base URL when using Claude OAuth billing
         delete newConfig.anthropicBaseUrl
+        delete newConfig.customModelIds
       } else if (targetAuthType === 'api_key' && hasBaseUrlField) {
         const trimmedBaseUrl = config.baseUrl?.trim()
         if (trimmedBaseUrl) {

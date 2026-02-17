@@ -48,6 +48,8 @@ export interface StoredConfig {
   authType?: AuthType;
   /** Optional override for Anthropic API base URL */
   anthropicBaseUrl?: string;
+  /** Optional user-defined model IDs used for custom base URL/API key flows */
+  customModelIds?: string[];
   workspaces: Workspace[];
   activeWorkspaceId: string | null;
   activeSessionId: string | null;  // Currently active session (primary scope)
@@ -147,6 +149,46 @@ export function setAnthropicBaseUrl(baseUrl?: string | null): void {
     config.anthropicBaseUrl = trimmed;
   } else {
     delete config.anthropicBaseUrl;
+  }
+  saveConfig(config);
+}
+
+/**
+ * Get the configured custom model IDs for API key billing.
+ */
+export function getCustomModelIds(): string[] {
+  const config = loadStoredConfig();
+  if (!config?.customModelIds || !Array.isArray(config.customModelIds)) {
+    return [];
+  }
+
+  const unique = new Set<string>();
+  for (const rawId of config.customModelIds) {
+    if (typeof rawId !== 'string') continue;
+    const id = rawId.trim();
+    if (id) unique.add(id);
+  }
+  return Array.from(unique);
+}
+
+/**
+ * Set custom model IDs in config (clears when empty).
+ */
+export function setCustomModelIds(modelIds?: string[] | null): void {
+  const config = loadStoredConfig();
+  if (!config) return;
+
+  const unique = new Set<string>();
+  for (const rawId of modelIds ?? []) {
+    const id = rawId.trim();
+    if (id) unique.add(id);
+  }
+  const normalized = Array.from(unique);
+
+  if (normalized.length > 0) {
+    config.customModelIds = normalized;
+  } else {
+    delete config.customModelIds;
   }
   saveConfig(config);
 }

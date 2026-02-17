@@ -38,6 +38,8 @@ export interface AppShellContextType {
   currentModel: string
   /** API base URL for model selection (determines which models to show) */
   apiBaseUrl: string | null
+  /** Custom model IDs configured for API key billing (if any) */
+  customModelIds?: string[]
   pendingPermissions: Map<string, PermissionRequest[]>
   pendingCredentials: Map<string, CredentialRequest[]>
   /** Get draft input text for a session - reads from ref without triggering re-renders */
@@ -87,6 +89,8 @@ export interface AppShellContextType {
 
   // Model
   onModelChange: (model: string) => void
+  // Billing config
+  onBillingConfigChange?: (baseUrl: string | null, customModelIds: string[]) => void
 
   // Workspace
   onSelectWorkspace: (id: string, openInNewWindow?: boolean) => void

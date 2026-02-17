@@ -87,6 +87,8 @@ interface ChatDisplayProps {
   onPersonalityChange?: (personalityId: string) => void
   /** API base URL for determining which models to show */
   apiBaseUrl?: string | null
+  /** Custom model IDs configured via app settings */
+  customModelIds?: string[]
   /** Ref for the input, used for external focus control */
   textareaRef?: React.RefObject<RichTextInputHandle>
   /** When true, disables input (e.g., when agent needs activation) */
@@ -326,6 +328,7 @@ export function ChatDisplay({
   currentPersonalityId,
   onPersonalityChange,
   apiBaseUrl,
+  customModelIds,
   textareaRef: externalTextareaRef,
   disabled = false,
   pendingPermission,
@@ -877,6 +880,7 @@ export function ChatDisplay({
               currentPersonalityId={currentPersonalityId}
               onPersonalityChange={onPersonalityChange}
               apiBaseUrl={apiBaseUrl}
+              customModelIds={customModelIds}
               thinkingLevel={thinkingLevel}
               onThinkingLevelChange={onThinkingLevelChange}
               ultrathinkEnabled={ultrathinkEnabled}

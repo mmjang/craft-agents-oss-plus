@@ -45,6 +45,9 @@ export interface LastApiError {
   statusText: string;
   message: string;
   timestamp: number;
+  url?: string;
+  method?: string;
+  errorType?: 'http_error' | 'network_error';
 }
 
 // File-based storage for cross-process sharing
@@ -129,10 +132,16 @@ function debugLog(...args: unknown[]) {
 
 
 /**
- * Check if URL is Anthropic API
+ * Check whether URL targets Anthropic-compatible /messages endpoint.
+ * Works for both official api.anthropic.com and custom base URLs.
  */
-function isAnthropicMessagesUrl(url: string): boolean {
-  return url.includes('api.anthropic.com') && url.includes('/messages');
+function isMessagesEndpointUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.pathname === '/v1/messages' || parsed.pathname.endsWith('/messages');
+  } catch {
+    return url.includes('/v1/messages') || url.includes('/messages');
+  }
 }
 
 /**
@@ -207,7 +216,45 @@ function addMetadataToMcpTools(body: Record<string, unknown>): Record<string, un
  * Check if URL should have API errors captured
  */
 function shouldCaptureApiErrors(url: string): boolean {
-  return url.includes('api.anthropic.com') && url.includes('/messages');
+  return isMessagesEndpointUrl(url);
+}
+
+function getRequestMethod(input: string | URL | Request, init?: RequestInit): string {
+  if (init?.method) return init.method.toUpperCase();
+  if (input instanceof Request) return input.method.toUpperCase();
+  return 'GET';
+}
+
+function extractErrorMessage(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+
+  const parts: string[] = [];
+  if (error.message) parts.push(error.message);
+
+  const anyError = error as Error & {
+    code?: unknown;
+    errno?: unknown;
+    cause?: unknown;
+    syscall?: unknown;
+    hostname?: unknown;
+    address?: unknown;
+  };
+
+  if (anyError.code) parts.push(`code=${String(anyError.code)}`);
+  if (anyError.errno) parts.push(`errno=${String(anyError.errno)}`);
+  if (anyError.syscall) parts.push(`syscall=${String(anyError.syscall)}`);
+  if (anyError.hostname) parts.push(`hostname=${String(anyError.hostname)}`);
+  if (anyError.address) parts.push(`address=${String(anyError.address)}`);
+
+  if (anyError.cause) {
+    if (anyError.cause instanceof Error) {
+      parts.push(`cause=${anyError.cause.message}`);
+    } else {
+      parts.push(`cause=${String(anyError.cause)}`);
+    }
+  }
+
+  return parts.join(' | ');
 }
 
 const originalFetch = globalThis.fetch.bind(globalThis);
@@ -262,7 +309,7 @@ function toCurl(url: string, init?: RequestInit): string {
  * Clone response and log its body (handles streaming responses).
  * Also captures API errors (4xx/5xx) for the error handler.
  */
-async function logResponse(response: Response, url: string, startTime: number): Promise<Response> {
+async function logResponse(response: Response, url: string, startTime: number, method = 'GET'): Promise<Response> {
   const duration = Date.now() - startTime;
 
 
@@ -293,6 +340,9 @@ async function logResponse(response: Response, url: string, startTime: number): 
         statusText: response.statusText,
         message: errorMessage,
         timestamp: Date.now(),
+        url,
+        method,
+        errorType: 'http_error',
       });
       debugLog(`  [Captured API error: ${response.status} ${errorMessage}]`);
     } catch (e) {
@@ -303,6 +353,9 @@ async function logResponse(response: Response, url: string, startTime: number): 
         statusText: response.statusText,
         message: response.statusText,
         timestamp: Date.now(),
+        url,
+        method,
+        errorType: 'http_error',
       });
     }
   }
@@ -357,6 +410,7 @@ async function interceptedFetch(
         : input.url;
 
   const startTime = Date.now();
+  const method = getRequestMethod(input, init);
 
 
   // Log all requests as cURL commands
@@ -367,7 +421,7 @@ async function interceptedFetch(
   }
 
   if (
-    isAnthropicMessagesUrl(url) &&
+    isMessagesEndpointUrl(url) &&
     init?.method?.toUpperCase() === 'POST' &&
     init?.body
   ) {
@@ -385,15 +439,35 @@ async function interceptedFetch(
         };
 
         const response = await originalFetch(url, modifiedInit);
-        return logResponse(response, url, startTime);
+        return logResponse(response, url, startTime, method);
       }
     } catch (e) {
       debugLog('FETCH modification failed:', e);
     }
   }
 
-  const response = await originalFetch(input, init);
-  return logResponse(response, url, startTime);
+  try {
+    const response = await originalFetch(input, init);
+    return logResponse(response, url, startTime, method);
+  } catch (error) {
+    const message = extractErrorMessage(error);
+
+    // Capture network-level failures (DNS/TLS/connection timeout/refused/etc.)
+    if (shouldCaptureApiErrors(url)) {
+      setStoredError({
+        status: 0,
+        statusText: 'NETWORK_ERROR',
+        message,
+        timestamp: Date.now(),
+        url,
+        method,
+        errorType: 'network_error',
+      });
+      debugLog(`[NETWORK ERROR] ${method} ${url} -> ${message}`);
+    }
+
+    throw error;
+  }
 }
 
 // Create proxy to handle both function calls and static properties (e.g., fetch.preconnect in Bun)
