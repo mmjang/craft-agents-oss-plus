@@ -3003,18 +3003,9 @@ To view this task's output:
           markStoredCompactionComplete(managed.workspace.rootPath, sessionId)
           sessionLog.info(`Session ${sessionId}: compaction complete, marked pending plan ready`)
 
-          // Emit usage_update so the context count badge refreshes immediately
-          // after compaction, without waiting for the next message
-          if (managed.tokenUsage) {
-            this.sendEvent({
-              type: 'usage_update',
-              sessionId,
-              tokenUsage: {
-                inputTokens: managed.tokenUsage.inputTokens,
-                contextWindow: managed.tokenUsage.contextWindow,
-              },
-            }, workspaceId)
-          }
+          // Do not emit usage_update here: this info event can arrive before
+          // the turn's final usage is computed. The authoritative usage is sent
+          // on the subsequent complete event.
         }
 
         this.sendEvent({

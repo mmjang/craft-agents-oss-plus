@@ -742,6 +742,10 @@ export class CraftAgent {
       // Clear intent and display name maps for new turn
       this.toolIntents.clear();
       this.toolDisplayNames.clear();
+      // Reset per-turn usage snapshot.
+      // Some turns (e.g. /compact) may not emit assistant messages, so carrying
+      // over the previous turn's value would report stale context usage.
+      this.lastAssistantUsage = null;
 
       // Pin system prompt components on first chat() call for consistency after compaction
       // The SDK's resume mechanism expects system prompt consistency within a session
