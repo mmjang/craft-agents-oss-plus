@@ -184,6 +184,7 @@ export default {
   'appSettings.billing.claudeDesc': 'Use your Pro or Max subscription',
   'appSettings.billing.apiKeyLabel': 'API Key',
   'appSettings.billing.apiKeyDesc': 'Pay-as-you-go with your Anthropic key',
+  'appSettings.billing.editApiKey': 'Edit Key',
   'appSettings.apiKey.description': 'Pay-as-you-go with your own API key.',
   'appSettings.apiKey.getOne': 'Get one from Anthropic',
   'appSettings.apiKey.baseUrlLabel': 'API base URL (optional)',

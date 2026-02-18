@@ -184,6 +184,7 @@ export default {
   'appSettings.billing.claudeDesc': '使用你的 Pro 或 Max 订阅',
   'appSettings.billing.apiKeyLabel': 'API Key',
   'appSettings.billing.apiKeyDesc': '按量计费，使用你的 Anthropic 密钥',
+  'appSettings.billing.editApiKey': '修改 Key',
   'appSettings.apiKey.description': '使用你自己的 API Key 按量计费。',
   'appSettings.apiKey.getOne': '前往 Anthropic 获取',
   'appSettings.apiKey.baseUrlLabel': 'API 基础地址（可选）',

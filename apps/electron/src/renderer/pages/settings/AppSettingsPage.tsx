@@ -41,7 +41,6 @@ import {
   SettingsRow,
   SettingsToggle,
   SettingsSegmentedControl,
-  SettingsMenuSelectRow,
   SettingsMenuSelect,
 } from '@/components/settings'
 import { useUpdateChecker } from '@/hooks/useUpdateChecker'
@@ -486,17 +485,15 @@ export default function AppSettingsPage() {
     checkExistingToken()
   }, [expandedMethod])
 
+  const openApiKeyDialog = useCallback(() => {
+    setExpandedMethod('api_key')
+    setApiKeyError(undefined)
+  }, [])
+
   // Handle clicking on a billing method option
   const handleMethodClick = useCallback(async (method: AuthType) => {
-    // For API key method, allow toggling the dialog even when credential exists
-    // This enables users to modify their existing API key
     if (method === 'api_key') {
-      if (expandedMethod === 'api_key') {
-        setExpandedMethod(null)
-      } else {
-        setExpandedMethod(method)
-        setApiKeyError(undefined)
-      }
+      openApiKeyDialog()
       return
     }
 
@@ -510,7 +507,7 @@ export default function AppSettingsPage() {
     setApiKeyError(undefined)
     setClaudeOAuthStatus('idle')
     setClaudeOAuthError(undefined)
-  }, [authType, hasCredential, expandedMethod])
+  }, [authType, hasCredential, openApiKeyDialog])
 
   // Cancel billing method expansion
   const handleCancel = useCallback(() => {
@@ -780,7 +777,7 @@ export default function AppSettingsPage() {
             {/* Billing */}
             <SettingsSection title={t('appSettings.billing.title', 'Billing')} description={t('appSettings.billing.desc', 'Choose how you pay for AI usage')}>
               <SettingsCard>
-                <SettingsMenuSelectRow
+                <SettingsRow
                   label={t('appSettings.billing.paymentMethod', 'Payment method')}
                   description={
                     authType === 'api_key' && hasCredential
@@ -789,13 +786,28 @@ export default function AppSettingsPage() {
                         ? t('appSettings.billing.claudeConnected', 'Claude connected')
                         : t('appSettings.billing.selectMethod', 'Select a method')
                   }
-                  value={authType}
-                  onValueChange={(v) => handleMethodClick(v as AuthType)}
-                  options={[
-                    { value: 'oauth_token', label: t('appSettings.billing.claudePro', 'Claude Pro/Max'), description: t('appSettings.billing.claudeDesc', 'Use your Pro or Max subscription') },
-                    { value: 'api_key', label: t('appSettings.billing.apiKeyLabel', 'API Key'), description: t('appSettings.billing.apiKeyDesc', 'Pay-as-you-go with your Anthropic key') },
-                  ]}
-                />
+                >
+                  <div className="flex items-center gap-2">
+                    <SettingsMenuSelect
+                      value={authType}
+                      onValueChange={(v) => handleMethodClick(v as AuthType)}
+                      options={[
+                        { value: 'oauth_token', label: t('appSettings.billing.claudePro', 'Claude Pro/Max'), description: t('appSettings.billing.claudeDesc', 'Use your Pro or Max subscription') },
+                        { value: 'api_key', label: t('appSettings.billing.apiKeyLabel', 'API Key'), description: t('appSettings.billing.apiKeyDesc', 'Pay-as-you-go with your Anthropic key') },
+                      ]}
+                    />
+                    {authType === 'api_key' && hasCredential && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-3 rounded-lg bg-background shadow-minimal hover:bg-foreground/[0.02]"
+                        onClick={openApiKeyDialog}
+                      >
+                        {t('appSettings.billing.editApiKey', 'Edit Key')}
+                      </Button>
+                    )}
+                  </div>
+                </SettingsRow>
               </SettingsCard>
 
               {/* API Key Dialog */}

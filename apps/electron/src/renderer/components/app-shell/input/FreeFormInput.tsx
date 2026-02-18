@@ -312,6 +312,7 @@ export function FreeFormInput({
     () => personalityOptions.find((personality) => personality.id === currentPersonalityId) ?? personalityOptions[0],
     [currentPersonalityId, personalityOptions]
   )
+  const hasOnlyDefaultPersonalityOption = personalityOptions.length === 1 && personalityOptions[0]?.id === DEFAULT_PERSONALITY_ID
 
   // Double-Esc interrupt: show warning overlay on first Esc, interrupt on second
   const { showEscapeOverlay } = useEscapeInterrupt()
@@ -1295,7 +1296,7 @@ export function FreeFormInput({
           <div className="flex-1" />
 
           {/* 5. Personality Selector */}
-          {onPersonalityChange && selectedPersonality && (
+          {onPersonalityChange && selectedPersonality && !hasOnlyDefaultPersonalityOption && (
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-muted-foreground select-none">{t('freeform.personality.label', 'Personality')}</span>
               <DropdownMenu open={personalityDropdownOpen} onOpenChange={setPersonalityDropdownOpen}>
