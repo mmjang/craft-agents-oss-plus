@@ -467,6 +467,7 @@ export type SessionCommand =
   | { type: 'revokeShare' }
   | { type: 'startOAuth'; requestId: string }
   | { type: 'refreshTitle' }
+  | { type: 'editLastUserMessageAndResend'; messageId: string; content: string; badges?: ContentBadge[] }
   // Pending plan execution (Accept & Compact flow)
   | { type: 'setPendingPlanExecution'; planPath: string }
   | { type: 'markCompactionComplete' }

@@ -457,6 +457,13 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
       case 'refreshTitle':
         ipcLog.info(`IPC: refreshTitle received for session ${sessionId}`)
         return sessionManager.refreshTitle(sessionId)
+      case 'editLastUserMessageAndResend':
+        return sessionManager.editLastUserMessageAndResend(
+          sessionId,
+          command.messageId,
+          command.content,
+          command.badges
+        )
       // Pending plan execution (Accept & Compact flow)
       case 'setPendingPlanExecution':
         return sessionManager.setPendingPlanExecution(sessionId, command.planPath)

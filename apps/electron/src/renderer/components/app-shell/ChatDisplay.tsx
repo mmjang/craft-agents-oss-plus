@@ -13,6 +13,9 @@ import {
 import { motion, AnimatePresence } from "motion/react"
 
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { Markdown, CollapsibleMarkdownProvider, StreamingMarkdown, type RenderMode } from "@/components/markdown"
 import { AnimatedCollapsibleContent } from "@/components/ui/collapsible"
@@ -72,9 +75,15 @@ type OverlayState =
   | MarkdownOverlayState
   | null
 
+interface EditMessageState {
+  messageId: string
+  content: string
+}
+
 interface ChatDisplayProps {
   session: Session | null
   onSendMessage: (message: string, attachments?: FileAttachment[], skillSlugs?: string[]) => void
+  onEditLastUserMessageAndResend?: (messageId: string, content: string) => Promise<void>
   onOpenFile: (path: string) => void
   onOpenUrl: (url: string) => void
   // Model selection
@@ -314,6 +323,7 @@ function ScrollOnMount({
 export function ChatDisplay({
   session,
   onSendMessage,
+  onEditLastUserMessageAndResend,
   onOpenFile,
   onOpenUrl,
   currentModel,
@@ -421,6 +431,48 @@ export function ChatDisplay({
       title: t('chat.overlay.messagePreview', 'Message Preview'),
     })
   }, [session, t])
+
+  const [editState, setEditState] = useState<EditMessageState | null>(null)
+  const isSessionProcessing = session?.isProcessing ?? false
+
+  const openEditDialog = useCallback((message: Message) => {
+    if (!onEditLastUserMessageAndResend || isSessionProcessing) return
+    if (message.role !== 'user') return
+    setEditState({
+      messageId: message.id,
+      content: message.content,
+    })
+  }, [onEditLastUserMessageAndResend, isSessionProcessing])
+
+  const closeEditDialog = useCallback(() => {
+    setEditState(null)
+  }, [])
+
+  const handleEditContentChange = useCallback((value: string) => {
+    setEditState(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        content: value,
+      }
+    })
+  }, [])
+
+  const handleEditAndResend = useCallback(async () => {
+    if (!editState || !onEditLastUserMessageAndResend) return
+    const trimmed = editState.content.trim()
+    if (!trimmed) return
+
+    const messageId = editState.messageId
+    const content = editState.content
+    // Close immediately and let chat area reflect progress state.
+    setEditState(null)
+    try {
+      await onEditLastUserMessageAndResend(messageId, content)
+    } catch (error) {
+      console.error('Failed to edit and resend message:', error)
+    }
+  }, [editState, onEditLastUserMessageAndResend])
 
   // Ref to track total turn count for scroll handler
   const totalTurnCountRef = React.useRef(0)
@@ -568,6 +620,11 @@ export function ChatDisplay({
     return groupMessagesByTurn(session.messages)
   }, [session?.messages])
 
+  const lastUserMessageId = React.useMemo(() => {
+    const lastUserTurn = [...allTurns].reverse().find(turn => turn.type === 'user')
+    return lastUserTurn?.message.id
+  }, [allTurns])
+
   // Keep ref in sync for scroll handler
   totalTurnCountRef.current = allTurns.length
 
@@ -650,6 +707,13 @@ export function ChatDisplay({
                             message={turn.message}
                             onOpenFile={onOpenFile}
                             onOpenUrl={onOpenUrl}
+                            canEditAndResend={
+                              !!onEditLastUserMessageAndResend &&
+                              !messagesLoading &&
+                              !session.isProcessing &&
+                              turn.message.id === lastUserMessageId
+                            }
+                            onEditAndResend={openEditDialog}
                           />
                         </div>
                       )
@@ -898,6 +962,33 @@ export function ChatDisplay({
         </div>
       ) : null}
 
+      <Dialog open={!!editState} onOpenChange={(open) => { if (!open) closeEditDialog() }}>
+        <DialogContent className="sm:max-w-[640px]">
+          <DialogHeader>
+            <DialogTitle>{t('chat.editLastUserMessage', 'Edit last message')}</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={editState?.content ?? ''}
+            onChange={(e) => handleEditContentChange(e.target.value)}
+            rows={8}
+            autoFocus
+            className="min-h-[180px]"
+            placeholder={t('chat.editMessagePlaceholder', 'Update your message before re-sending')}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={closeEditDialog}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            <Button
+              onClick={handleEditAndResend}
+              disabled={!(editState?.content.trim())}
+            >
+              {t('chat.editAndResend', 'Edit and resend')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* ================================================================== */}
       {/* Preview Overlays - Rendered outside the main chat flow            */}
       {/* ================================================================== */}
@@ -1010,6 +1101,8 @@ interface MessageBubbleProps {
   message: Message
   onOpenFile: (path: string) => void
   onOpenUrl: (url: string) => void
+  canEditAndResend?: boolean
+  onEditAndResend?: (message: Message) => void
   /**
    * Markdown render mode for assistant messages
    * @default 'minimal'
@@ -1077,6 +1170,8 @@ function MessageBubble({
   message,
   onOpenFile,
   onOpenUrl,
+  canEditAndResend = false,
+  onEditAndResend,
   renderMode = 'minimal',
   onPopOut,
 }: MessageBubbleProps) {
@@ -1085,16 +1180,28 @@ function MessageBubble({
   // === USER MESSAGE: Right-aligned bubble with attachments above ===
   if (message.role === 'user') {
     return (
-      <UserMessageBubble
-        content={message.content}
-        attachments={message.attachments}
-        badges={message.badges}
-        isPending={message.isPending}
-        isQueued={message.isQueued}
-        ultrathink={message.ultrathink}
-        onUrlClick={onOpenUrl}
-        onFileClick={onOpenFile}
-      />
+      <div className="flex flex-col items-end gap-1.5">
+        {canEditAndResend && onEditAndResend && !message.isPending && !message.isQueued && (
+          <button
+            type="button"
+            onClick={() => onEditAndResend(message)}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2"
+            title={t('chat.editAndResend', 'Edit and resend')}
+          >
+            {t('chat.editAndResend', 'Edit and resend')}
+          </button>
+        )}
+        <UserMessageBubble
+          content={message.content}
+          attachments={message.attachments}
+          badges={message.badges}
+          isPending={message.isPending}
+          isQueued={message.isQueued}
+          ultrathink={message.ultrathink}
+          onUrlClick={onOpenUrl}
+          onFileClick={onOpenFile}
+        />
+      </div>
     )
   }
 
@@ -1227,6 +1334,8 @@ const MemoizedMessageBubble = React.memo(MessageBubble, (prev, next) => {
   return (
     prev.message.id === next.message.id &&
     prev.message.content === next.message.content &&
-    prev.message.role === next.message.role
+    prev.message.role === next.message.role &&
+    prev.canEditAndResend === next.canEditAndResend &&
+    prev.onEditAndResend === next.onEditAndResend
   )
 })

@@ -110,6 +110,7 @@ interface AppShellProps {
  */
 const PANEL_WINDOW_EDGE_SPACING = 6 // Padding between panels and window edge
 const PANEL_PANEL_SPACING = 5 // Gap between adjacent panels
+const SHOW_SOURCES_NAV = false // Temporarily hide Sources entry from left sidebar
 
 /**
  * AppShell - Main 3-panel layout container
@@ -777,8 +778,10 @@ function AppShellContent({
   }, [selectedSessionId, sortedWorkspaceSessionMetas, t, todoStateMap])
 
   const bottomSidebarLinks = useMemo<SidebarItem[]>(() => {
-    return [
-      {
+    const items: SidebarItem[] = []
+
+    if (SHOW_SOURCES_NAV) {
+      items.push({
         id: "nav:sources",
         title: t('appShell.nav.sources', 'Sources'),
         label: String(sources.length),
@@ -793,7 +796,7 @@ function AppShellContent({
         onToggle: () => toggleExpanded('nav:sources'),
         // Context menu: Add Source
         contextMenu: {
-          type: 'sources',
+          type: 'sources' as const,
           onAddSource: openAddSource,
         },
         // Subcategories for source types: APIs, MCPs, Local Folders
@@ -839,8 +842,10 @@ function AppShellContent({
             },
           },
         ],
-      },
-      {
+      })
+    }
+
+    items.push({
         id: "nav:skills",
         title: t('appShell.nav.skills', 'Skills'),
         label: String(skills.length),
@@ -852,16 +857,17 @@ function AppShellContent({
           type: 'skills',
           onAddSkill: openAddSkill,
         },
-      },
-      { id: "separator:skills-settings", type: "separator" },
-      {
+      })
+    items.push({ id: "separator:skills-settings", type: "separator" })
+    items.push({
         id: "nav:settings",
         title: t('appShell.nav.settings', 'Settings'),
         icon: Settings,
         variant: isSettingsNavigation(navState) ? "default" : "ghost",
         onClick: () => handleSettingsClick('app'),
-      },
-    ]
+      })
+
+    return items
   }, [
     t,
     sources.length,

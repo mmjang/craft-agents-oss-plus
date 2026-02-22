@@ -520,6 +520,10 @@ export default {
   'chat.openInNewWindow': 'Open in new window',
   'chat.conversationCompacted': 'Conversation Compacted',
   'chat.warning': 'Warning',
+  'chat.editAndResend': 'Edit and resend',
+  'chat.editLastUserMessage': 'Edit last message',
+  'chat.editMessagePlaceholder': 'Update your message before re-sending',
+  'chat.resending': 'Resending...',
 
   // Auth Request Card
   'auth.connected': '{{name}} Connected',

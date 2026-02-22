@@ -40,6 +40,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     apiBaseUrl,
     customModelIds,
     onSendMessage,
+    onEditLastUserMessageAndResend,
     onOpenFile,
     onOpenUrl,
     onRespondToPermission,
@@ -426,6 +427,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
               <ChatDisplay
                 session={skeletonSession}
                 onSendMessage={() => {}}
+                onEditLastUserMessageAndResend={async () => {}}
                 onOpenFile={handleOpenFile}
                 onOpenUrl={handleOpenUrl}
                 currentModel={effectiveModel}
@@ -490,6 +492,11 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
             onSendMessage={(message, attachments, skillSlugs) => {
               if (session) {
                 onSendMessage(session.id, message, attachments, skillSlugs)
+              }
+            }}
+            onEditLastUserMessageAndResend={async (messageId, content) => {
+              if (session) {
+                await onEditLastUserMessageAndResend(session.id, messageId, content)
               }
             }}
             onOpenFile={handleOpenFile}

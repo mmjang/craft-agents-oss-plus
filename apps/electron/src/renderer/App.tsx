@@ -686,6 +686,43 @@ export default function App() {
     window.electronAPI.sessionCommand(sessionId, { type: 'rename', name })
   }, [updateSessionById])
 
+  const buildMessageBadges = useCallback((message: string): ContentBadge[] => {
+    const badges: ContentBadge[] = windowWorkspaceId
+      ? extractBadges(message, skills, sources, windowWorkspaceId)
+      : []
+
+    // Detect SDK slash commands (e.g., /compact) and create command badges
+    const commandMatch = message.match(/^\/([a-z]+)(\s|$)/i)
+    if (commandMatch && commandMatch[1].toLowerCase() === 'compact') {
+      const commandText = commandMatch[0].trimEnd()
+      badges.unshift({
+        type: 'command',
+        label: 'Compact',
+        rawText: commandText,
+        start: 0,
+        end: commandText.length,
+      })
+    }
+
+    // Detect plan execution messages and create file badges
+    const planExecuteMatch = message.match(/^(Read the plan at )(.+?)( and execute it\.?)$/i)
+    if (planExecuteMatch) {
+      const prefix = planExecuteMatch[1]
+      const filePath = planExecuteMatch[2]
+      const fileName = filePath.split('/').pop() || 'plan.md'
+      badges.push({
+        type: 'file',
+        label: fileName,
+        rawText: filePath,
+        filePath: filePath,
+        start: prefix.length,
+        end: prefix.length + filePath.length,
+      })
+    }
+
+    return badges
+  }, [windowWorkspaceId, skills, sources])
+
   const handleSendMessage = useCallback(async (sessionId: string, message: string, attachments?: FileAttachment[], skillSlugs?: string[]) => {
     try {
       // Step 1: Store attachments and get persistent metadata
@@ -756,44 +793,8 @@ export default function App() {
         )
       }
 
-      // Step 4: Extract badges from mentions (sources/skills) with embedded icons
-      // Badges are self-contained for display in UserMessageBubble and viewer
-      const badges: ContentBadge[] = windowWorkspaceId
-        ? extractBadges(message, skills, sources, windowWorkspaceId)
-        : []
-
-      // Step 4.1: Detect SDK slash commands (e.g., /compact) and create command badges
-      // This makes /compact render as an inline badge rather than raw text
-      const commandMatch = message.match(/^\/([a-z]+)(\s|$)/i)
-      if (commandMatch && commandMatch[1].toLowerCase() === 'compact') {
-        const commandText = commandMatch[0].trimEnd() // "/compact" without trailing space
-        badges.unshift({
-          type: 'command',
-          label: 'Compact',
-          rawText: commandText,
-          start: 0,
-          end: commandText.length,
-        })
-      }
-
-      // Step 4.2: Detect plan execution messages and create file badges
-      // Pattern: "Read the plan at <path> and execute it."
-      // This is sent after compaction when accepting a plan, displays as clickable file badge
-      // Only the file path is replaced with a badge - surrounding text remains visible
-      const planExecuteMatch = message.match(/^(Read the plan at )(.+?)( and execute it\.?)$/i)
-      if (planExecuteMatch) {
-        const prefix = planExecuteMatch[1]      // "Read the plan at "
-        const filePath = planExecuteMatch[2]    // the actual path
-        const fileName = filePath.split('/').pop() || 'plan.md'
-        badges.push({
-          type: 'file',
-          label: fileName,
-          rawText: filePath,
-          filePath: filePath,
-          start: prefix.length,
-          end: prefix.length + filePath.length,
-        })
-      }
+      // Step 4: Extract content badges for inline rendering (sources/skills/commands/files)
+      const badges = buildMessageBadges(message)
 
       // Step 5: Create user message with StoredAttachments (for UI display)
       // Mark as isPending for optimistic UI - will be confirmed by user_message event
@@ -834,7 +835,84 @@ export default function App() {
         ]
       }))
     }
-  }, [updateSessionById, skills, sources, windowWorkspaceId])
+  }, [updateSessionById, buildMessageBadges])
+
+  const handleEditLastUserMessageAndResend = useCallback(async (sessionId: string, messageId: string, content: string) => {
+    const nextContent = content.trim()
+    if (!nextContent) {
+      throw new Error('Message cannot be empty')
+    }
+
+    const currentSession = store.get(sessionAtomFamily(sessionId))
+    if (!currentSession) {
+      throw new Error(`Session ${sessionId} not found`)
+    }
+
+    if (currentSession.isProcessing) {
+      throw new Error('Session is currently processing')
+    }
+
+    const targetIndex = currentSession.messages.findIndex(m => m.id === messageId && m.role === 'user')
+    if (targetIndex < 0) {
+      throw new Error('Message not found')
+    }
+
+    const latestUserMessage = [...currentSession.messages].reverse().find(m => m.role === 'user')
+    if (!latestUserMessage || latestUserMessage.id !== messageId) {
+      throw new Error('Only the latest user message can be edited')
+    }
+
+    const snapshot = currentSession
+    const badges = buildMessageBadges(nextContent)
+
+    // Optimistically truncate from edited message and show processing state.
+    updateSessionById(sessionId, (session) => {
+      const index = session.messages.findIndex(m => m.id === messageId)
+      if (index < 0) return {}
+      const remainingMessages = session.messages.slice(0, index)
+      const lastPersistable = [...remainingMessages].reverse().find(m =>
+        m.role === 'user' ||
+        m.role === 'assistant' ||
+        m.role === 'plan' ||
+        m.role === 'tool' ||
+        m.role === 'error'
+      )
+
+      return {
+        messages: remainingMessages,
+        isProcessing: true,
+        lastMessageAt: Date.now(),
+        lastMessageRole: lastPersistable?.role as Session['lastMessageRole'],
+      }
+    })
+
+    try {
+      await window.electronAPI.sessionCommand(sessionId, {
+        type: 'editLastUserMessageAndResend',
+        messageId,
+        content: nextContent,
+        badges: badges.length > 0 ? badges : undefined,
+      })
+    } catch (error) {
+      const errorText = error instanceof Error ? error.message : 'Unknown error'
+
+      updateSessionDirect(sessionId, () => ({
+        ...snapshot,
+        isProcessing: false,
+        messages: [
+          ...snapshot.messages,
+          {
+            id: generateMessageId(),
+            role: 'error',
+            content: `Failed to edit and resend message: ${errorText}`,
+            timestamp: Date.now(),
+          },
+        ],
+      }))
+
+      throw error
+    }
+  }, [store, updateSessionById, updateSessionDirect, buildMessageBadges])
 
   const handleModelChange = useCallback((model: string) => {
     setCurrentModel(model)
@@ -1135,6 +1213,7 @@ export default function App() {
     // Session callbacks
     onCreateSession: handleCreateSession,
     onSendMessage: handleSendMessage,
+    onEditLastUserMessageAndResend: handleEditLastUserMessageAndResend,
     onRenameSession: handleRenameSession,
     onFlagSession: handleFlagSession,
     onUnflagSession: handleUnflagSession,
@@ -1176,6 +1255,7 @@ export default function App() {
     sessionOptions,
     handleCreateSession,
     handleSendMessage,
+    handleEditLastUserMessageAndResend,
     handleRenameSession,
     handleFlagSession,
     handleUnflagSession,

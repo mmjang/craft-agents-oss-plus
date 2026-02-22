@@ -49,6 +49,7 @@ import { generateSessionTitle, regenerateSessionTitle, formatPathsToRelative, fo
 import { DEFAULT_MODEL } from '@craft-agent/shared/config'
 import { type ThinkingLevel, DEFAULT_THINKING_LEVEL } from '@craft-agent/shared/agent/thinking-levels'
 import { loadWorkspacePersonality } from '@craft-agent/shared/personalities'
+import { readFileAttachment as readFileAttachmentFromPath } from '@craft-agent/shared/utils/files'
 
 /**
  * Sanitize message content for use as session title.
@@ -2090,6 +2091,131 @@ export class SessionManager {
       this.sendEvent({ type: 'session_personality_changed', sessionId, personality }, managed.workspace.id)
       sessionLog.info(`Session ${sessionId} personality updated to: ${personality ?? '(default)'}`)
     }
+  }
+
+  /**
+   * Rebuild sendable attachments from stored attachment metadata.
+   * Used when re-sending a previously sent user message.
+   */
+  private async rebuildAttachmentsFromStored(storedAttachments?: StoredAttachment[]): Promise<FileAttachment[] | undefined> {
+    if (!storedAttachments?.length) return undefined
+
+    const rebuilt = await Promise.all(storedAttachments.map(async (stored) => {
+      try {
+        const attachment = readFileAttachmentFromPath(stored.storedPath)
+        if (!attachment) {
+          sessionLog.warn(`Failed to re-read stored attachment: ${stored.storedPath}`)
+          return null
+        }
+
+        return {
+          ...attachment,
+          // Keep persisted metadata as source of truth
+          name: stored.name,
+          mimeType: stored.mimeType,
+          size: stored.size,
+          storedPath: stored.storedPath,
+          markdownPath: stored.markdownPath,
+          // Use resized payload if available (for large images)
+          base64: stored.resizedBase64 ?? attachment.base64,
+        } as FileAttachment
+      } catch (error) {
+        sessionLog.warn(`Failed to rebuild attachment ${stored.storedPath}:`, error)
+        return null
+      }
+    }))
+
+    const valid = rebuilt.filter((att): att is FileAttachment => att !== null)
+    return valid.length > 0 ? valid : undefined
+  }
+
+  /**
+   * Get the last persistable role for sidebar badge display.
+   */
+  private getLastPersistableRole(messages: Message[]): ManagedSession['lastMessageRole'] {
+    const last = [...messages].reverse().find(m =>
+      m.role === 'user' ||
+      m.role === 'assistant' ||
+      m.role === 'plan' ||
+      m.role === 'tool' ||
+      m.role === 'error'
+    )
+    return last?.role as ManagedSession['lastMessageRole'] | undefined
+  }
+
+  /**
+   * Edit the latest user message in a session and re-send it.
+   * This truncates that message and everything after it, clears SDK resume state,
+   * then sends the edited content as a fresh user message.
+   */
+  async editLastUserMessageAndResend(
+    sessionId: string,
+    messageId: string,
+    content: string,
+    badges?: Message['badges']
+  ): Promise<void> {
+    const managed = this.sessions.get(sessionId)
+    if (!managed) {
+      throw new Error(`Session ${sessionId} not found`)
+    }
+
+    const nextContent = content.trim()
+    if (!nextContent) {
+      throw new Error('Message content cannot be empty')
+    }
+
+    if (managed.isProcessing) {
+      throw new Error('Cannot edit while session is processing')
+    }
+
+    await this.ensureMessagesLoaded(managed)
+
+    const lastUserIndex = managed.messages.findLastIndex(m => m.role === 'user')
+    if (lastUserIndex < 0) {
+      throw new Error('No user message found to edit')
+    }
+
+    const lastUserMessage = managed.messages[lastUserIndex]
+    if (!lastUserMessage || lastUserMessage.id !== messageId) {
+      throw new Error('Only the latest user message can be edited')
+    }
+
+    const storedAttachments = lastUserMessage.attachments
+    const ultrathinkEnabled = !!lastUserMessage.ultrathink
+
+    // Remove the target user message and all subsequent messages
+    managed.messages = managed.messages.slice(0, lastUserIndex)
+    managed.lastMessageAt = Date.now()
+    managed.lastMessageRole = this.getLastPersistableRole(managed.messages)
+    managed.messageQueue = []
+    managed.pendingTools.clear()
+    managed.parentToolStack = []
+    managed.toolToParentMap.clear()
+    managed.pendingTextParent = undefined
+
+    // Force fresh SDK conversation state to keep model context aligned with truncated history
+    managed.sdkSessionId = undefined
+    if (managed.agent) {
+      managed.agent.clearHistory()
+      managed.agent.setSessionId(null)
+    }
+
+    this.persistSession(managed)
+    // Flush immediately so a crash won't leave stale resume state on disk
+    await this.flushSession(sessionId)
+
+    const rebuiltAttachments = await this.rebuildAttachmentsFromStored(storedAttachments)
+
+    await this.sendMessage(
+      sessionId,
+      nextContent,
+      rebuiltAttachments,
+      storedAttachments,
+      {
+        ultrathinkEnabled,
+        badges,
+      }
+    )
   }
 
   /**

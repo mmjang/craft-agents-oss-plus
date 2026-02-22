@@ -520,6 +520,10 @@ export default {
   'chat.openInNewWindow': '在新窗口中打开',
   'chat.conversationCompacted': '对话已压缩',
   'chat.warning': '警告',
+  'chat.editAndResend': '编辑并重发',
+  'chat.editLastUserMessage': '编辑最后一条消息',
+  'chat.editMessagePlaceholder': '修改消息后重新发送',
+  'chat.resending': '重发中...',
 
   // 认证请求卡片
   'auth.connected': '{{name}} 已连接',
