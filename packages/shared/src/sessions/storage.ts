@@ -144,6 +144,7 @@ export function createSession(
     enabledSourceSlugs?: string[];
     model?: string;
     personality?: string;
+    thinkingLevel?: SessionConfig['thinkingLevel'];
   }
 ): SessionConfig {
   ensureSessionsDir(workspaceRootPath);
@@ -171,6 +172,7 @@ export function createSession(
     enabledSourceSlugs: options?.enabledSourceSlugs,
     model: options?.model,
     personality: options?.personality,
+    thinkingLevel: options?.thinkingLevel,
   };
 
   // Save empty session
@@ -372,6 +374,7 @@ function headerToMetadata(header: SessionHeader, workspaceRootPath: string): Ses
       sdkCwd,
       model: header.model,
       personality: header.personality,
+      thinkingLevel: header.thinkingLevel,
       // Shared viewer state - must be included for persistence across app restarts
       sharedUrl: header.sharedUrl,
       sharedId: header.sharedId,
@@ -478,6 +481,7 @@ export function updateSessionMetadata(
     | 'sharedId'
     | 'model'
     | 'personality'
+    | 'thinkingLevel'
   >>
 ): void {
   const session = loadSession(workspaceRootPath, sessionId);
@@ -494,6 +498,7 @@ export function updateSessionMetadata(
   if ('sharedId' in updates) session.sharedId = updates.sharedId;
   if ('model' in updates) session.model = updates.model;
   if ('personality' in updates) session.personality = updates.personality;
+  if ('thinkingLevel' in updates) session.thinkingLevel = updates.thinkingLevel;
 
   saveSession(session);
 }

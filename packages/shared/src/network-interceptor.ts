@@ -1,5 +1,5 @@
 /**
- * Fetch interceptor for Anthropic API requests.
+ * Fetch interceptor for LLM API requests.
  *
  * Loaded via bunfig.toml preload to run BEFORE any modules are evaluated.
  * This ensures we patch globalThis.fetch before the SDK captures it.
@@ -7,9 +7,11 @@
  * Features:
  * - Captures API errors for error handler (4xx/5xx responses)
  * - Adds _intent and _displayName metadata to MCP tool schemas
+ * - Optionally dumps per-request API I/O evidence to JSON files
  */
 
 import { existsSync, readFileSync, writeFileSync, unlinkSync, appendFileSync, mkdirSync } from 'node:fs';
+import { createHash, randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
@@ -18,18 +20,341 @@ import { join } from 'node:path';
 type HeadersInitType = Headers | Record<string, string> | string[][];
 
 const DEBUG = process.argv.includes('--debug') || process.env.CRAFT_DEBUG === '1';
+const API_IO_DUMP_DIR_ENV = 'CRAFT_API_IO_DUMP_DIR';
+const API_IO_INCLUDE_SECRETS = process.env.CRAFT_API_IO_INCLUDE_SECRETS === '1';
+const DEFAULT_API_IO_DUMP_DIR = join(homedir(), '.craft-plus', 'api-request-dumps');
+const API_IO_DUMP_DIR = resolveApiIoDumpDir();
+const API_IO_DUMP_ENABLED = API_IO_DUMP_DIR !== null;
+const API_IO_MAX_BODY_CHARS = parsePositiveInt(process.env.CRAFT_API_IO_MAX_BODY_CHARS, 2_000_000);
+let apiIoDumpCounter = 0;
 
 // Log file for debug output (avoids console spam)
 const LOG_DIR = join(homedir(), '.craft-plus', 'logs');
 const LOG_FILE = join(LOG_DIR, 'interceptor.log');
 
-// Ensure log directory exists at module load
-try {
-  if (!existsSync(LOG_DIR)) {
-    mkdirSync(LOG_DIR, { recursive: true });
+function ensureDir(dir: string): void {
+  try {
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+  } catch {
+    // Ignore - logging/dumping will silently fail if dir can't be created
   }
-} catch {
-  // Ignore - logging will silently fail if dir can't be created
+}
+
+// Ensure output directories exist at module load
+ensureDir(LOG_DIR);
+if (API_IO_DUMP_DIR) {
+  ensureDir(API_IO_DUMP_DIR);
+}
+
+interface ApiRequestCapture {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  bodyText: string | null;
+  bodyJson?: unknown;
+}
+
+interface ApiResponseCapture {
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  bodyText: string | null;
+  bodyJson?: unknown;
+  bodyOmittedReason?: string;
+  bodyTruncated?: boolean;
+  originalBodyLength?: number;
+}
+
+interface SecretSummary {
+  present: boolean;
+  preview: string | null;
+  sha256: string | null;
+}
+
+interface ApiInteractionCapture {
+  request: ApiRequestCapture;
+  startedAtMs: number;
+  finishedAtMs: number;
+  durationMs: number;
+  response?: ApiResponseCapture;
+  networkError?: {
+    message: string;
+    name?: string;
+  };
+}
+
+function parsePositiveInt(rawValue: string | undefined, fallback: number): number {
+  if (!rawValue) return fallback;
+  const parsed = Number.parseInt(rawValue, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function resolveApiIoDumpDir(): string | null {
+  const raw = process.env[API_IO_DUMP_DIR_ENV];
+  if (raw === undefined) return null;
+
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed === '1' || trimmed.toLowerCase() === 'true') {
+    return DEFAULT_API_IO_DUMP_DIR;
+  }
+  return trimmed;
+}
+
+function hashSecret(value: string): string {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+function previewSecret(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return '(empty)';
+  if (trimmed.length <= 8) {
+    return `${trimmed.charAt(0)}***${trimmed.charAt(trimmed.length - 1)} (len=${trimmed.length})`;
+  }
+  return `${trimmed.slice(0, 6)}...${trimmed.slice(-4)} (len=${trimmed.length})`;
+}
+
+function summarizeSecret(value: string | null | undefined): SecretSummary {
+  if (value == null) {
+    return { present: false, preview: null, sha256: null };
+  }
+  return {
+    present: true,
+    preview: previewSecret(value),
+    sha256: value ? hashSecret(value) : null,
+  };
+}
+
+function sanitizeFileSegment(value: string): string {
+  return value.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'unknown';
+}
+
+function timestampForFile(timestampMs: number): string {
+  return new Date(timestampMs).toISOString().replace(/[.:]/g, '-');
+}
+
+function headerEntries(headersInit: HeadersInitType | undefined): Array<[string, string]> {
+  if (!headersInit) return [];
+  if (headersInit instanceof Headers) {
+    const pairs: Array<[string, string]> = [];
+    headersInit.forEach((value, key) => {
+      pairs.push([key, value]);
+    });
+    return pairs;
+  }
+  if (Array.isArray(headersInit)) {
+    const pairs: Array<[string, string]> = [];
+    for (const entry of headersInit) {
+      if (entry.length >= 2) {
+        pairs.push([String(entry[0]), String(entry[1])]);
+      }
+    }
+    return pairs;
+  }
+  return Object.entries(headersInit);
+}
+
+function mergeHeaders(input: string | URL | Request, init?: RequestInit): Headers {
+  const merged = new Headers(input instanceof Request ? input.headers : undefined);
+  for (const [key, value] of headerEntries(init?.headers as HeadersInitType | undefined)) {
+    merged.set(key, value);
+  }
+  return merged;
+}
+
+function getRequestBodyTypeLabel(body: RequestInit['body']): string {
+  if (!body) return 'empty';
+  if (typeof body === 'string') return 'text';
+  if (body instanceof URLSearchParams) return 'urlsearchparams';
+  if (body instanceof FormData) return 'formdata';
+  if (body instanceof Blob) return 'blob';
+  if (body instanceof ReadableStream) return 'readable-stream';
+  if (body instanceof ArrayBuffer) return 'arraybuffer';
+  if (ArrayBuffer.isView(body)) return 'typed-array';
+  return typeof body;
+}
+
+async function extractRequestBodyText(input: string | URL | Request, init?: RequestInit): Promise<string | null> {
+  if (typeof init?.body === 'string') return init.body;
+
+  if (init?.body != null) {
+    return `[omitted non-text request body: ${getRequestBodyTypeLabel(init.body)}]`;
+  }
+
+  if (input instanceof Request) {
+    try {
+      return await input.clone().text();
+    } catch {
+      return '[omitted request body: failed to clone/read Request body]';
+    }
+  }
+
+  return null;
+}
+
+function tryParseJson(text: string | null): unknown | undefined {
+  if (!text) return undefined;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
+function toObjectSanitized(headers: Headers): Record<string, string> {
+  const result: Record<string, string> = {};
+  headers.forEach((value, key) => {
+    const lower = key.toLowerCase();
+    const isSensitive =
+      lower === 'authorization' ||
+      lower === 'x-api-key' ||
+      lower === 'cookie' ||
+      lower === 'set-cookie';
+
+    if (isSensitive && !API_IO_INCLUDE_SECRETS) {
+      const preview = previewSecret(value) ?? 'n/a';
+      const digest = value ? hashSecret(value) : 'empty';
+      result[key] = `[REDACTED preview=${preview} sha256=${digest}]`;
+      return;
+    }
+
+    result[key] = value;
+  });
+  return result;
+}
+
+function extractAuthScheme(value: string | null): string | null {
+  if (!value) return null;
+  const firstSpace = value.indexOf(' ');
+  if (firstSpace === -1) return value;
+  return value.slice(0, firstSpace);
+}
+
+function getApiAuthContext(headers: Headers): Record<string, unknown> {
+  const authorization = headers.get('authorization');
+  const xApiKey = headers.get('x-api-key');
+
+  return {
+    requestHeaders: {
+      authorization: summarizeSecret(authorization),
+      authorizationScheme: extractAuthScheme(authorization),
+      xApiKey: summarizeSecret(xApiKey),
+      anthropicVersion: headers.get('anthropic-version'),
+      claudeOauthHeaderPresent: headers.has('x-claude-code-oauth-token'),
+    },
+    runtimeEnv: {
+      anthropicApiKey: summarizeSecret(process.env.ANTHROPIC_API_KEY),
+      anthropicAuthToken: summarizeSecret(process.env.ANTHROPIC_AUTH_TOKEN),
+      claudeCodeOauthToken: summarizeSecret(process.env.CLAUDE_CODE_OAUTH_TOKEN),
+      anthropicBaseUrl: process.env.ANTHROPIC_BASE_URL?.trim() || null,
+    },
+  };
+}
+
+async function buildRequestCapture(
+  input: string | URL | Request,
+  init: RequestInit | undefined,
+  url: string,
+  method: string
+): Promise<ApiRequestCapture> {
+  const headers = mergeHeaders(input, init);
+  const bodyText = await extractRequestBodyText(input, init);
+  return {
+    url,
+    method,
+    headers: toObjectSanitized(headers),
+    bodyText,
+    bodyJson: tryParseJson(bodyText),
+  };
+}
+
+async function buildResponseCapture(response: Response): Promise<ApiResponseCapture> {
+  const contentType = response.headers.get('content-type') ?? '';
+  const headers = toObjectSanitized(response.headers);
+
+  if (contentType.includes('text/event-stream')) {
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+      bodyText: null,
+      bodyOmittedReason: 'SSE stream body is not captured to avoid consuming live stream payload',
+    };
+  }
+
+  try {
+    const text = await response.clone().text();
+    const truncated = text.length > API_IO_MAX_BODY_CHARS;
+    const bodyText = truncated ? `${text.slice(0, API_IO_MAX_BODY_CHARS)}\n...[truncated]` : text;
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+      bodyText,
+      bodyJson: tryParseJson(bodyText),
+      bodyTruncated: truncated || undefined,
+      originalBodyLength: truncated ? text.length : undefined,
+    };
+  } catch (error) {
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+      bodyText: null,
+      bodyOmittedReason: `Failed to read response body: ${extractErrorMessage(error)}`,
+    };
+  }
+}
+
+function shouldCaptureApiIoDump(url: string): boolean {
+  return API_IO_DUMP_ENABLED && isLlmApiEndpointUrl(url);
+}
+
+function writeApiInteractionDump(
+  url: string,
+  method: string,
+  capture: ApiInteractionCapture,
+  authContext: Record<string, unknown>
+): void {
+  if (!shouldCaptureApiIoDump(url) || !API_IO_DUMP_DIR) return;
+
+  ensureDir(API_IO_DUMP_DIR);
+  const counter = (++apiIoDumpCounter).toString().padStart(6, '0');
+  const statusPart = capture.networkError
+    ? 'network-error'
+    : capture.response
+      ? `http-${capture.response.status}`
+      : 'unknown';
+  const fileName = `${timestampForFile(capture.startedAtMs)}-${sanitizeFileSegment(method)}-${sanitizeFileSegment(statusPart)}-${counter}-${randomUUID().slice(0, 8)}.json`;
+  const filePath = join(API_IO_DUMP_DIR, fileName);
+
+  const payload = {
+    schemaVersion: 1,
+    capturedAt: new Date(capture.finishedAtMs).toISOString(),
+    timing: {
+      startedAt: new Date(capture.startedAtMs).toISOString(),
+      finishedAt: new Date(capture.finishedAtMs).toISOString(),
+      durationMs: capture.durationMs,
+    },
+    request: capture.request,
+    response: capture.response ?? null,
+    networkError: capture.networkError ?? null,
+    authentication: authContext,
+    runtime: {
+      pid: process.pid,
+      platform: process.platform,
+      bunVersion: process.versions.bun ?? null,
+      nodeVersion: process.versions.node,
+    },
+  };
+
+  try {
+    writeFileSync(filePath, JSON.stringify(payload, null, 2), 'utf-8');
+  } catch (error) {
+    debugLog(`[api-io-dump] Failed to write file ${filePath}: ${extractErrorMessage(error)}`);
+  }
 }
 
 /**
@@ -145,6 +470,33 @@ function isMessagesEndpointUrl(url: string): boolean {
 }
 
 /**
+ * Check whether URL targets a common LLM inference endpoint.
+ * Covers Anthropic-compatible, OpenAI-compatible, and gateway variants.
+ */
+function isLlmApiEndpointUrl(url: string): boolean {
+  const matches = (path: string): boolean => {
+    const normalized = path.toLowerCase();
+    return (
+      normalized === '/v1/messages' ||
+      normalized.endsWith('/messages') ||
+      normalized === '/v1/chat/completions' ||
+      normalized.endsWith('/chat/completions') ||
+      normalized === '/v1/responses' ||
+      normalized.endsWith('/responses') ||
+      normalized === '/v1/completions' ||
+      normalized.endsWith('/completions')
+    );
+  };
+
+  try {
+    const parsed = new URL(url);
+    return matches(parsed.pathname);
+  } catch {
+    return matches(url);
+  }
+}
+
+/**
  * Add _intent and _displayName fields to all MCP tool schemas in Anthropic API request.
  * Only modifies tools that start with "mcp__" (MCP tools from SDK).
  * Returns the modified request body object.
@@ -216,7 +568,7 @@ function addMetadataToMcpTools(body: Record<string, unknown>): Record<string, un
  * Check if URL should have API errors captured
  */
 function shouldCaptureApiErrors(url: string): boolean {
-  return isMessagesEndpointUrl(url);
+  return isLlmApiEndpointUrl(url);
 }
 
 function isOpenRouterUrl(url: string): boolean {
@@ -394,8 +746,16 @@ function toCurl(url: string, init?: RequestInit): string {
  * Clone response and log its body (handles streaming responses).
  * Also captures API errors (4xx/5xx) for the error handler.
  */
-async function logResponse(response: Response, url: string, startTime: number, method = 'GET'): Promise<Response> {
-  const duration = Date.now() - startTime;
+async function logResponse(
+  response: Response,
+  url: string,
+  startTime: number,
+  method = 'GET',
+  requestCapture?: ApiRequestCapture,
+  authContext?: Record<string, unknown>
+): Promise<Response> {
+  const finishedAtMs = Date.now();
+  const duration = finishedAtMs - startTime;
 
 
   // Capture API errors (runs regardless of DEBUG mode)
@@ -443,6 +803,17 @@ async function logResponse(response: Response, url: string, startTime: number, m
         errorType: 'http_error',
       });
     }
+  }
+
+  if (requestCapture && authContext && shouldCaptureApiIoDump(url)) {
+    const responseCapture = await buildResponseCapture(response);
+    writeApiInteractionDump(url, method, {
+      request: requestCapture,
+      startedAtMs: startTime,
+      finishedAtMs,
+      durationMs: duration,
+      response: responseCapture,
+    }, authContext);
   }
 
   if (!DEBUG) return response;
@@ -494,7 +865,6 @@ async function interceptedFetch(
         ? input.toString()
         : input.url;
 
-  const startTime = Date.now();
   const method = getRequestMethod(input, init);
 
 
@@ -527,7 +897,14 @@ async function interceptedFetch(
           headers,
           body: JSON.stringify(parsed),
         };
-
+        const shouldDumpRequest = shouldCaptureApiIoDump(requestUrl);
+        const requestCapture = shouldDumpRequest
+          ? await buildRequestCapture(requestUrl, modifiedInit, requestUrl, method)
+          : undefined;
+        const authContext = shouldDumpRequest
+          ? getApiAuthContext(mergeHeaders(requestUrl, modifiedInit))
+          : undefined;
+        const requestStartTime = Date.now();
         const response = await originalFetch(requestUrl, modifiedInit);
 
         // OpenRouter fallback:
@@ -541,31 +918,48 @@ async function interceptedFetch(
         ) {
           const firstBody = await responseBodyText(response);
           if (isNoAllowedProvidersMessage(firstBody)) {
+            await logResponse(response, requestUrl, requestStartTime, method, requestCapture, authContext);
             debugLog('[OpenRouter fallback] No providers for tool payload; retrying without tools/tool_choice');
             const fallbackBody = removeToolFields(parsed);
             const fallbackInit = {
               ...modifiedInit,
               body: JSON.stringify(fallbackBody),
             };
+            const fallbackShouldDump = shouldCaptureApiIoDump(requestUrl);
+            const fallbackRequestCapture = fallbackShouldDump
+              ? await buildRequestCapture(requestUrl, fallbackInit, requestUrl, method)
+              : undefined;
+            const fallbackAuthContext = fallbackShouldDump
+              ? getApiAuthContext(mergeHeaders(requestUrl, fallbackInit))
+              : undefined;
+            const fallbackStartTime = Date.now();
             const fallbackResponse = await originalFetch(requestUrl, fallbackInit);
             if (fallbackResponse.ok) {
               // Clear stale captured error from failed first attempt
               setStoredError(null);
             }
-            return logResponse(fallbackResponse, requestUrl, startTime, method);
+            return logResponse(fallbackResponse, requestUrl, fallbackStartTime, method, fallbackRequestCapture, fallbackAuthContext);
           }
         }
 
-        return logResponse(response, requestUrl, startTime, method);
+        return logResponse(response, requestUrl, requestStartTime, method, requestCapture, authContext);
       }
     } catch (e) {
       debugLog('FETCH modification failed:', e);
     }
   }
 
+  const shouldDump = shouldCaptureApiIoDump(url);
+  const requestCapture = shouldDump
+    ? await buildRequestCapture(input, init, url, method)
+    : undefined;
+  const authContext = shouldDump
+    ? getApiAuthContext(mergeHeaders(input, init))
+    : undefined;
+  const requestStartTime = Date.now();
   try {
     const response = await originalFetch(input, init);
-    return logResponse(response, url, startTime, method);
+    return logResponse(response, url, requestStartTime, method, requestCapture, authContext);
   } catch (error) {
     const message = extractErrorMessage(error);
 
@@ -581,6 +975,20 @@ async function interceptedFetch(
         errorType: 'network_error',
       });
       debugLog(`[NETWORK ERROR] ${method} ${url} -> ${message}`);
+    }
+
+    if (requestCapture && authContext) {
+      const finishedAtMs = Date.now();
+      writeApiInteractionDump(url, method, {
+        request: requestCapture,
+        startedAtMs: requestStartTime,
+        finishedAtMs,
+        durationMs: finishedAtMs - requestStartTime,
+        networkError: {
+          message,
+          name: error instanceof Error ? error.name : undefined,
+        },
+      }, authContext);
     }
 
     throw error;

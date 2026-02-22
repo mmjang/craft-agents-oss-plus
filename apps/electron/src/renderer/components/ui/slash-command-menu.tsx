@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Command as CommandPrimitive } from 'cmdk'
-import { Brain, Check } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { Icon_Folder } from '@craft-agent/ui'
 import { cn } from '@/lib/utils'
 import { PERMISSION_MODE_CONFIG, PERMISSION_MODE_ORDER, type PermissionMode } from '@craft-agent/shared/agent/modes'
@@ -91,21 +91,12 @@ const permissionModeCommands: SlashCommand[] = PERMISSION_MODE_ORDER.map(mode =>
   }
 })
 
-const ultrathinkCommand: SlashCommand = {
-  id: 'ultrathink',
-  label: 'Ultrathink',
-  description: 'Extended reasoning for complex problems',
-  icon: <Brain className={MENU_ICON_SIZE} />,
-}
-
 export const DEFAULT_SLASH_COMMANDS: SlashCommand[] = [
   ...permissionModeCommands,
-  ultrathinkCommand,
 ]
 
 export const DEFAULT_SLASH_COMMAND_GROUPS: CommandGroup[] = [
   { id: 'modes', commands: permissionModeCommands },
-  { id: 'features', commands: [ultrathinkCommand] },
 ]
 
 // ============================================================================
@@ -209,14 +200,6 @@ export function SlashCommandMenu({
   const resolvedPlaceholder = filterPlaceholder ?? t('slashMenu.search', 'Search commands...')
 
   const localizeCommand = React.useCallback((cmd: SlashCommand): SlashCommand => {
-    if (cmd.id === 'ultrathink') {
-      return {
-        ...cmd,
-        label: t('appShell.ultrathink', cmd.label),
-        description: t('slash.ultrathinkDesc', 'Extended reasoning for complex problems'),
-      }
-    }
-
     if (cmd.id === 'safe' || cmd.id === 'ask' || cmd.id === 'allow-all') {
       const modeLabelKey: Record<string, TranslationKey> = {
         safe: 'permissions.mode.safe',
@@ -611,13 +594,6 @@ export function useInlineSlashCommand({
       id: 'modes',
       label: 'Modes',
       items: permissionModeCommands,
-    })
-
-    // Features section
-    result.push({
-      id: 'features',
-      label: 'Features',
-      items: [ultrathinkCommand],
     })
 
     // Recent folders section - sorted alphabetically by folder name, show all

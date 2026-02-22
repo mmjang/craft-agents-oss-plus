@@ -33,15 +33,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import {
   DropdownMenu,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu'
 import {
   StyledDropdownMenuContent,
   StyledDropdownMenuItem,
   StyledDropdownMenuSeparator,
-  StyledDropdownMenuSubTrigger,
-  StyledDropdownMenuSubContent,
 } from '@/components/ui/styled-dropdown'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
@@ -53,7 +49,6 @@ import { FreeFormInputContextBadge } from './FreeFormInputContextBadge'
 import type { FileAttachment, LoadedSource, LoadedSkill, WorkspacePersonality } from '../../../../shared/types'
 import type { PermissionMode } from '@craft-agent/shared/agent/modes'
 import { PERMISSION_MODE_ORDER } from '@craft-agent/shared/agent/modes'
-import { type ThinkingLevel, THINKING_LEVELS, getThinkingLevelName } from '@craft-agent/shared/agent/thinking-levels'
 import { useEscapeInterrupt } from '@/context/EscapeInterruptContext'
 import { EscapeInterruptOverlay } from './EscapeInterruptOverlay'
 import { useI18n } from '@/i18n/I18nContext'
@@ -98,13 +93,9 @@ export interface FreeFormInputProps {
   apiBaseUrl?: string | null
   /** Custom model IDs configured via app settings */
   customModelIds?: string[]
-  // Thinking level (session-level setting)
-  /** Current thinking level ('off', 'think', 'max') */
-  thinkingLevel?: ThinkingLevel
-  /** Callback when thinking level changes */
-  onThinkingLevelChange?: (level: ThinkingLevel) => void
-  // Advanced options
+  /** @deprecated Kept only for playground compatibility; no longer used in UI. */
   ultrathinkEnabled?: boolean
+  /** @deprecated Kept only for playground compatibility; no longer used in UI. */
   onUltrathinkChange?: (enabled: boolean) => void
   permissionMode?: PermissionMode
   onPermissionModeChange?: (mode: PermissionMode) => void
@@ -180,10 +171,8 @@ export function FreeFormInput({
   onPersonalityChange,
   apiBaseUrl,
   customModelIds,
-  thinkingLevel = 'think',
-  onThinkingLevelChange,
-  ultrathinkEnabled = false,
-  onUltrathinkChange,
+  ultrathinkEnabled: _ultrathinkEnabled,
+  onUltrathinkChange: _onUltrathinkChange,
   permissionMode = 'ask',
   onPermissionModeChange,
   enabledModes = ['safe', 'ask', 'allow-all'],
@@ -556,17 +545,15 @@ export function FreeFormInput({
     if (permissionMode === 'safe') active.push('safe')
     else if (permissionMode === 'ask') active.push('ask')
     else if (permissionMode === 'allow-all') active.push('allow-all')
-    if (ultrathinkEnabled) active.push('ultrathink')
     return active
-  }, [permissionMode, ultrathinkEnabled])
+  }, [permissionMode])
 
   // Handle slash command selection (mode/feature commands)
   const handleSlashCommand = React.useCallback((commandId: SlashCommandId) => {
     if (commandId === 'safe') onPermissionModeChange?.('safe')
     else if (commandId === 'ask') onPermissionModeChange?.('ask')
     else if (commandId === 'allow-all') onPermissionModeChange?.('allow-all')
-    else if (commandId === 'ultrathink') onUltrathinkChange?.(!ultrathinkEnabled)
-  }, [permissionMode, ultrathinkEnabled, onPermissionModeChange, onUltrathinkChange])
+  }, [onPermissionModeChange])
 
   // Handle folder selection from slash command menu
   const handleSlashFolderSelect = React.useCallback((path: string) => {
@@ -1394,39 +1381,6 @@ export function FreeFormInput({
                   </StyledDropdownMenuItem>
                 )
               })}
-
-              {/* Separator before thinking level */}
-              <StyledDropdownMenuSeparator className="my-1" />
-
-              {/* Thinking Level - Radix submenu with automatic edge detection */}
-              <DropdownMenuSub>
-                <StyledDropdownMenuSubTrigger className="flex items-center justify-between px-2 py-2 rounded-lg">
-                  <div className="text-left flex-1">
-                    <div className="font-medium text-sm">{getThinkingLevelName(thinkingLevel)}</div>
-                    <div className="text-xs text-muted-foreground">{t('freeform.thinking.desc', 'Extended reasoning depth')}</div>
-                  </div>
-                </StyledDropdownMenuSubTrigger>
-                <StyledDropdownMenuSubContent className="min-w-[220px]">
-                  {THINKING_LEVELS.map(({ id, name, description }) => {
-                    const isSelected = thinkingLevel === id
-                    return (
-                      <StyledDropdownMenuItem
-                        key={id}
-                        onSelect={() => onThinkingLevelChange?.(id)}
-                        className="flex items-center justify-between px-2 py-2 rounded-lg cursor-pointer"
-                      >
-                        <div className="text-left">
-                          <div className="font-medium text-sm">{name}</div>
-                          <div className="text-xs text-muted-foreground">{description}</div>
-                        </div>
-                        {isSelected && (
-                          <Check className="h-4 w-4 text-foreground shrink-0 ml-3" />
-                        )}
-                      </StyledDropdownMenuItem>
-                    )
-                  })}
-                </StyledDropdownMenuSubContent>
-              </DropdownMenuSub>
 
               {/* Context usage footer - only show when we have token data */}
               {contextStatus?.inputTokens != null && contextStatus.inputTokens > 0 && (

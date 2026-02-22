@@ -14,6 +14,7 @@ The Electron app is the desktop application for Craft Agent. It provides a nativ
 - First-run portable runtime download (Git Bash/Python/Node) into `~/.craft-agent/runtime/` with onboarding progress
 - Workspace custom personalities (`{workspace}/personalities/*.md`) with optional YAML frontmatter, selectable per session in chat input
 - Personality selector is hidden in chat input when only the built-in default personality is available
+- Chat input keeps model + permission mode controls; thinking level and ultrathink toggles are intentionally not exposed in UI
 
 ## Directory Structure
 

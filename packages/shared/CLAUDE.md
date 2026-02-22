@@ -52,7 +52,7 @@ src/
 ├── version/            # Version management, install scripts
 ├── workspaces/         # Workspace storage
 ├── branding.ts         # Branding constants
-└── network-interceptor.ts    # Fetch interceptor for API errors and MCP schema injection
+└── network-interceptor.ts    # Fetch interceptor for API errors, MCP schema injection, and optional API I/O dump capture
 ```
 
 ## Key Concepts
@@ -64,6 +64,12 @@ The main agent class that wraps the Claude Agent SDK. Handles:
 - Large result summarization via PostToolUse hook
 - Permission mode integration (safe/ask/allow-all)
 - Session continuity
+
+### Network Interceptor (`src/network-interceptor.ts`)
+- Patches `globalThis.fetch` early (via Bun `--preload`) before SDK modules capture fetch.
+- Captures API errors for post-failure diagnostics.
+- Injects MCP tool metadata (`_intent`, `_displayName`) into Anthropic `/messages` requests.
+- Optional API evidence dump (one JSON per request) is enabled only when `CRAFT_API_IO_DUMP_DIR` exists; supports Anthropic-compatible and OpenAI-compatible inference endpoints.
 
 ### Permission Modes (`src/agent/mode-manager.ts`, `mode-types.ts`)
 Three-level permission system per session:

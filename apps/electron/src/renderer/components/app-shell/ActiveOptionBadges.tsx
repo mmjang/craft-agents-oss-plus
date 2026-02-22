@@ -2,7 +2,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { SlashCommandMenu, DEFAULT_SLASH_COMMAND_GROUPS, type SlashCommandId } from '@/components/ui/slash-command-menu'
-import { ChevronDown, X } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { PERMISSION_MODE_CONFIG, type PermissionMode } from '@craft-agent/shared/agent/modes'
 import { ActiveTasksBar, type BackgroundTask } from './ActiveTasksBar'
 import { useI18n } from '@/i18n/I18nContext'
@@ -30,9 +30,9 @@ function PermissionModeIcon({ mode, className }: { mode: PermissionMode; classNa
 }
 
 export interface ActiveOptionBadgesProps {
-  /** Show ultrathink badge */
+  /** @deprecated Kept only for playground compatibility; no longer used in UI. */
   ultrathinkEnabled?: boolean
-  /** Callback when ultrathink is toggled off */
+  /** @deprecated Kept only for playground compatibility; no longer used in UI. */
   onUltrathinkChange?: (enabled: boolean) => void
   /** Current permission mode */
   permissionMode?: PermissionMode
@@ -51,8 +51,8 @@ export interface ActiveOptionBadgesProps {
 }
 
 export function ActiveOptionBadges({
-  ultrathinkEnabled = false,
-  onUltrathinkChange,
+  ultrathinkEnabled: _ultrathinkEnabled,
+  onUltrathinkChange: _onUltrathinkChange,
   permissionMode = 'ask',
   onPermissionModeChange,
   tasks = [],
@@ -64,7 +64,7 @@ export function ActiveOptionBadges({
   const { t } = useI18n()
 
   // Only render if badges or tasks are active
-  if (!ultrathinkEnabled && !permissionMode && tasks.length === 0) {
+  if (!permissionMode && tasks.length === 0) {
     return null
   }
 
@@ -76,26 +76,9 @@ export function ActiveOptionBadges({
           <span className="text-xs text-muted-foreground select-none">{t('permissions.mode.label', 'Mode')}</span>
           <PermissionModeDropdown
             permissionMode={permissionMode}
-            ultrathinkEnabled={ultrathinkEnabled}
             onPermissionModeChange={onPermissionModeChange}
-            onUltrathinkChange={onUltrathinkChange}
           />
         </div>
-      )}
-
-      {/* Ultrathink Badge */}
-      {ultrathinkEnabled && (
-        <button
-          type="button"
-          onClick={() => onUltrathinkChange?.(false)}
-          className="h-[30px] pl-2.5 pr-2 text-xs font-medium rounded-[8px] flex items-center gap-1.5 shrink-0 transition-all bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10 hover:from-blue-600/15 hover:via-purple-600/15 hover:to-pink-600/15 shadow-tinted outline-none select-none"
-          style={{ '--shadow-color': '147, 51, 234' } as React.CSSProperties}
-        >
-          <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            {t('appShell.ultrathink', 'Ultrathink')}
-          </span>
-          <X className="h-3 w-3 text-purple-500 opacity-60 hover:opacity-100 translate-y-px" />
-        </button>
       )}
 
       {/* Background Tasks - DISABLED: UI hidden because task tracking is not reliable.
@@ -109,12 +92,10 @@ export function ActiveOptionBadges({
 
 interface PermissionModeDropdownProps {
   permissionMode: PermissionMode
-  ultrathinkEnabled?: boolean
   onPermissionModeChange?: (mode: PermissionMode) => void
-  onUltrathinkChange?: (enabled: boolean) => void
 }
 
-function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onPermissionModeChange, onUltrathinkChange }: PermissionModeDropdownProps) {
+function PermissionModeDropdown({ permissionMode, onPermissionModeChange }: PermissionModeDropdownProps) {
   const [open, setOpen] = React.useState(false)
   const { t } = useI18n()
   // Optimistic local state - updates immediately, syncs with prop
@@ -125,23 +106,19 @@ function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onP
     setOptimisticMode(permissionMode)
   }, [permissionMode])
 
-  // Build active commands including ultrathink state
+  // Build active commands list
   const activeCommands = React.useMemo((): SlashCommandId[] => {
-    const active: SlashCommandId[] = [optimisticMode as SlashCommandId]
-    if (ultrathinkEnabled) active.push('ultrathink')
-    return active
-  }, [optimisticMode, ultrathinkEnabled])
+    return [optimisticMode as SlashCommandId]
+  }, [optimisticMode])
 
   // Handle command selection from dropdown
   const handleSelect = React.useCallback((commandId: SlashCommandId) => {
     if (commandId === 'safe' || commandId === 'ask' || commandId === 'allow-all') {
       setOptimisticMode(commandId)
       onPermissionModeChange?.(commandId)
-    } else if (commandId === 'ultrathink') {
-      onUltrathinkChange?.(!ultrathinkEnabled)
     }
     setOpen(false)
-  }, [onPermissionModeChange, onUltrathinkChange, ultrathinkEnabled])
+  }, [onPermissionModeChange])
 
   // Get config for current mode (use optimistic state for instant UI update)
   const config = PERMISSION_MODE_CONFIG[optimisticMode]

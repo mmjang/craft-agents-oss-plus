@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { FreeFormInput, type FreeFormInputProps } from './FreeFormInput'
 import { StructuredInput } from './StructuredInput'
-import { UltrathinkGlow } from '@/components/ui/ultrathink-glow'
 import type { RichTextInputHandle } from '@/components/ui/rich-text-input'
 import type { StructuredInputState, StructuredResponse, InputMode } from './structured/types'
 
@@ -48,24 +47,7 @@ export function InputContainer({
   // Separate height states: freeform uses callback, structured uses measuring div
   const [freeformHeight, setFreeformHeight] = React.useState<number>(FALLBACK_HEIGHTS.freeform)
   const [structuredHeight, setStructuredHeight] = React.useState<number | null>(null)
-  const [containerWidth, setContainerWidth] = React.useState<number>(600)
-  const [isFocused, setIsFocused] = React.useState(false)
   const hasInitializedRef = React.useRef(false)
-
-  // Track container width for shader corner radius calculation
-  React.useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerWidth(entry.contentRect.width)
-      }
-    })
-
-    observer.observe(container)
-    return () => observer.disconnect()
-  }, [])
 
   // Create a stable key for the current content
   const contentKey = mode === 'freeform' ? 'freeform' : `structured-${structuredInput?.type}`
@@ -98,11 +80,6 @@ export function InputContainer({
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true
     }
-  }, [])
-
-  // Handle focus changes from FreeFormInput
-  const handleFocusChange = React.useCallback((focused: boolean) => {
-    setIsFocused(focused)
   }, [])
 
   // Use ResizeObserver only for structured inputs (freeform uses onHeightChange callback)
@@ -149,7 +126,7 @@ export function InputContainer({
           {...freeFormProps}
           inputRef={forMeasuring ? undefined : textareaRef}
           onHeightChange={forMeasuring ? undefined : handleFreeformHeightChange}
-          onFocusChange={forMeasuring ? undefined : handleFocusChange}
+          onFocusChange={forMeasuring ? undefined : freeFormProps.onFocusChange}
           unstyled
         />
       )
@@ -192,13 +169,6 @@ export function InputContainer({
           ease: TRANSITION_EASE
         }}
       >
-        {/* Ultrathink Pulsing Border shader effect - covers entire input */}
-        <UltrathinkGlow
-          enabled={freeFormProps.ultrathinkEnabled ?? false}
-          width={containerWidth}
-          height={targetHeight}
-        />
-
         {/* Crossfading content - freeform anchored to bottom (for auto-grow), others fill */}
         <AnimatePresence mode="sync" initial={false}>
           <motion.div

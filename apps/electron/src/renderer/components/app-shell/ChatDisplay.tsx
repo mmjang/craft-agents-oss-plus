@@ -38,7 +38,6 @@ import { useTheme } from "@/hooks/useTheme"
 import { useI18n } from "@/i18n/I18nContext"
 import type { Session, Message, FileAttachment, StoredAttachment, PermissionRequest, CredentialRequest, CredentialResponse, LoadedSource, LoadedSkill, WorkspacePersonality } from "../../../shared/types"
 import type { PermissionMode } from "@craft-agent/shared/agent/modes"
-import type { ThinkingLevel } from "@craft-agent/shared/agent/thinking-levels"
 import { TurnCard, UserMessageBubble, groupMessagesByTurn, formatTurnAsMarkdown, formatActivityAsMarkdown, type Turn, type AssistantTurn, type UserTurn, type SystemTurn, type AuthRequestTurn } from "@craft-agent/ui"
 import { MemoizedAuthRequestCard } from "@/components/chat/AuthRequestCard"
 import { ActiveOptionBadges } from "./ActiveOptionBadges"
@@ -101,14 +100,9 @@ interface ChatDisplayProps {
   pendingCredential?: CredentialRequest
   /** Callback to respond to credential request */
   onRespondToCredential?: (sessionId: string, requestId: string, response: CredentialResponse) => void
-  // Thinking level (session-level setting)
-  /** Current thinking level ('off', 'think', 'max') */
-  thinkingLevel?: ThinkingLevel
-  /** Callback when thinking level changes */
-  onThinkingLevelChange?: (level: ThinkingLevel) => void
-  // Advanced options
-  /** Enable ultrathink mode for extended reasoning */
+  /** @deprecated Kept only for playground compatibility; no longer used in UI. */
   ultrathinkEnabled?: boolean
+  /** @deprecated Kept only for playground compatibility; no longer used in UI. */
   onUltrathinkChange?: (enabled: boolean) => void
   /** Current permission mode */
   permissionMode?: PermissionMode
@@ -335,12 +329,8 @@ export function ChatDisplay({
   onRespondToPermission,
   pendingCredential,
   onRespondToCredential,
-  // Thinking level
-  thinkingLevel = 'think',
-  onThinkingLevelChange,
-  // Advanced options
-  ultrathinkEnabled = false,
-  onUltrathinkChange,
+  ultrathinkEnabled: _ultrathinkEnabled,
+  onUltrathinkChange: _onUltrathinkChange,
   permissionMode = 'ask',
   onPermissionModeChange,
   enabledModes,
@@ -859,8 +849,6 @@ export function ChatDisplay({
           )}>
             {/* Active option badges and tasks - positioned above input */}
             <ActiveOptionBadges
-              ultrathinkEnabled={ultrathinkEnabled}
-              onUltrathinkChange={onUltrathinkChange}
               permissionMode={permissionMode}
               onPermissionModeChange={onPermissionModeChange}
               tasks={backgroundTasks}
@@ -881,10 +869,6 @@ export function ChatDisplay({
               onPersonalityChange={onPersonalityChange}
               apiBaseUrl={apiBaseUrl}
               customModelIds={customModelIds}
-              thinkingLevel={thinkingLevel}
-              onThinkingLevelChange={onThinkingLevelChange}
-              ultrathinkEnabled={ultrathinkEnabled}
-              onUltrathinkChange={onUltrathinkChange}
               permissionMode={permissionMode}
               onPermissionModeChange={onPermissionModeChange}
               enabledModes={enabledModes}

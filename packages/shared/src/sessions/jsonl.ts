@@ -71,6 +71,7 @@ export function readSessionJsonl(sessionFile: string): StoredSession | null {
       sharedId: header.sharedId,
       model: header.model,
       personality: header.personality,
+      thinkingLevel: header.thinkingLevel,
       messages,
       tokenUsage: header.tokenUsage,
     };
@@ -119,6 +120,7 @@ export function createSessionHeader(session: StoredSession): SessionHeader {
     sharedId: session.sharedId,
     model: session.model,
     personality: session.personality,
+    thinkingLevel: session.thinkingLevel,
     // Pre-computed fields
     messageCount: session.messages.length,
     lastMessageRole: extractLastMessageRole(session.messages),

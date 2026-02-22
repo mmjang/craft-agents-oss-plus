@@ -22,9 +22,8 @@ import { routes } from '@/lib/navigate'
 import { Spinner } from '@craft-agent/ui'
 import { useI18n } from '@/i18n/I18nContext'
 import { RenameDialog } from '@/components/ui/rename-dialog'
-import type { PermissionMode, ThinkingLevel, WorkspaceSettings } from '../../../shared/types'
+import type { PermissionMode, WorkspaceSettings } from '../../../shared/types'
 import { PERMISSION_MODE_CONFIG } from '@craft-agent/shared/agent/mode-types'
-import { DEFAULT_THINKING_LEVEL, THINKING_LEVELS } from '@craft-agent/shared/agent/thinking-levels'
 import { getModelsForBaseUrl, getDefaultModelForBaseUrl } from '@config/models'
 import type { DetailsPageMeta } from '@/lib/navigation-registry'
 
@@ -66,7 +65,6 @@ export default function WorkspaceSettingsPage() {
   const [wsIconUrl, setWsIconUrl] = useState<string | null>(null)
   const [isUploadingIcon, setIsUploadingIcon] = useState(false)
   const [wsModel, setWsModel] = useState(defaultModel)
-  const [wsThinkingLevel, setWsThinkingLevel] = useState<ThinkingLevel>(DEFAULT_THINKING_LEVEL)
   const [permissionMode, setPermissionMode] = useState<PermissionMode>('ask')
   const [workingDirectory, setWorkingDirectory] = useState('')
   const [localMcpEnabled, setLocalMcpEnabled] = useState(true)
@@ -91,7 +89,6 @@ export default function WorkspaceSettingsPage() {
           setWsName(settings.name || '')
           setWsNameEditing(settings.name || '')
           setWsModel(settings.model || defaultModel)
-          setWsThinkingLevel(settings.thinkingLevel || DEFAULT_THINKING_LEVEL)
           setPermissionMode(settings.permissionMode || 'ask')
           setWorkingDirectory(settings.workingDirectory || '')
           setLocalMcpEnabled(settings.localMcpEnabled ?? true)
@@ -207,14 +204,6 @@ export default function WorkspaceSettingsPage() {
       onModelChange?.(newModel)
     },
     [updateWorkspaceSetting, onModelChange]
-  )
-
-  const handleThinkingLevelChange = useCallback(
-    async (newLevel: ThinkingLevel) => {
-      setWsThinkingLevel(newLevel)
-      await updateWorkspaceSetting('thinkingLevel', newLevel)
-    },
-    [updateWorkspaceSetting]
   )
 
   const handlePermissionModeChange = useCallback(
@@ -406,17 +395,6 @@ export default function WorkspaceSettingsPage() {
                     value: model.id,
                     label: model.name,
                     description: model.description,
-                  }))}
-                />
-                <SettingsMenuSelectRow
-                  label={t('workspace.model.thinkingLevel', 'Thinking level')}
-                  description={t('workspace.model.thinkingDesc', 'Reasoning depth for new chats')}
-                  value={wsThinkingLevel}
-                  onValueChange={(v) => handleThinkingLevelChange(v as ThinkingLevel)}
-                  options={THINKING_LEVELS.map(({ id, name, description }) => ({
-                    value: id,
-                    label: name,
-                    description,
                   }))}
                 />
               </SettingsCard>

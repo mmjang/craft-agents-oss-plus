@@ -732,6 +732,7 @@ export class SessionManager {
         enabledSourceSlugs: managed.enabledSourceSlugs,
         workingDirectory: managed.workingDirectory,
         sdkCwd: managed.sdkCwd,
+        model: managed.model,
         thinkingLevel: managed.thinkingLevel,
         personality: managed.personality,
         messages: persistableMessages.map(messageToStored),
@@ -1139,6 +1140,10 @@ export class SessionManager {
       managed.sharedId = storedSession.sharedId
       // Sync name from disk - ensures title persistence across lazy loading
       managed.name = storedSession.name
+      // Keep session-scoped options in sync with persisted state
+      managed.model = storedSession.model
+      managed.personality = storedSession.personality
+      managed.thinkingLevel = storedSession.thinkingLevel
       sessionLog.debug(`Lazy-loaded ${managed.messages.length} messages for session ${managed.id}`)
     }
     managed.messagesLoaded = true
@@ -1192,6 +1197,7 @@ export class SessionManager {
       permissionMode: defaultPermissionMode,
       workingDirectory: resolvedWorkingDir,
       personality: options?.personality,
+      thinkingLevel: defaultThinkingLevel,
     })
 
     const managed: ManagedSession = {
@@ -1340,6 +1346,7 @@ export class SessionManager {
       managed.agent.onPermissionModeChange = (mode) => {
         sessionLog.info(`Permission mode changed for session ${managed.id}:`, mode)
         managed.permissionMode = mode
+        updateSessionMetadata(managed.workspace.rootPath, managed.id, { permissionMode: mode })
         this.sendEvent({
           type: 'permission_mode_changed',
           sessionId: managed.id,
@@ -2770,8 +2777,8 @@ To view this task's output:
       }
 
       sessionLog.info(`Session ${sessionId}: thinking level set to ${level}`)
-      // Persist to disk
-      this.persistSession(managed)
+      // Persist to disk immediately so it survives restarts reliably
+      updateSessionMetadata(managed.workspace.rootPath, sessionId, { thinkingLevel: level })
     }
   }
 

@@ -184,8 +184,7 @@ export default function App() {
   // Using ref instead of state to avoid re-renders during typing - drafts are only
   // needed for initial value restoration and disk persistence, not reactive updates
   const sessionDraftsRef = useRef<Map<string, string>>(new Map())
-  // Unified session options - replaces ultrathinkSessions and sessionModes
-  // All session-scoped options in one place (ultrathink, permissionMode)
+  // Session-scoped options (currently permission mode only)
   const [sessionOptions, setSessionOptions] = useState<Map<string, SessionOptions>>(new Map())
 
   // Theme state (app-level only)
@@ -234,13 +233,6 @@ export default function App() {
 
   // Get translation function for UITranslationProvider (packages/ui components)
   const { t } = useI18n()
-
-  // Ref for sessionOptions to access current value in event handlers without re-registering
-  const sessionOptionsRef = useRef(sessionOptions)
-  // Keep ref in sync with state
-  useEffect(() => {
-    sessionOptionsRef.current = sessionOptions
-  }, [sessionOptions])
 
   // Event processor hook - handles all agent events through pure functions
   const { processAgentEvent } = useEventProcessor()
@@ -378,12 +370,9 @@ export default function App() {
       for (const s of loadedSessions) {
         // Only store non-default options to keep the map lean
         const hasNonDefaultMode = s.permissionMode && s.permissionMode !== 'ask'
-        const hasNonDefaultThinking = s.thinkingLevel && s.thinkingLevel !== 'think'
-        if (hasNonDefaultMode || hasNonDefaultThinking) {
+        if (hasNonDefaultMode) {
           optionsMap.set(s.id, {
-            ultrathinkEnabled: false, // ultrathink is single-shot, never persisted
             permissionMode: s.permissionMode ?? 'ask',
-            thinkingLevel: s.thinkingLevel ?? 'think',
           })
         }
       }
@@ -623,14 +612,11 @@ export default function App() {
 
     // Apply session defaults to the unified sessionOptions
     const hasNonDefaultMode = session.permissionMode && session.permissionMode !== 'ask'
-    const hasNonDefaultThinking = session.thinkingLevel && session.thinkingLevel !== 'think'
-    if (hasNonDefaultMode || hasNonDefaultThinking) {
+    if (hasNonDefaultMode) {
       setSessionOptions(prev => {
         const next = new Map(prev)
         next.set(session.id, {
-          ultrathinkEnabled: false,
           permissionMode: session.permissionMode ?? 'ask',
-          thinkingLevel: session.thinkingLevel ?? 'think',
         })
         return next
       })
@@ -770,9 +756,6 @@ export default function App() {
         )
       }
 
-      // Step 3: Check if ultrathink is enabled for this session
-      const isUltrathink = sessionOptions.get(sessionId)?.ultrathinkEnabled ?? false
-
       // Step 4: Extract badges from mentions (sources/skills) with embedded icons
       // Badges are self-contained for display in UserMessageBubble and viewer
       const badges: ContentBadge[] = windowWorkspaceId
@@ -821,7 +804,6 @@ export default function App() {
         timestamp: Date.now(),
         attachments: storedAttachments,
         badges: badges.length > 0 ? badges : undefined,
-        ultrathink: isUltrathink || undefined,  // Only set if true
         isPending: true,  // Optimistic - will be confirmed by backend
       }
 
@@ -834,15 +816,9 @@ export default function App() {
 
       // Step 6: Send to Claude with processed attachments + stored attachments for persistence
       await window.electronAPI.sendMessage(sessionId, message, processedAttachments, storedAttachments, {
-        ultrathinkEnabled: isUltrathink,
         skillSlugs,
         badges: badges.length > 0 ? badges : undefined,
       })
-
-      // Auto-disable ultrathink after sending (single-shot activation)
-      if (isUltrathink) {
-        handleSessionOptionsChange(sessionId, { ultrathinkEnabled: false })
-      }
     } catch (error) {
       console.error('Failed to send message:', error)
       updateSessionById(sessionId, (s) => ({
@@ -858,7 +834,7 @@ export default function App() {
         ]
       }))
     }
-  }, [sessionOptions, updateSessionById, skills, sources, windowWorkspaceId])
+  }, [updateSessionById, skills, sources, windowWorkspaceId])
 
   const handleModelChange = useCallback((model: string) => {
     setCurrentModel(model)
@@ -898,12 +874,7 @@ export default function App() {
       // Sync permission mode change with backend
       window.electronAPI.sessionCommand(sessionId, { type: 'setPermissionMode', mode: updates.permissionMode })
     }
-    if (updates.thinkingLevel !== undefined) {
-      // Sync thinking level change with backend (session-level, persisted)
-      window.electronAPI.sessionCommand(sessionId, { type: 'setThinkingLevel', level: updates.thinkingLevel })
-    }
-    // ultrathinkEnabled is UI-only (single-shot), no backend persistence needed
-  }, [sessionOptions])
+  }, [])
 
   // Handle input draft changes per session with debounced persistence
   const draftSaveTimeoutRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
